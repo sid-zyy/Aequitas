@@ -445,7 +445,7 @@ class Pipeline:
         self.store.record_window(job.camera_id, start, end, ans.summary if ans else u.summary,
                                  ans.category if ans else None, ans.confidence if ans else None, u.summarize_ms,
                                  u.classify_ms, (time.perf_counter_ns() - job.capture_ns) / 1e6,
-                                 violence=job.violence, source=source)
+                                 keep=self.s.analysis.keep_windows, violence=job.violence, source=source)
         alone = self.s.models.violence_alone_threshold
         also = frozenset({"fighting"}) if (self.s.analysis.clip_votes and alone is not None
                                            and job.violence is not None and job.violence >= max(alone, threshold)

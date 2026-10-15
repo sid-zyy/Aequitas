@@ -270,3 +270,25 @@ table.queue tr.review-row td { background: var(--panel-2); padding: 4px 12px 16p
 .review { display: grid; grid-template-columns: minmax(280px, 560px) 1fr; gap: 18px; align-items: start; }
 .review .player { width: 100%; border-radius: 8px; background: #000; max-height: 360px; }
 @media (max-width: 900px) { .review { grid-template-columns: 1fr; } }
+
+/* bodycam review */
+.bc-timeline { position: relative; height: 26px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; overflow: hidden; }
+.bc-timeline i { position: absolute; top: 0; bottom: 0; }
+.bc-timeline i.ok, .bc-legend i.ok { background: rgba(55,194,91,.35); }
+.bc-timeline i.inc, .bc-legend i.inc { background: var(--danger); }
+.bc-timeline i.fail { background: var(--faint); }
+.bc-legend i.gap { background: var(--panel-2); border: 1px solid var(--line-2); }
+.bc-mark { position: absolute; top: -2px; width: 3px; height: 30px; background: #fff; transform: translateX(-1px); }
+.bc-mark.dim { opacity: .35; }
+.bc-head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); pointer-events: none; }
+.bc-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.bc-legend i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.bc-moment { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+.bc-moment.sel { box-shadow: inset 3px 0 0 var(--accent); }
+.bc-moment.dim { opacity: .55; }
+.bc-moment img { width: 132px; border-radius: 6px; cursor: pointer; background: #000; }
+.bc-log { display: grid; gap: 2px; max-height: 340px; overflow: auto; margin-top: 8px; }
+.bc-log > div { display: grid; grid-template-columns: 52px max-content 1fr; gap: 10px; align-items: start; padding: 5px 8px; border-radius: 6px; cursor: pointer; }
+.bc-log > div:hover { background: var(--panel-2); }
+.bc-log > div.sel { background: var(--panel-3); }
+@media (max-width: 640px) { .bc-moment { grid-template-columns: 1fr; } .bc-moment img { width: 100%; } }

@@ -378,6 +378,10 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         media = {".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime"}
         return FileResponse(u["path"], media_type=media.get(Path(u["path"]).suffix.lower(), "application/octet-stream"))
 
+    from aequitas.web import bodycam
+    bodycam.register(app, settings, store, jobs, auth, upload_dir, _upload_json, _total_s, VIDEO_EXTS,
+                     MAX_UPLOAD_BYTES)
+
     # ---------- live CCTV dashboard ----------
 
     live = LiveManager(settings, store, load_localities(settings.live.localities_file))

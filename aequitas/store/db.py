@@ -56,6 +56,12 @@ MIGRATIONS = [
     ("uploads", "started_at", "INTEGER"),
     ("windows", "violence", "REAL"),
     ("windows", "source", "TEXT"),
+    ("uploads", "kind", "TEXT"),        # NULL: dashboard upload or citizen report; "bodycam": officer recording
+    ("uploads", "view", "TEXT"),        # cctv | close (stage-1 prompt variant)
+    ("uploads", "officer", "TEXT"),     # bodycam: officer or unit, as typed by the uploader
+    ("events", "review", "TEXT"),       # officer decision: confirmed | dismissed (NULL = not reviewed yet)
+    ("events", "reviewed_by", "TEXT"),
+    ("events", "reviewed_at", "INTEGER"),
 ]
 
 
@@ -205,8 +211,8 @@ class EventStore:
         """Per-stage totals for one run: job count, and sum/mean ms of each stage."""
         with self._lock:
             r = self._conn.execute(
-                "SELECT SUM(kind!='skipped') AS jobs, SUM(ok AND kind!='skipped') AS ok, "
-                "SUM(kind='skipped') AS skipped, SUM(summarize_ms) AS sum_s, AVG(summarize_ms) AS avg_s, "
+                "SELECT SUM(kind NOT IN ('skipped','gated')) AS jobs, SUM(ok AND kind NOT IN ('skipped','gated')) AS ok, "
+                "SUM(kind='skipped') AS skipped, SUM(kind='gated') AS gated, SUM(summarize_ms) AS sum_s, AVG(summarize_ms) AS avg_s, "
                 "SUM(classify_ms) AS sum_c, AVG(classify_ms) AS avg_c, AVG(queue_ms) AS avg_q "
                 "FROM stage_timings WHERE run_id=?", (run_id,),
             ).fetchone()
@@ -215,6 +221,7 @@ class EventStore:
             return round(v, 1) if v is not None else None
 
         return {"jobs": r["jobs"] or 0, "ok": r["ok"] or 0, "skipped_static": r["skipped"] or 0,
+                "skipped_gate": r["gated"] or 0,
                 "summarize_ms": {"total": rnd(r["sum_s"]), "mean": rnd(r["avg_s"])},
                 "classify_ms": {"total": rnd(r["sum_c"]), "mean": rnd(r["avg_c"])},
                 "queue_ms": {"mean": rnd(r["avg_q"])}}
@@ -305,6 +312,33 @@ class EventStore:
                 "ORDER BY u.created_at DESC LIMIT ?", (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def uploads_of_kind(self, kind: str, limit: int = 100) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM uploads WHERE kind=? ORDER BY created_at DESC LIMIT ?", (kind, limit)).fetchall()
+        return [dict(r) for r in rows]
+
+    def windows_for(self, camera_id: str) -> list[dict]:
+        """Every stored window of a camera, oldest first (a bodycam recording has its own camera)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM windows WHERE camera_id=? ORDER BY start_ts, id", (camera_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def events_for(self, camera_id: str) -> list[dict]:
+        """Every event of a camera in time order, any status (the review page shows unverified ones too)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM events WHERE camera_id=? ORDER BY start_ts, event_id", (camera_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def review_event(self, event_id: int, decision: str, by: str) -> bool:
+        """An officer's decision on an AI-detected event. The AI's own status stays as it was."""
+        with self._lock, self._conn:
+            cur = self._conn.execute("UPDATE events SET review=?, reviewed_by=?, reviewed_at=? WHERE event_id=?",
+                                     (decision, by, int(time.time() * 1000), event_id))
+        return cur.rowcount == 1
 
     def upload(self, upload_id: str) -> dict | None:
         with self._lock:

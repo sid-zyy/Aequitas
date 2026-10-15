@@ -46,7 +46,9 @@ with `.venv\Scripts\python -m aequitas create-user --username <name> --role admi
 - **Live CCTV:** pick a Bengaluru locality; each camera's footage is summarised, labelled and timed live.
 - **Active requests:** open citizen reports, longest waiting first, with the video, what the AI found and the
   AI-generated likelihood.
-- **Bodycam review / All reports:** uploaded footage and the full citizen-report archive.
+- **Bodycam review:** upload an officer's recording; a 4 s timeline of summaries, key moments to confirm or
+  dismiss (every decision is audited), and a printable report marked as an AI draft.
+- **All reports:** the full citizen-report archive.
 - **Citizen portal** (`/report`, opens in its own window): public upload with a tracking code.
 
 The API is documented at `/api/docs`.

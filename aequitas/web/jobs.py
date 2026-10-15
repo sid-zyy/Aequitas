@@ -76,6 +76,7 @@ class JobManager:
         return CameraCfg(
             camera_id=cam["camera_id"], name=cam["name"], aliases=cam["aliases"], source=row["path"],
             realtime=False, start_time=start_iso, zones=Zones.model_validate(cam["zones"] or {}),
+            view=row.get("view") or "cctv",
         )
 
     def _worker(self) -> None:
@@ -103,6 +104,8 @@ class JobManager:
         s.analysis.mode = row["mode"]
         if row["vlm_model"]:
             s.vlm.model = row["vlm_model"]
+        if row.get("kind") == "bodycam":  # the review timeline needs every window of the recording
+            s.analysis.keep_windows = 1_000_000
 
         use_vlm, note = True, None
         try:
