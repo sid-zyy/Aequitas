@@ -525,6 +525,21 @@ def test_fuse_window_rules():
     assert ans.category == "fighting" and "clip model" in ans.summary and src == "clip_model"
 
 
+def test_fuse_window_keeps_specific_labels_and_needs_more_from_the_clip_model_alone():
+    from aequitas.understand.fusion import fuse_window
+    from aequitas.understand.prompts import VlmAnswer
+
+    arrest = VlmAnswer(category="arrest", summary="Officers hold a man's arms behind his back.")
+    assert fuse_window(arrest, 0.98, 0.51, 0.9) == (arrest, "vlm+clip")  # a struggle is not relabelled fighting
+    assert fuse_window(arrest, 0.2, 0.51, 0.9) == (arrest, "vlm")
+    busy = VlmAnswer(category="none", summary="A crowded shopping street.")
+    assert fuse_window(busy, 0.85, 0.51, 0.9) == (busy, "vlm")  # clip model alone, not sure enough
+    ans, src = fuse_window(busy, 0.97, 0.51, 0.9)
+    assert ans.category == "fighting" and src == "clip_model"
+    fight = VlmAnswer(category="fighting", summary="Two men exchange punches.")
+    assert fuse_window(fight, 0.6, 0.51, 0.9) == (fight, "both")  # agreement needs only the calibrated threshold
+
+
 def test_window_with_high_violence_score_becomes_a_fighting_event(periodic_pipeline):
     from aequitas.pipeline import VlmJob
     from aequitas.understand.stages import Understanding

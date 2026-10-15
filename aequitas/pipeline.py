@@ -408,7 +408,7 @@ class Pipeline:
     def _apply_window_result(self, job: VlmJob, u: Understanding, queue_ms: float) -> None:
         start, end = job.window
         threshold = (self.s.models.violence_threshold or self.violence_model.threshold) if self.violence_model else 1.0
-        ans, source = fuse_window(u.answer, job.violence, threshold)
+        ans, source = fuse_window(u.answer, job.violence, threshold, self.s.models.violence_alone_threshold)
         if u.escalated:
             source = f"{source}+rechecked:{u.escalated}"
         self.store.record_window(job.camera_id, start, end, ans.summary if ans else u.summary,
