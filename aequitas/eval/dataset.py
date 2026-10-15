@@ -140,10 +140,13 @@ def rouge_l(a: str, b: str) -> float:
 
 
 def run_dataset_eval(vlm, classifier, items: list[Item], categories: dict[str, str], tile: int = 448,
-                     label: str = "", out_dir: Path = Path("data/reports")) -> dict:
+                     label: str = "", out_dir: Path = Path("data/reports"), on_progress=None) -> dict:
+    """on_progress(done, total, row) is called after every video (progress logs on long runs)."""
     t_all = time.perf_counter()
     rows = []
     for it in items:
+        if on_progress is not None and rows:
+            on_progress(len(rows), len(items), rows[-1])
         t0 = time.perf_counter()
         grid = clip_grid(it.path, tile)
         if grid is None:
@@ -157,6 +160,8 @@ def run_dataset_eval(vlm, classifier, items: list[Item], categories: dict[str, s
             "summarize_s": round((u.summarize_ms or 0) / 1000, 3), "classify_s": round((u.classify_ms or 0) / 1000, 3),
             "video_total_s": round(time.perf_counter() - t0, 3),
         })
+    if on_progress is not None and rows:
+        on_progress(len(rows), len(items), rows[-1])
     total_s = time.perf_counter() - t_all
     scored = [r for r in rows if r.get("gold") is not None and "error" not in r]
     times = [r["video_total_s"] for r in rows if "video_total_s" in r]

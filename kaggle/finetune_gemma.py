@@ -109,6 +109,39 @@ if not SMOKE:
     print(_sp.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv"], capture_output=True, text=True).stdout)
 
 
+RUN_T0 = time.time()
+STAGES = ["install", "find clips", "key-frame grids", "teacher (12B)", "baseline test (base E2B)",
+          "training", "export to Ollama", "test fine-tuned E2B", "results and downloads"]
+
+
+def stage(name: str) -> None:
+    """A banner per stage in the log: which stage of how many, and the time since the run started."""
+    i = STAGES.index(name) + 1
+    msg = f"STAGE {i}/{len(STAGES)}: {name}  (run time so far {(time.time() - RUN_T0) / 60:.1f} min)"
+    print(f"\n{'=' * len(msg)}\n{msg}\n{'=' * len(msg)}", flush=True)
+
+
+class Progress:
+    """'[teacher] 120/900 (13 %) | 10.2 min | ~58 min left | 5.1 s each | kept 96', at most every `every_s`
+    seconds (and for the first few items, so a stuck start shows quickly)."""
+
+    def __init__(self, name: str, total: int, every_s: float = 60, first: int = 3):
+        self.name, self.total, self.every_s, self.first = name, total, every_s, first
+        self.t0 = self.last = time.time()
+        print(f"[{name}] starting: {total} to do", flush=True)
+
+    def __call__(self, done: int, extra: str = "") -> None:
+        now = time.time()
+        if done < self.total and done > self.first and now - self.last < self.every_s:
+            return
+        self.last = now
+        el = now - self.t0
+        each = el / max(done, 1)
+        left = each * (self.total - done)
+        print(f"[{self.name}] {done}/{self.total} ({100 * done / max(self.total, 1):.0f} %) | {el / 60:.1f} min | "
+              f"~{left / 60:.0f} min left | {each:.1f} s each" + (f" | {extra}" if extra else ""), flush=True)
+
+
 def sh(cmd: str, check: bool = True) -> str:
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     out = r.stdout + r.stderr
@@ -123,6 +156,7 @@ def sh(cmd: str, check: bool = True) -> str:
 # ## Install Aequitas, Ollama and Unsloth
 
 # %%
+stage("install")
 REPO = WORK / "Aequitas"
 if not SMOKE:
     if not REPO.exists():
@@ -151,6 +185,8 @@ sys.path.insert(0, str(REPO))
 
 # %%
 from aequitas.eval.dataset import Item, clip_grid, load_dataset  # noqa: E402
+
+stage("find clips")
 
 
 def norm(s: str) -> str:
@@ -296,10 +332,13 @@ def window_grid(path: Path, seconds: float = 4.0, tile: int = 448, n: int = 4) -
     return encode_jpeg(make_grid(frames, None, Zones(), tile)) if frames else None
 
 
+stage("key-frame grids")
 GRIDS = TMP / "grids"
 GRIDS.mkdir(exist_ok=True)
 samples = []  # {"grid": path, "gold": category, "clip": path}
+prog = Progress("grids", len(TRAIN), every_s=30)
 for i, it in enumerate(TRAIN):
+    prog(i, f"{len(samples)} grids")
     n_win = LONG_WINDOWS if FAMILY.get(str(it.path)) in ("ucf", "xd") else GRIDS_PER_CLIP - 1
     makers = [lambda p: clip_grid(p, 448)] + [window_grid] * n_win
     for j, make in enumerate(makers):
@@ -310,7 +349,7 @@ for i, it in enumerate(TRAIN):
                 continue
             out.write_bytes(g)
         samples.append({"grid": str(out), "gold": it.label, "clip": str(it.path)})
-print(len(samples), "training grids")
+prog(len(TRAIN), f"{len(samples)} grids")
 
 # %% [markdown]
 # ## Teacher: 12B summarises and labels every training grid (our real stage 1 + stage 2)
@@ -343,14 +382,17 @@ CHECK_PROMPT = ("Here is a 2x2 grid of four frames from a camera and a descripti
                 "number of people, what they do, objects, police, fire, vehicles? Answer false if anything is "
                 "invented or wrong, and name the wrong part in a few words. Respond with JSON only.")
 
+stage("teacher (12B)")
 TEACH = OUT / "teacher.jsonl"
 if not SMOKE:
     sh(f"ollama pull {TEACHER}")
     teacher = ollama_client(TEACHER)
     done = {json.loads(x)["grid"] for x in TEACH.read_text().splitlines()} if TEACH.exists() else set()
-    t0 = time.time()
+    prog = Progress("teacher", len(samples))
+    n_kept = n_fail = 0
     with TEACH.open("a") as f:
         for k, smp in enumerate(samples):
+            prog(k, f"usable so far {n_kept}, failed {n_fail}")
             if smp["grid"] in done:
                 continue
             grid = Path(smp["grid"]).read_bytes()
@@ -366,8 +408,10 @@ if not SMOKE:
                                 "checked": chk.every_statement_visible if chk else None,
                                 "wrong_part": chk.wrong_part if chk else None}) + "\n")
             f.flush()
-            if k % 50 == 0:
-                print(f"teacher {k}/{len(samples)}  {time.time() - t0:.0f} s")
+            ok_label = label is not None and label in ACCEPT.get(smp["gold"], {smp["gold"]})
+            n_kept += bool(s is not None and ok_label and (chk is None or chk.every_statement_visible))
+            n_fail += s is None
+        prog(len(samples), f"usable {n_kept}, failed {n_fail}")
     sh(f"ollama stop {TEACHER}", check=False)
 
 
@@ -427,13 +471,30 @@ if rows:
 # %%
 from aequitas.eval.dataset import run_dataset_eval  # noqa: E402
 
+stage("baseline test (base E2B)")
 RESULTS, EXTRA = {}, {}  # model -> report on the SCVD test / on the extra test (riot, arrest, fire, peaceful)
 
 
+def eval_progress(name: str, total: int):
+    prog = Progress(name, total, every_s=30)
+    hits = {"exact": 0, "inc": 0, "caught": 0}
+
+    def cb(done: int, _total: int, row: dict) -> None:
+        if "error" not in row and row.get("gold") is not None:
+            hits["exact"] += row["gold"] == row.get("pred")
+            if row["gold"] != "none":
+                hits["inc"] += 1
+                hits["caught"] += row.get("pred") not in (None, "none")
+        prog(done, f"exact label {hits['exact']}/{done}, incidents caught {hits['caught']}/{hits['inc']}")
+    return cb
+
+
 def evaluate(name: str, vlm, clf, label: str) -> None:
-    RESULTS[name] = run_dataset_eval(vlm, clf, TEST, CATS, label=label, out_dir=OUT / "reports")
+    RESULTS[name] = run_dataset_eval(vlm, clf, TEST, CATS, label=label, out_dir=OUT / "reports",
+                                     on_progress=eval_progress(f"test {name}", len(TEST)))
     if TEST_EXTRA:
-        EXTRA[name] = run_dataset_eval(vlm, clf, TEST_EXTRA, CATS, label=label + "_extra", out_dir=OUT / "reports")
+        EXTRA[name] = run_dataset_eval(vlm, clf, TEST_EXTRA, CATS, label=label + "_extra", out_dir=OUT / "reports",
+                                       on_progress=eval_progress(f"extra test {name}", len(TEST_EXTRA)))
 
 
 if not SMOKE:
@@ -462,12 +523,30 @@ def to_conversation(r: dict, image) -> dict:
 
 
 LORA = OUT / "lora"
+stage("training")
 if not SMOKE:
     from PIL import Image
     from unsloth import FastVisionModel, get_chat_template, is_bf16_supported  # noqa: E402
     from unsloth.trainer import UnslothVisionDataCollator  # noqa: E402
     from trl import SFTConfig, SFTTrainer  # noqa: E402
+    from transformers import TrainerCallback  # noqa: E402
     import torch  # noqa: E402
+
+    class StepLog(TrainerCallback):
+        """'[training] step 40/120 (33 %) | loss 0.812 | 6.0 min | ~12 min left' at every logging step."""
+
+        def on_train_begin(self, args, state, control, **kw):
+            self.t0 = time.time()
+            print(f"[training] starting: {state.max_steps} steps", flush=True)
+
+        def on_log(self, args, state, control, logs=None, **kw):
+            if not logs or "loss" not in logs:
+                return
+            el = time.time() - self.t0
+            left = el / max(state.global_step, 1) * (state.max_steps - state.global_step)
+            print(f"[training] step {state.global_step}/{state.max_steps} "
+                  f"({100 * state.global_step / max(state.max_steps, 1):.0f} %) | loss {logs['loss']:.3f} | "
+                  f"{el / 60:.1f} min | ~{left / 60:.0f} min left", flush=True)
 
     model, processor = FastVisionModel.from_pretrained(STUDENT_HF, load_in_4bit=True,
                                                        use_gradient_checkpointing="unsloth")
@@ -481,7 +560,7 @@ if not SMOKE:
     FastVisionModel.for_training(model)
     trainer = SFTTrainer(
         model=model, train_dataset=data, processing_class=processor.tokenizer,
-        data_collator=UnslothVisionDataCollator(model, processor),
+        data_collator=UnslothVisionDataCollator(model, processor), callbacks=[StepLog()],
         args=SFTConfig(
             per_device_train_batch_size=1, gradient_accumulation_steps=8, num_train_epochs=EPOCHS,
             learning_rate=1e-4, warmup_ratio=0.05, max_grad_norm=0.3, lr_scheduler_type="cosine",
@@ -502,6 +581,7 @@ if not SMOKE:
 # ## Export: merged 16-bit weights -> Ollama (Q4_K_M, same precision as the base gemma4:e2b)
 
 # %%
+stage("export to Ollama")
 MERGED = TMP / "merged"
 OLLAMA_OK = False
 if not SMOKE:
@@ -517,6 +597,7 @@ if not SMOKE:
 # ## Test: fine-tuned E2B on the same 60 clips
 
 # %%
+stage("test fine-tuned E2B")
 if not SMOKE and OLLAMA_OK:  # Ollama runs on GPU 1, so the trained model can stay on GPU 0 for the fallback
     student = ollama_client(STUDENT_OLLAMA)
     probe = run_dataset_eval(student, student, TEST[:5], CATS, label="warmup", out_dir=OUT / "reports")
@@ -555,6 +636,7 @@ if not SMOKE and not OLLAMA_OK:
 # ## Results table, chart, and the downloads
 
 # %%
+stage("results and downloads")
 if not SMOKE:
     import matplotlib
 
