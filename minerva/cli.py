@@ -72,6 +72,14 @@ def main(argv: list[str] | None = None) -> int:
     bench.add_argument("--requests", type=int, default=16, help="requests per concurrency level")
     bench.add_argument("--label", default="", help="e.g. w4a16-mtp, used in the report name")
 
+    ev = sub.add_parser("eval-classify", help="stage-2 accuracy/F1/latency on labelled summaries")
+    ev.add_argument("--labels", default="config/classify_eval.yaml")
+    ev.add_argument("--host", default=None, help="server URL (default: vlm.host)")
+    ev.add_argument("--model", default=None, help="model name (default: vlm.model)")
+    ev.add_argument("--backend", choices=["ollama", "openai"], default=None)
+    ev.add_argument("--concurrency", type=int, default=4)
+    ev.add_argument("--label", default="", help="e.g. w4a16, used in the report name")
+
     sub.add_parser("stats", help="per-stage latency summary of recorded events")
 
     rep = sub.add_parser("eval-report", help="score recorded events per clip against expected labels")
@@ -135,6 +143,19 @@ def main(argv: list[str] | None = None) -> int:
                            allow_remote=settings.vlm.allow_remote)
         print(Path(report["_path"]).read_text(encoding="utf-8"))
         print(f"Report: {report['_path']}")
+        return 0
+
+    if args.cmd == "eval-classify":
+        from minerva.eval.classify_eval import load_items, run_eval, summary_line
+        from minerva.understand.vlm_client import make_client
+
+        ep = settings.vlm.model_copy(update={k: v for k, v in
+                                             {"host": args.host, "model": args.model, "backend": args.backend}.items()
+                                             if v is not None})
+        items, cats = load_items(args.labels)
+        report = run_eval(make_client(ep), items, cats or settings.categories, args.concurrency, args.label,
+                          settings.data_dir / "reports")
+        print(summary_line(report))
         return 0
 
     if args.cmd == "stats":
