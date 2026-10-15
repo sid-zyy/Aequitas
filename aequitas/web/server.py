@@ -425,6 +425,25 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             raise HTTPException(404, "no footage for this camera")
         return FileResponse(cam.file, media_type="video/mp4")
 
+    @app.post("/api/live/cameras/{camera_id}/frame")
+    async def live_frame(camera_id: str, request: Request):
+        """One JPEG frame from the browser's camera (source: browser). The page sends them at sample_fps."""
+        cam = live.cameras.get(camera_id)
+        if cam is None or cam.source != "browser":
+            raise HTTPException(404, "not a browser camera")
+        body = await request.body()
+        if not body or len(body) > 4 * 1024 * 1024:
+            raise HTTPException(400, "expected one JPEG frame under 4 MB")
+        import cv2
+        import numpy as np
+
+        img = cv2.imdecode(np.frombuffer(body, np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
+            raise HTTPException(400, "not an image")
+        from aequitas.ingest.frame_source import push_frame
+
+        return {"accepted": push_frame(camera_id, img)}
+
     @app.get("/api/live/cameras/{camera_id}/mjpeg")
     def live_mjpeg(camera_id: str):
         """The frames the pipeline is reading from a live source (webcam/RTSP), as an MJPEG stream. The

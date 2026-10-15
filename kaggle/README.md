@@ -25,6 +25,8 @@ combinations (fast model + bigger re-checker) from the saved results without ext
 12B caught 70 % of SCVD incidents, E2B 15 % (`model_compare`). 12B summarises the training clips with our real
 prompts; summaries whose label agrees with the dataset label teach E2B (QLoRA, Unsloth). Stage 2 is unchanged.
 Tested on the same 60 held-out SCVD clips as `model_compare`, against base E2B in the same run.
+Half of the training summaries use the close-range instructions (bodycam / live webcam); the 60 test clips
+are run with both instruction sets, so the gain is reported for CCTV and for close range separately.
 
 1. Import `finetune_gemma.ipynb`; **GPU T4 x2**, Internet **On**.
 2. **Add Input**: SCVD (needed, it is the test set), RWF-2000, Real Life Violence Situations; optionally a

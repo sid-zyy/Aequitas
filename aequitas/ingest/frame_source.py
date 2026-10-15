@@ -19,9 +19,26 @@ from aequitas.types import Frame
 
 log = logging.getLogger(__name__)
 _END = object()
+# source "browser": frames arrive over HTTP from the page's own camera (getUserMedia), so the browser asks the
+# user for permission and the server never opens a device. camera_id -> the running FrameSource.
+PUSH_SOURCES: dict[str, "FrameSource"] = {}
+_push_lock = threading.Lock()
+
+
+def push_frame(camera_id: str, image) -> bool:
+    """Hand one frame (BGR) from the browser to the running pipeline. False if that camera is not running."""
+    with _push_lock:
+        src = PUSH_SOURCES.get(camera_id)
+    if src is None or src._stop.is_set():
+        return False
+    src._put(Frame(camera_id, src.pushed, int(time.time() * 1000), time.perf_counter_ns(), image))
+    src.pushed += 1
+    return True
 
 
 def source_kind(source: str) -> str:
+    if source == "browser":
+        return "push"
     if source.isdigit():
         return "webcam"
     if "://" in source:
@@ -35,12 +52,13 @@ class FrameSource:
         self.sample_fps = sample_fps
         self.kind = source_kind(cam.source)
         self.reconnect_s = reconnect_s
-        self.live = self.kind in ("webcam", "stream") or cam.realtime
+        self.live = self.kind in ("webcam", "stream", "push") or cam.realtime
         # Live: newest frame wins. Offline file: lossless, back-pressured.
         self._q: queue.Queue = queue.Queue(maxsize=1 if self.live else 16)
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, name=f"ingest-{cam.camera_id}", daemon=True)
         self.dropped = 0
+        self.pushed = 0
 
     def start(self) -> "FrameSource":
         self._thread.start()
@@ -87,6 +105,8 @@ class FrameSource:
         try:
             if self.kind == "file":
                 self._run_file()
+            elif self.kind == "push":
+                self._run_push()
             else:
                 self._run_live()
         except Exception:
@@ -102,6 +122,16 @@ class FrameSource:
                         self._q.get_nowait()
                     except queue.Empty:
                         pass
+
+    def _run_push(self) -> None:
+        with _push_lock:
+            PUSH_SOURCES[self.cam.camera_id] = self
+        try:
+            self._stop.wait()
+        finally:
+            with _push_lock:
+                if PUSH_SOURCES.get(self.cam.camera_id) is self:
+                    del PUSH_SOURCES[self.cam.camera_id]
 
     def _run_file(self) -> None:
         cap = self._open()

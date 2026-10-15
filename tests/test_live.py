@@ -127,7 +127,7 @@ def test_bangalore_config_is_valid():
     city = [loc for loc in locs if not any(c.is_live for c in loc.cameras)]
     assert len(city) >= 6 and all(len(loc.cameras) >= 3 for loc in city)
     webcam = [c for loc in locs for c in loc.cameras if c.is_live]
-    assert webcam and webcam[0].source == "0" and webcam[0].view == "close" and webcam[0].window_s == 2.0
+    assert webcam and webcam[0].source == "browser" and webcam[0].view == "close" and webcam[0].window_s == 2.0
     ids = [c.id for loc in locs for c in loc.cameras]
     assert len(ids) == len(set(ids))
 
