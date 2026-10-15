@@ -140,8 +140,10 @@ def rouge_l(a: str, b: str) -> float:
 
 
 def run_dataset_eval(vlm, classifier, items: list[Item], categories: dict[str, str], tile: int = 448,
-                     label: str = "", out_dir: Path = Path("data/reports"), on_progress=None) -> dict:
-    """on_progress(done, total, row) is called after every video (progress logs on long runs)."""
+                     label: str = "", out_dir: Path = Path("data/reports"), on_progress=None,
+                     view: str = "cctv") -> dict:
+    """on_progress(done, total, row) is called after every video (progress logs on long runs).
+    view: the stage-1 instructions, "cctv" or "close" (bodycam / webcam)."""
     t_all = time.perf_counter()
     rows = []
     for it in items:
@@ -152,7 +154,7 @@ def run_dataset_eval(vlm, classifier, items: list[Item], categories: dict[str, s
         if grid is None:
             rows.append({"video": str(it.path), "gold": it.label, "error": "unreadable video"})
             continue
-        u = understand(vlm, classifier, grid, highlighted=False, categories=categories)
+        u = understand(vlm, classifier, grid, highlighted=False, categories=categories, view=view)
         rows.append({
             "video": str(it.path), "gold": it.label, "pred": u.answer.category if u.answer else None,
             "summary": u.summary, "reference": it.summary,
@@ -167,7 +169,7 @@ def run_dataset_eval(vlm, classifier, items: list[Item], categories: dict[str, s
     times = [r["video_total_s"] for r in rows if "video_total_s" in r]
     sims = [r["rougeL"] for r in rows if r.get("rougeL") is not None]
     report = {
-        "label": label, "run": datetime.now().isoformat(timespec="seconds"), "n_videos": len(items),
+        "label": label, "view": view, "run": datetime.now().isoformat(timespec="seconds"), "n_videos": len(items),
         "total_execution_s": round(total_s, 2),
         "per_video_s": {"p50": round(percentile(times, .5), 3), "p95": round(percentile(times, .95), 3),
                         "mean": round(statistics.mean(times), 3)} if times else None,

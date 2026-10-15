@@ -60,4 +60,5 @@ localities:
   - id: live-demo
     name: "Live demo: laptop webcam"
     cameras:
-      - {id: demo-webcam, name: Laptop webcam, source: "0", view: close, window_s: 2.0}
+      # source "browser": the page asks for camera permission and sends frames; "0" = the server opens it
+      - {id: demo-webcam, name: Laptop webcam, source: browser, view: close, window_s: 2.0}

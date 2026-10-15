@@ -1,4 +1,5 @@
 import { isIncident, label, LiveCamera, secs, timeOf } from "../api";
+import BrowserCamera from "./BrowserCamera";
 
 export default function CameraTile({ cam, running }: { cam: LiveCamera; running: boolean }) {
   const w = cam.latest;
@@ -24,6 +25,8 @@ export default function CameraTile({ cam, running }: { cam: LiveCamera; running:
       <div className="video-wrap">
         {!cam.has_footage ? (
           <div className="nofeed">No feed</div>
+        ) : cam.browser_camera ? (
+          <BrowserCamera cameraId={cam.id} running={running} />
         ) : cam.live_source ? (
           <img src={cam.video_url} alt={`${cam.name} live`} />
         ) : (

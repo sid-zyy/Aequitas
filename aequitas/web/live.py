@@ -27,7 +27,7 @@ class LiveCamera(BaseModel):
     id: str
     name: str
     file: str | None = None  # demo footage, looped
-    source: str | None = None  # a live source instead: webcam index ("0") or rtsp:// URL
+    source: str | None = None  # a live source instead: "browser" (the page's camera), webcam index "0", rtsp://
     view: str = "cctv"  # "close" for a webcam near the people (gestures described in detail)
     window_s: float | None = None  # shorter windows react faster (live demo)
 
@@ -124,7 +124,7 @@ class LiveManager:
             latest = recent[0] if recent else None
             cams.append({
                 "id": c.id, "name": c.name, "has_footage": self.has_footage(c.id), "live_source": c.is_live,
-                "view": c.view,
+                "view": c.view, "browser_camera": c.source == "browser",
                 # files play in a <video>; live sources stream the frames the pipeline reads (MJPEG)
                 "video_url": f"/api/live/cameras/{c.id}/{'mjpeg' if c.is_live else 'video'}",
                 "latest": latest, "recent": recent,

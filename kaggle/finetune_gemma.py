@@ -93,6 +93,9 @@ HOLDOUT = 0.2           # share of each non-SCVD class (riot, arrest, fire...) k
 EXTRA_TEST_PER_CLASS = 20
 LONG_WINDOWS = 3        # untrimmed videos (UCF-Crime, XD-Violence): more 4 s windows per video
 REVIEW_N = 120          # random kept samples in review.html, for a human spot check
+# Share of training grids summarised with the close-range instructions (view="close": bodycam and the live
+# webcam; hands, arms, posture). The rest use the CCTV instructions. Both are tested separately at the end.
+CLOSE_SHARE = 0.5
 # never train on summaries that describe people by these (guardrails)
 BANNED = re.compile(r"\b(relig\w*|caste|hindu\w*|muslim\w*|islam\w*|christian\w*|sikh\w*|jain\w*|buddhis\w*|"
                     r"part(y|ies) (flag|worker|member)s?|flags?|banners?|slogans?|saffron|hijab\w*|burqa\w*|"
@@ -348,7 +351,8 @@ for i, it in enumerate(TRAIN):
             if g is None:
                 continue
             out.write_bytes(g)
-        samples.append({"grid": str(out), "gold": it.label, "clip": str(it.path)})
+        view = "close" if random.Random(f"{i}-{j}").random() < CLOSE_SHARE else "cctv"
+        samples.append({"grid": str(out), "gold": it.label, "clip": str(it.path), "view": view})
 prog(len(TRAIN), f"{len(samples)} grids")
 
 # %% [markdown]
@@ -396,7 +400,7 @@ if not SMOKE:
             if smp["grid"] in done:
                 continue
             grid = Path(smp["grid"]).read_bytes()
-            s, _ = teacher.summarize(grid, highlighted=False)
+            s, _ = teacher.summarize(grid, highlighted=False, view=smp.get("view", "cctv"))
             label, chk = None, None
             if s is not None:
                 label, _, _ = teacher.classify_text(s.summary, s.visible_evidence, CATS)
@@ -454,7 +458,7 @@ if rows:
         im = cv2.imread(r["grid"])
         im = cv2.resize(im, (448, 448 * im.shape[0] // im.shape[1]))
         b64 = base64.b64encode(cv2.imencode(".jpg", im, [cv2.IMWRITE_JPEG_QUALITY, 70])[1]).decode()
-        cards.append(f'<div class="c"><img src="data:image/jpeg;base64,{b64}"><p><b>#{i + 1}</b> dataset: '
+        cards.append(f'<div class="c"><img src="data:image/jpeg;base64,{b64}"><p><b>#{i + 1}</b> [{r.get("view", "cctv")}] dataset: '
                      f'<b>{r["gold"]}</b> · 12B: <b>{r["teacher_label"]}</b></p><p>{r["summary"]}</p>'
                      f'<p class="e">{r.get("visible_evidence") or ""}</p></div>')
     (OUT / "review.html").write_text(
@@ -472,7 +476,7 @@ if rows:
 from aequitas.eval.dataset import run_dataset_eval  # noqa: E402
 
 stage("baseline test (base E2B)")
-RESULTS, EXTRA = {}, {}  # model -> report on the SCVD test / on the extra test (riot, arrest, fire, peaceful)
+RESULTS, EXTRA, CLOSE = {}, {}, {}  # CLOSE: the SCVD test with the close-range (bodycam) instructions  # model -> report on the SCVD test / on the extra test (riot, arrest, fire, peaceful)
 
 
 def eval_progress(name: str, total: int):
@@ -495,6 +499,9 @@ def evaluate(name: str, vlm, clf, label: str) -> None:
     if TEST_EXTRA:
         EXTRA[name] = run_dataset_eval(vlm, clf, TEST_EXTRA, CATS, label=label + "_extra", out_dir=OUT / "reports",
                                        on_progress=eval_progress(f"extra test {name}", len(TEST_EXTRA)))
+    if CLOSE_SHARE > 0:
+        CLOSE[name] = run_dataset_eval(vlm, clf, TEST, CATS, label=label + "_close", out_dir=OUT / "reports",
+                                       on_progress=eval_progress(f"close-range test {name}", len(TEST)), view="close")
 
 
 if not SMOKE:
@@ -511,13 +518,14 @@ if not SMOKE:
 # %%
 from aequitas.understand.prompts import summarize_prompt  # noqa: E402
 
-PROMPT = summarize_prompt(highlighted=False, concise=S.vlm.concise_summary, view="cctv")
+PROMPTS = {v: summarize_prompt(highlighted=False, concise=S.vlm.concise_summary, view=v) for v in ("cctv", "close")}
 
 
 def to_conversation(r: dict, image) -> dict:
     target = json.dumps({"summary": r["summary"].strip(), "visible_evidence": (r.get("visible_evidence") or "").strip()})
     return {"messages": [
-        {"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": PROMPT}]},
+        {"role": "user", "content": [{"type": "image", "image": image},
+                                     {"type": "text", "text": PROMPTS[r.get("view", "cctv")]}]},
         {"role": "assistant", "content": [{"type": "text", "text": target}]},
     ]}
 
@@ -617,7 +625,7 @@ if not SMOKE and not OLLAMA_OK:
             import io
             t = time.perf_counter()
             img = Image.open(io.BytesIO(grid_jpeg)).convert("RGB")
-            msgs = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": PROMPT}]}]
+            msgs = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": PROMPTS[view]}]}]
             text = processor.apply_chat_template(msgs, add_generation_prompt=True)
             inp = processor(img, text, add_special_tokens=False, return_tensors="pt").to("cuda")
             out = model.generate(**inp, max_new_tokens=160, do_sample=False)
@@ -676,6 +684,14 @@ if not SMOKE:
                 rs = [r for r in ok if r["gold"] == c]
                 cells.append(f'{sum(r["pred"] in ACCEPT.get(c, {c}) for r in rs)}/{len(rs)}')
             md.append(f"| {name} | " + " | ".join(cells) + " |")
+    if CLOSE:
+        md += ["", "## Same 60 SCVD clips with the close-range (bodycam / webcam) instructions", "",
+               f"{100 * CLOSE_SHARE:.0f} % of the training summaries used these instructions.", "",
+               "| model | incident recall | incident precision | accuracy | time per clip p50 |", "|---|---|---|---|---|"]
+        for name, rep in CLOSE.items():
+            c = rep["classification"]
+            md.append(f"| {name} | {c['incident_recall']} | {c['incident_precision']} | {c['accuracy']} | "
+                      f"{rep['per_video_s']['p50']} s |")
     if not OLLAMA_OK:
         md += ["", "Ollama import failed: the fine-tuned row ran in transformers, so its time is not comparable."]
     md += ["", f"Training data checks: {json.dumps(stats['dropped'])} dropped. Spot check: review.html."]

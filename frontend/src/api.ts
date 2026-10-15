@@ -35,7 +35,7 @@ export type Window = {
 };
 
 export type LiveCamera = {
-  id: string; name: string; has_footage: boolean; live_source: boolean; view: string; video_url: string;
+  id: string; name: string; has_footage: boolean; live_source: boolean; view: string; video_url: string; browser_camera?: boolean;
   latest: Window | null; recent: Window[]; behind_live_s: number | null;
 };
 

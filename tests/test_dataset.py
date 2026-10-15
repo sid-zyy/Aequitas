@@ -76,6 +76,7 @@ def test_eval_runs_every_video_and_reports_accuracy_and_time(tmp_path):
                          on_progress=lambda done, total, row: seen.append((done, total, row["video"])))
     assert [(d, t) for d, t, _ in seen] == [(1, 3), (2, 3), (3, 3)]  # once per video, unreadable ones too
     assert len({v for _, _, v in seen}) == 3
+    assert r["view"] == "cctv"
     assert r["n_videos"] == 3 and r["classification"]["accuracy"] == 1.0
     assert r["total_execution_s"] >= 0 and r["per_video_s"]["p50"] >= 0
     assert any(row.get("error") == "unreadable video" for row in r["rows"])
