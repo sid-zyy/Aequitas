@@ -1,4 +1,4 @@
-"""`minerva bench` against a fake OpenAI-compatible streaming server (no models)."""
+"""`aequitas bench` against a fake OpenAI-compatible streaming server (no models)."""
 
 import base64
 import json
@@ -6,8 +6,8 @@ import json
 import httpx
 import pytest
 
-from minerva.eval import bench
-from minerva.understand.prompts import CHOICES
+from aequitas.eval import bench
+from aequitas.understand.prompts import CHOICES
 
 
 def test_every_summarize_request_gets_a_different_image():

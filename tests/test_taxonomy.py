@@ -4,13 +4,13 @@ import sqlite3
 
 import pytest
 
-from minerva.chat.parser import QuestionParser, keyword_filter
-from minerva.config import Settings
-from minerva.store.db import EventRecord, EventStore
-from minerva.taxonomy import DEFAULT_CATEGORIES, choices, label
-from minerva.understand.prompts import classify_text_prompt, label_model
-from minerva.understand.vlm_client import LlmClient
-from minerva.config import LlmEndpoint
+from aequitas.chat.parser import QuestionParser, keyword_filter
+from aequitas.config import Settings
+from aequitas.store.db import EventRecord, EventStore
+from aequitas.taxonomy import DEFAULT_CATEGORIES, choices, label
+from aequitas.understand.prompts import classify_text_prompt, label_model
+from aequitas.understand.vlm_client import LlmClient
+from aequitas.config import LlmEndpoint
 
 from test_store_chat import NOW
 
@@ -67,7 +67,7 @@ def test_keyword_parser_knows_the_police_categories(question, cat):
 
 
 def test_parser_drops_categories_outside_the_list(tmp_path):
-    from minerva.chat.parser import LlmFilter, finalize
+    from aequitas.chat.parser import LlmFilter, finalize
 
     f = finalize(LlmFilter(categories=["fire", "made_up"]), NOW, []).filter
     assert f.categories == ["fire"]
@@ -98,7 +98,7 @@ def test_new_categories_are_stored_and_old_databases_lose_the_check(tmp_path):
     con.close()
     store = EventStore(path)
     store.insert_event(_event("new", "fire"))
-    from minerva.store.query import QueryFilter
+    from aequitas.store.query import QueryFilter
 
     assert [r["category"] for r in store.query(QueryFilter(categories=["fire"]))] == ["fire"]
     old = store.query(QueryFilter(text="shove"))  # the FTS index still finds the old row
@@ -110,9 +110,9 @@ def test_new_categories_are_stored_and_old_databases_lose_the_check(tmp_path):
 def test_categories_endpoint(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
 
-    from minerva.chat.answer import ChatService
-    from minerva.web import server as web
-    from minerva.web.jobs import JobManager
+    from aequitas.chat.answer import ChatService
+    from aequitas.web import server as web
+    from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
     s = Settings(data_dir=tmp_path)
@@ -125,7 +125,7 @@ def test_categories_endpoint(tmp_path, monkeypatch):
 # ---------- eval-classify ----------
 
 def test_metrics_accuracy_macro_f1_and_incident_rates():
-    from minerva.eval.classify_eval import metrics
+    from aequitas.eval.classify_eval import metrics
 
     m = metrics(["fire", "fire", "riot", "none"], ["fire", "none", "riot", "riot"])
     assert m["accuracy"] == 0.5 and m["valid"] == 4
@@ -136,7 +136,7 @@ def test_metrics_accuracy_macro_f1_and_incident_rates():
 
 
 def test_dev_set_covers_every_default_category(tmp_path):
-    from minerva.eval.classify_eval import load_items, run_eval
+    from aequitas.eval.classify_eval import load_items, run_eval
 
     items, cats = load_items("config/classify_eval.yaml")
     labels = {i["label"] for i in items}

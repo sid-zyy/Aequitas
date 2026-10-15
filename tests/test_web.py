@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from minerva.chat.answer import ChatService
-from minerva.chat.parser import QuestionParser
-from minerva.config import CameraCfg, Settings
-from minerva.store.db import EventRecord, EventStore
-from minerva.web import server as web
-from minerva.web.jobs import JobManager
+from aequitas.chat.answer import ChatService
+from aequitas.chat.parser import QuestionParser
+from aequitas.config import CameraCfg, Settings
+from aequitas.store.db import EventRecord, EventStore
+from aequitas.web import server as web
+from aequitas.web.jobs import JobManager
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def _video(path, seconds=2, fps=10):
 
 def test_index_and_static_served(client):
     r = client.get("/")
-    assert r.status_code == 200 and "Minerva" in r.text
+    assert r.status_code == 200 and "Aequitas" in r.text
     assert client.get("/app.js").status_code == 200
 
 

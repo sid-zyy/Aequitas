@@ -1,11 +1,11 @@
 # %% [markdown]
-# # Minerva · hazard detector (fire, smoke, weapons)
+# # Aequitas · hazard detector (fire, smoke, weapons)
 #
 # Fine-tunes YOLO11 to find **fire, smoke, knives, guns and sticks/lathis/rods**. It runs alongside
-# Minerva's normal person detector, so people and bags keep using the COCO model.
+# Aequitas's normal person detector, so people and bags keep using the COCO model.
 #
 # Training images are partly **degraded to look like CCTV** (low resolution, JPEG artefacts) because
-# that is where Minerva's detectors struggled.
+# that is where Aequitas's detectors struggled.
 #
 # **Kaggle setup**
 # 1. Settings → Accelerator → **GPU T4 x2** or P100. Internet **on** (installs `ultralytics`).
@@ -14,7 +14,7 @@
 #    - a knife / pistol dataset (e.g. OD-WeaponDetection, Knife-vs-Pistol)
 #    - your own **lathi / stick / rod** images labelled in CVAT or Label Studio (export YOLO)
 # 3. Edit `SOURCES` (paths and, where a dataset has no `data.yaml`, its class index map), then *Run all*.
-# 4. Download `/kaggle/working/hazard_detector.zip` and unzip it into Minerva's `models/` folder.
+# 4. Download `/kaggle/working/hazard_detector.zip` and unzip it into Aequitas's `models/` folder.
 #
 # Licences: check each dataset's terms before use.
 
@@ -34,8 +34,8 @@ import cv2
 import numpy as np
 import yaml
 
-SMOKE = os.environ.get("MINERVA_SMOKE") == "1"
-WORK = Path(os.environ.get("MINERVA_WORK", "/kaggle/working"))
+SMOKE = os.environ.get("AEQUITAS_SMOKE") == "1"
+WORK = Path(os.environ.get("AEQUITAS_WORK", "/kaggle/working"))
 try:
     import ultralytics  # noqa: F401
 except ImportError:
@@ -46,7 +46,7 @@ from ultralytics import YOLO
 # ## Configuration
 # Each source is a folder of images plus labels. Class names are read from the source's `data.yaml`
 # when it has one; otherwise give `index_map` (source class index → name). Names are mapped onto
-# Minerva's classes through `ALIASES`; anything unmapped is dropped.
+# Aequitas's classes through `ALIASES`; anything unmapped is dropped.
 #
 # **Check D-Fire's class order in its README before training.** The map below assumes 0 = smoke, 1 = fire.
 
@@ -63,7 +63,7 @@ ALIASES = {
 SOURCES = [
     {"path": "/kaggle/input/d-fire", "index_map": {0: "smoke", 1: "fire"}},
     {"path": "/kaggle/input/knife-vs-pistol"},
-    # {"path": "/kaggle/input/minerva-lathi"},   # your own labelled sticks/lathis/rods
+    # {"path": "/kaggle/input/aequitas-lathi"},   # your own labelled sticks/lathis/rods
 ]
 CFG = dict(
     model="yolo11s.pt", imgsz=640, epochs=80, batch=-1, patience=20,
@@ -72,7 +72,7 @@ CFG = dict(
 )
 
 # %% [markdown]
-# ## Smoke-test data (only when `MINERVA_SMOKE=1`)
+# ## Smoke-test data (only when `AEQUITAS_SMOKE=1`)
 
 # %%
 def make_synthetic(root: Path, n: int = 24) -> None:
@@ -99,7 +99,7 @@ if SMOKE:
     if not synth.exists():
         make_synthetic(synth)
     SOURCES = [{"path": str(synth)}]
-    local = Path(os.environ.get("MINERVA_YOLO", "yolo11n.pt"))
+    local = Path(os.environ.get("AEQUITAS_YOLO", "yolo11n.pt"))
     CFG.update(model=str(local), imgsz=160, epochs=1, batch=4)
 
 random.seed(CFG["seed"])
@@ -296,4 +296,4 @@ shutil.copy(onnx_file, out / "hazard_detector.onnx")
     "trained_at": time.strftime("%Y-%m-%d %H:%M"), "smoke_test": SMOKE,
 }, indent=2))
 shutil.make_archive(str(WORK / "hazard_detector"), "zip", out)
-print("Download:", WORK / "hazard_detector.zip", "→ unzip into Minerva/models/hazard_detector/")
+print("Download:", WORK / "hazard_detector.zip", "→ unzip into Aequitas/models/hazard_detector/")

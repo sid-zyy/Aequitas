@@ -1,4 +1,4 @@
-# Minerva — Refined Design (v0.2)
+# Aequitas — Refined Design (v0.2)
 
 Live video event summarization, classification and conversational querying.
 Refines `Video_Event_System_Problem_Statement_and_Plan.pdf`. This doc is the contract
@@ -10,13 +10,13 @@ Only §4.2 (model sizes) depends on the card.
 
 **Implementation note:** trigger scores are computed from the strength of the evidence when the
 rule fires, not from duration (a duration score would always equal the sustain time). The exact
-formulas are in `minerva/triggers/*.py`; the score formulas in §2 are superseded.
+formulas are in `aequitas/triggers/*.py`; the score formulas in §2 are superseded.
 
 ## 0. Requirements added at the team meeting (2026-10-15)
 
 The team's workflow slide extends the problem statement. It is binding alongside the PDF.
 
-| Slide requirement | How Minerva meets it |
+| Slide requirement | How Aequitas meets it |
 |---|---|
 | Capture: RTSP, webcam or file; single or multiple cameras | `FrameSource` per camera, one thread each (§4.1). |
 | Prepare: sample frames; **YOLO tracking is optional**; camera ID and timestamp | Two analysis modes (`analysis.mode`): **`triggered`** (YOLO + rules gate the VLM, the default) and **`periodic`** (no YOLO: the VLM reviews every sampled window). See §3.5. |
@@ -361,7 +361,7 @@ Split per category: **validation** (tune thresholds and fusion) and **test** (re
 ## 8. Project layout
 
 ```
-minerva/
+aequitas/
   ingest/       frame_source.py, ring_buffer.py
   vision/       detector.py, tracker.py, pose.py
   triggers/     base.py, person_down.py, fighting.py, tailgating.py, crowd.py, suspicious.py
@@ -371,7 +371,7 @@ minerva/
   ui/           app.py
   eval/         datasets.py, match.py, report.py, vram_probe.py
 config/         cameras.yaml, thresholds.yaml
-data/           keyframes/, clips/, minerva.db
+data/           keyframes/, clips/, aequitas.db
 tests/
 ```
 

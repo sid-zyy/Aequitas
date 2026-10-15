@@ -1,5 +1,5 @@
 [project]
-name = "minerva"
+name = "aequitas"
 version = "0.1.0"
 description = "Open-source live video event summarization, classification and conversational querying"
 requires-python = ">=3.11"
@@ -25,13 +25,13 @@ dev = ["pytest>=8"]
 nvidia = ["nvidia-ml-py>=12"]
 
 [project.scripts]
-minerva = "minerva.cli:main"
+aequitas = "aequitas.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["minerva*"]
+include = ["aequitas*"]
 
 [tool.setuptools.package-data]
-minerva = ["store/schema.sql", "web/static/*"]
+aequitas = ["store/schema.sql", "web/static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

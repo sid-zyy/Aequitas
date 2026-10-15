@@ -3,7 +3,7 @@
 **Footage:** 11 clips from the CAVIAR INRIA lobby set (CC BY-SA; EC Funded CAVIAR project/IST 2001 37540).
 384×288, 25 fps, 17–58 s, one high wide-angle fixed camera.
 Download with `scripts/get_caviar.sh`; expected labels are in `config/caviar_expected.yaml`.
-Scoring is clip-level, with `minerva eval-report`.
+Scoring is clip-level, with `aequitas eval-report`.
 
 **Machine:** CPU only (Intel i9-13900H, Iris Xe). VLM: gemma4:e2b.
 

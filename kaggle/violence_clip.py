@@ -1,8 +1,8 @@
 # %% [markdown]
-# # Minerva · violence clip classifier
+# # Aequitas · violence clip classifier
 #
 # Trains a small 3D CNN that looks at a **2-second clip** and scores *violence vs not*. It needs no
-# person tracking, so it works where Minerva's fight rules fail (low-res CCTV, crowds, occlusion).
+# person tracking, so it works where Aequitas's fight rules fail (low-res CCTV, crowds, occlusion).
 #
 # **Kaggle setup**
 # 1. Settings → Accelerator → **GPU T4 x2** (or P100). Internet **on** (for the pretrained weights).
@@ -10,7 +10,7 @@
 #    **Real Life Violence Situations** (`Violence/NonViolence`). Optional: your own hard-negative
 #    clips (festivals, sports, dancing, processions) in a folder named `NonViolence`.
 # 3. Edit `SOURCES` below if your paths differ, then *Run all*.
-# 4. Download `/kaggle/working/violence_clip.zip` and unzip it into Minerva's `models/` folder.
+# 4. Download `/kaggle/working/violence_clip.zip` and unzip it into Aequitas's `models/` folder.
 #
 # Licences: check each dataset's terms; RWF-2000 and most violence datasets are research-only.
 
@@ -31,13 +31,13 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data import DataLoader, Dataset
 
-SMOKE = os.environ.get("MINERVA_SMOKE") == "1"  # tiny synthetic run for local testing
-WORK = Path(os.environ.get("MINERVA_WORK", "/kaggle/working"))
+SMOKE = os.environ.get("AEQUITAS_SMOKE") == "1"  # tiny synthetic run for local testing
+WORK = Path(os.environ.get("AEQUITAS_WORK", "/kaggle/working"))
 
 # %% [markdown]
 # ## Configuration
-# `clip_fps` and `clip_len` must match how Minerva samples video. The default (4 fps × 8 frames =
-# 2 s) matches Minerva's default `sample_fps: 4`. When you move to a GPU and raise `sample_fps` to 8,
+# `clip_fps` and `clip_len` must match how Aequitas samples video. The default (4 fps × 8 frames =
+# 2 s) matches Aequitas's default `sample_fps: 4`. When you move to a GPU and raise `sample_fps` to 8,
 # retrain with `clip_fps=8, clip_len=16`.
 
 # %%
@@ -58,7 +58,7 @@ NEGATIVE = {"nonfight", "non_fight", "nofight", "nonviolence", "non_violence", "
 VIDEO_EXTS = {".avi", ".mp4", ".mov", ".mkv", ".mpg", ".mpeg", ".webm", ".m4v"}
 
 # %% [markdown]
-# ## Smoke-test data (only when `MINERVA_SMOKE=1`)
+# ## Smoke-test data (only when `AEQUITAS_SMOKE=1`)
 # Synthetic clips: "violent" = two squares jittering into each other, "normal" = one square drifting.
 
 # %%
@@ -355,7 +355,7 @@ print(json.dumps({k: v for k, v in metrics.items() if k != "history"}, indent=2)
 # %% [markdown]
 # ## 7 · Export
 # ONNX with a dynamic batch axis, plus `metadata.json` describing exactly how to preprocess clips.
-# Minerva reads both.
+# Aequitas reads both.
 
 # %%
 model_cpu = build_model(CFG["arch"], pretrained=False)
@@ -385,6 +385,6 @@ try:  # check the export matches PyTorch
 except ImportError:
     print("onnxruntime not installed; skipped ONNX check")
 
-(out_dir / "best.pt").unlink()  # the ONNX file is what Minerva uses; keeps the download small
+(out_dir / "best.pt").unlink()  # the ONNX file is what Aequitas uses; keeps the download small
 shutil.make_archive(str(WORK / "violence_clip"), "zip", out_dir)
-print("Download:", WORK / "violence_clip.zip", "→ unzip into Minerva/models/violence_clip/")
+print("Download:", WORK / "violence_clip.zip", "→ unzip into Aequitas/models/violence_clip/")

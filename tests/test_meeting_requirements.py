@@ -7,17 +7,17 @@ from datetime import datetime, timedelta
 import numpy as np
 import pytest
 
-from minerva.chat.answer import ChatService, GroundedSummary, grounded_summary
-from minerva.chat.parser import LlmFilter, QuestionParser
-from minerva.config import ChatCfg, LlmEndpoint, VlmCfg, Zones
-from minerva.ingest.ring_buffer import BufferedFrame
-from minerva.store.db import EventRecord, EventStore
-from minerva.store.query import QueryFilter
-from minerva.types import Status
-from minerva.understand.keyframes import make_grid
-from minerva.understand.periodic import WindowAggregator
-from minerva.understand.prompts import VlmAnswer, classify_prompt
-from minerva.understand.vlm_client import is_local_host, make_client, openai_payload
+from aequitas.chat.answer import ChatService, GroundedSummary, grounded_summary
+from aequitas.chat.parser import LlmFilter, QuestionParser
+from aequitas.config import ChatCfg, LlmEndpoint, VlmCfg, Zones
+from aequitas.ingest.ring_buffer import BufferedFrame
+from aequitas.store.db import EventRecord, EventStore
+from aequitas.store.query import QueryFilter
+from aequitas.types import Status
+from aequitas.understand.keyframes import make_grid
+from aequitas.understand.periodic import WindowAggregator
+from aequitas.understand.prompts import VlmAnswer, classify_prompt
+from aequitas.understand.vlm_client import is_local_host, make_client, openai_payload
 
 from test_store_chat import FakeLlm, NOW, store  # noqa: F401  (fixture)
 
@@ -59,7 +59,7 @@ def test_cameras_are_independent_and_gaps_split_events():
 
 
 def test_unverified_status_is_stored_and_hidden_by_default(tmp_path):
-    from minerva.config import CameraCfg
+    from aequitas.config import CameraCfg
 
     s = EventStore(tmp_path / "p.db")
     s.upsert_camera(CameraCfg(camera_id="cam1", name="Lobby", source="a.mp4"))

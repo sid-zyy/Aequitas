@@ -20,11 +20,11 @@ Two models that fix what the CAVIAR real-footage test exposed (see docs/ROADMAP.
    **D-Fire:** confirm its class order (`index_map`) in the dataset README.
 5. **Run all.** Expect about 1–2 h for the violence model and 2–4 h for the detector on a T4.
    Kaggle's weekly GPU quota is limited (check your quota page).
-6. Download the zip from the **Output** panel and unzip it into Minerva:
+6. Download the zip from the **Output** panel and unzip it into Aequitas:
 
 ```
-Minerva/models/violence_clip/     violence_clip.onnx, metadata.json
-Minerva/models/hazard_detector/   hazard_detector.pt, hazard_detector.onnx, metadata.json
+Aequitas/models/violence_clip/     violence_clip.onnx, metadata.json
+Aequitas/models/hazard_detector/   hazard_detector.pt, hazard_detector.onnx, metadata.json
 ```
 
 7. Turn them on in `config/settings.yaml`:
@@ -38,8 +38,8 @@ models:
 ## Check the notebooks locally first (no GPU, about 1 minute)
 
 ```bash
-set MINERVA_SMOKE=1
-set MINERVA_WORK=%TEMP%\minerva_kaggle_smoke
+set AEQUITAS_SMOKE=1
+set AEQUITAS_WORK=%TEMP%\aequitas_kaggle_smoke
 .venv\Scripts\python kaggle\violence_clip.py
 .venv\Scripts\python kaggle\hazard_detector.py
 ```

@@ -1,4 +1,4 @@
-# Minerva handover (written 2026-10-15, for the GPU laptop)
+# Aequitas handover (written 2026-10-15, for the GPU laptop)
 
 This file is the single starting point. It covers everything decided so far, what exists, what has been
 measured, and the complete plan. Details live in the linked docs. **§6 is the working checklist.**
@@ -16,7 +16,7 @@ measured, and the complete plan. Details live in the linked docs. **§6 is the w
 
 ---
 
-## 1. What Minerva is
+## 1. What Aequitas is
 
 An open-source, local-only system that takes video (files, RTSP, webcam), finds and summarises incidents,
 classifies them, stores them with key frames, and answers questions about them in a chatbot. It is being
@@ -38,20 +38,20 @@ built for a **hackathon** (the Honeywell problem statement, judged by faculty) a
 
 ## 3. What exists today
 
-Repo: https://github.com/sid-zyy/Minerva. 59 tests pass (`pytest`).
+Repo: https://github.com/sid-zyy/Aequitas. 59 tests pass (`pytest`).
 
 | Area | Status | Where |
 |---|---|---|
-| Ingest (file/RTSP/webcam, 4 fps sampling, per-camera thread, ring buffer) | Done | `minerva/ingest/` |
-| YOLO11n + ByteTrack, pose on crops, motion energy | Done; **weak on low-res CCTV** (see §4) | `minerva/vision/` |
-| Rules: person down, fighting, tailgating, overcrowding, loitering, abandoned object | Done, unit-tested; **fail on CAVIAR** (§4) | `minerva/triggers/` |
-| VLM check: 2×2 key-frame grid → category + summary → fusion (confirmed/disputed/rejected) | Done (category and summary in one call; **R5 needs these as two stages**) | `minerva/understand/` |
+| Ingest (file/RTSP/webcam, 4 fps sampling, per-camera thread, ring buffer) | Done | `aequitas/ingest/` |
+| YOLO11n + ByteTrack, pose on crops, motion energy | Done; **weak on low-res CCTV** (see §4) | `aequitas/vision/` |
+| Rules: person down, fighting, tailgating, overcrowding, loitering, abandoned object | Done, unit-tested; **fail on CAVIAR** (§4) | `aequitas/triggers/` |
+| VLM check: 2×2 key-frame grid → category + summary → fusion (confirmed/disputed/rejected) | Done (category and summary in one call; **R5 needs these as two stages**) | `aequitas/understand/` |
 | Periodic mode (no YOLO, VLM reviews every window) | Done | `understand/periodic.py`, `analysis.mode` |
 | Model-independent clients: Ollama + any local OpenAI-compatible server (**vLLM-ready**), non-local hosts refused | Done | `understand/vlm_client.py` |
-| SQLite store, FTS5, uploads table, per-stage timings table | Done | `minerva/store/` |
-| Chat: LLM → structured filter (reconciled with keywords) → SQL → `[#id]` grounded answer + optional cited summary | Done (not streamed yet) | `minerva/chat/` |
-| Web app: FastAPI API + **vanilla JS** frontend (upload, jobs, chat, event log, overview) | Done; **R5 needs React** | `minerva/web/` |
-| CLI: `init-db`, `run`, `ask`, `web`, `spike`, `stats`, `eval-report` | Done | `minerva/cli.py` |
+| SQLite store, FTS5, uploads table, per-stage timings table | Done | `aequitas/store/` |
+| Chat: LLM → structured filter (reconciled with keywords) → SQL → `[#id]` grounded answer + optional cited summary | Done (not streamed yet) | `aequitas/chat/` |
+| Web app: FastAPI API + **vanilla JS** frontend (upload, jobs, chat, event log, overview) | Done; **R5 needs React** | `aequitas/web/` |
+| CLI: `init-db`, `run`, `ask`, `web`, `spike`, `stats`, `eval-report` | Done | `aequitas/cli.py` |
 | CAVIAR evaluation (11 clips, expected labels, scorer) | Done | `config/caviar_*.yaml`, `scripts/get_caviar.sh`, docs/EVAL_CAVIAR.md |
 | Trained-model loaders (violence clip ONNX, hazard YOLO) + fight-from-clip-score path | Done, tested with fakes | `vision/violence.py`, `vision/hazards.py` |
 | Training scripts: violence clip classifier (r3d_18), hazard detector (YOLO11 fire/smoke/knife/gun/stick) | Written, smoke-tested on synthetic data, **never trained on real data** | `kaggle/*.py` (the `.ipynb` copies are only for Kaggle; R5 says no Jupyter, so run the `.py` directly on the GPU) |
@@ -82,7 +82,7 @@ Repo: https://github.com/sid-zyy/Minerva. 59 tests pass (`pytest`).
 
 1. Clone and install (Windows):
    ```bash
-   git clone https://github.com/sid-zyy/Minerva.git && cd Minerva
+   git clone https://github.com/sid-zyy/Aequitas.git && cd Aequitas
    python -m venv .venv
    ```
    Install the **CUDA build of PyTorch** first (pick the command for your CUDA version at pytorch.org),
@@ -92,14 +92,14 @@ Repo: https://github.com/sid-zyy/Minerva. 59 tests pass (`pytest`).
    .venv\Scripts\python -m pytest
    ```
 2. Ollama (dev fallback): `ollama pull gemma4:e2b` (~4.6 GB), and later `gemma4:e4b`.
-3. Smoke-check the app: `python -m minerva web`, upload a clip, ask a question.
+3. Smoke-check the app: `python -m aequitas web`, upload a clip, ask a question.
 4. **vLLM goes in WSL2 Ubuntu** (vLLM needs Linux + an NVIDIA GPU):
    - an NVIDIA Windows driver with WSL support
    - in Ubuntu: Python venv + `pip install vllm`
    - a Hugging Face token: Gemma models are gated, so accept the licence on HF first
    - **Look up the exact HF model IDs** for Gemma 4 E2B/E4B instruct and their **MTP drafter** models. Don't guess them.
    - Serve on `0.0.0.0:8000` (or another port).
-   - In Minerva's `config/settings.yaml`, set `vlm.backend: openai`, `vlm.host: http://127.0.0.1:<port>`,
+   - In Aequitas's `config/settings.yaml`, set `vlm.backend: openai`, `vlm.host: http://127.0.0.1:<port>`,
      `vlm.model: <served name>`. WSL2 forwards localhost by default.
 5. Record GPU facts in HACKATHON_PLAN.md: model name, VRAM, compute capability. **FP8 needs compute ≥ 8.9 (Ada/Hopper).**
 
@@ -109,7 +109,7 @@ Rules for every phase: tests pass before committing; commit locally; **ask the o
 record numbers in the docs.
 
 ### Phase 0 · GPU baseline (half a day)
-- [ ] Setup (§5). Run `minerva spike --models gemma4:e2b gemma4:e4b` with CUDA PyTorch. Record the results in DESIGN.md §4.3.
+- [ ] Setup (§5). Run `aequitas spike --models gemma4:e2b gemma4:e4b` with CUDA PyTorch. Record the results in DESIGN.md §4.3.
 - [ ] Re-run CAVIAR with **YOLO11s and YOLO11m** at `imgsz` 640 and 960. Does person recall fix the rules?
   Record the results in EVAL_CAVIAR.md. (The weights are small and come from Ultralytics.)
 
@@ -136,7 +136,7 @@ record numbers in the docs.
   (Gemma 4 MTP **does** use the separate `-assistant` checkpoint; see HACKATHON_PLAN.md "The GPU laptop"),
   or `{"method":"ngram","num_speculative_tokens":N,"prompt_lookup_max":K}`. Check the flag names against the
   installed vLLM version's docs.
-- [ ] `minerva bench`: for any OpenAI-compatible server, stream requests and measure TTFT, time per output
+- [ ] `aequitas bench`: for any OpenAI-compatible server, stream requests and measure TTFT, time per output
   token, tokens/s, total time, at concurrency 1/4/16, for all three tasks. Use a **unique image per request**
   (cache trap). Read the speculative acceptance rate from vLLM's `/metrics`. Write a JSON + markdown report
   to `data/reports/`.
@@ -157,7 +157,7 @@ record numbers in the docs.
 
 ### Phase 4 · React frontend (R5)
 - [ ] `frontend/`: Vite + React + TypeScript. Port the existing pages (Overview, Analyze video, Ask, Event
-  log, event detail with key frames and video at the event offset) from `minerva/web/static/`.
+  log, event detail with key frames and video at the event offset) from `aequitas/web/static/`.
   - The API stays the same (`/api/*`, documented at `/api/docs`).
   - Add a **live latency panel**: per-stage timings and the total time per video.
   - Add **streamed chat**.
@@ -169,7 +169,7 @@ record numbers in the docs.
   - summarization: ROUGE-L / BERTScore against references if provided, otherwise a rubric
   - classification: accuracy, macro-F1, confusion matrix
   - chatbot: a question set with expected event IDs or answers
-- [ ] If its categories differ from Minerva's five, make the category list configurable. It is currently a
+- [ ] If its categories differ from Aequitas's five, make the category list configurable. It is currently a
   hard-coded enum in `types.py`, the DB `CHECK` constraint, prompts and the UI.
 
 ### Phase 6 · Accuracy work

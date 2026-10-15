@@ -1,4 +1,4 @@
-# Minerva: instructions for Claude
+# Aequitas: instructions for Claude
 
 ## ⚠️ HACKATHON FACULTY REQUIREMENTS: TOP PRIORITY, ALWAYS
 
@@ -47,9 +47,9 @@ Full text: docs/POLICE_EDITION.md §8.
 
 ## Technical facts that have caught us before
 - **Ollama caches identical prompts and images.** Benchmarks must send a different image on every call, or
-  latency looks ~10× better than reality. `minerva spike` already randomises per run.
-- **supervision's ByteTrack** starts tracks only above `track_activation_threshold + 0.1`. Minerva subtracts
-  0.1 so the configured value is the real threshold (`minerva/vision/detector.py`).
+  latency looks ~10× better than reality. `aequitas spike` already randomises per run.
+- **supervision's ByteTrack** starts tracks only above `track_activation_threshold + 0.1`. Aequitas subtracts
+  0.1 so the configured value is the real threshold (`aequitas/vision/detector.py`).
 - **Gemma 4 E2B on its own** labelled almost everything "person_down" on CAVIAR (docs/EVAL_CAVIAR.md). Never
   trust a VLM label without a second signal: a rule trigger, a classifier, or agreement checks.
 - vLLM's structured-output fields are `extra_body={"structured_outputs": {"choice": [...]}}`. The old
@@ -58,13 +58,13 @@ Full text: docs/POLICE_EDITION.md §8.
 ## Commands
 ```bash
 .venv/Scripts/python -m pytest                     # all tests (Windows path; use .venv/bin on Linux/WSL)
-.venv/Scripts/python -m minerva web                # web app at http://127.0.0.1:8000
-.venv/Scripts/python -m minerva spike --models gemma4:e2b
-.venv/Scripts/python -m minerva --settings config/eval_caviar_v2.yaml --cameras config/caviar_cameras.yaml run
-.venv/Scripts/python -m minerva --settings config/eval_caviar_v2.yaml eval-report --expected config/caviar_expected.yaml
+.venv/Scripts/python -m aequitas web                # web app at http://127.0.0.1:8000
+.venv/Scripts/python -m aequitas spike --models gemma4:e2b
+.venv/Scripts/python -m aequitas --settings config/eval_caviar_v2.yaml --cameras config/caviar_cameras.yaml run
+.venv/Scripts/python -m aequitas --settings config/eval_caviar_v2.yaml eval-report --expected config/caviar_expected.yaml
 ```
 
 ## Code conventions
-Match the surrounding code: small modules, pydantic config in `minerva/config.py`, defaults in code and
+Match the surrounding code: small modules, pydantic config in `aequitas/config.py`, defaults in code and
 overrides in `config/*.yaml`, a unit test for every rule or behaviour change (`tests/`, synthetic data, no
 model downloads in tests).
