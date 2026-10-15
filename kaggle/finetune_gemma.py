@@ -178,6 +178,14 @@ def label_of(path: Path) -> tuple[str | None, str]:
             return UCF_MAP.get(n, UCF_MAP.get(n.replace("_", ""))), "ucf"
         if n.startswith("normal_videos") or n.startswith("testing_normal") or n.startswith("training_normal"):
             return "none", "ucf"
+    # UCF-Crime file names without class folders: Arrest001_x264.mp4, Normal_Videos_015_x264.mp4
+    m = re.match(r"([A-Za-z_]+?)_?\d+_x264$", path.stem)
+    if m:
+        n = norm(m.group(1))
+        if n.startswith("normal"):
+            return "none", "ucf"
+        if n in UCF_MAP:
+            return UCF_MAP[n], "ucf"
     return None, ""
 
 
