@@ -58,6 +58,26 @@ CREATE TABLE IF NOT EXISTS event_timings (
   e2e_ms     REAL   -- condition onset -> row committed (includes the rule's sustain time)
 );
 
+-- Videos uploaded through the web app, and the analysis job for each.
+CREATE TABLE IF NOT EXISTS uploads (
+  upload_id     TEXT PRIMARY KEY,
+  camera_id     TEXT NOT NULL REFERENCES cameras(camera_id),
+  filename      TEXT NOT NULL,
+  path          TEXT NOT NULL,
+  start_ts      INTEGER NOT NULL,   -- wall time the first frame represents
+  duration_ms   INTEGER,
+  mode          TEXT NOT NULL,
+  vlm_model     TEXT,
+  status        TEXT NOT NULL,      -- queued | processing | verifying | done | failed | cancelled
+  frames_done   INTEGER NOT NULL DEFAULT 0,
+  frames_total  INTEGER,
+  events_found  INTEGER NOT NULL DEFAULT 0,
+  error         TEXT,
+  created_at    INTEGER NOT NULL,
+  finished_at   INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_uploads_cam_time ON uploads(camera_id, start_ts);
+
 CREATE TABLE IF NOT EXISTS dropped_candidates (
   camera_id     TEXT NOT NULL,
   ts            INTEGER NOT NULL,

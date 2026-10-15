@@ -80,7 +80,10 @@ class JobQueue:
 
 
 class Pipeline:
-    def __init__(self, settings: Settings, cameras: list[CameraCfg], store: EventStore, use_vlm: bool = True):
+    def __init__(self, settings: Settings, cameras: list[CameraCfg], store: EventStore, use_vlm: bool = True,
+                 on_frame=None):
+        self.on_frame = on_frame  # optional callback(camera_id, frames_processed), for progress reporting
+        self.phase = "processing"  # -> "verifying" once streams end -> "done" once the VLM queue drains
         self.s = settings
         self.cameras = cameras
         self.store = store
@@ -138,6 +141,8 @@ class Pipeline:
                 break
             step(frame)
             n += 1
+            if self.on_frame is not None:
+                self.on_frame(cam.camera_id, n)
             if n % 200 == 0:
                 log.info("%s: %d frames, ingest dropped %d, VLM backlog %d",
                          cam.camera_id, n, source.dropped, self.queue.pending(cam.camera_id))
@@ -315,6 +320,10 @@ class Pipeline:
 
     # ---------- lifecycle ----------
 
+    def stop(self) -> None:
+        """Stop reading new frames; jobs already queued for the VLM still finish."""
+        self._stop.set()
+
     def run(self, max_seconds: float | None = None) -> None:
         cameras_done = threading.Event()
         cam_threads = [threading.Thread(target=self._camera_loop, args=(c,), name=f"cam-{c.camera_id}", daemon=True)
@@ -338,6 +347,8 @@ class Pipeline:
         except KeyboardInterrupt:
             log.info("interrupted, finishing queued events (Ctrl+C again to abort)")
             self._stop.set()
+        self.phase = "verifying"
         cameras_done.set()
         vlm_thread.join()
+        self.phase = "done"
         log.info("pipeline stopped")

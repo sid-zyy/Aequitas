@@ -53,8 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     ask.add_argument("question")
     ask.add_argument("--no-llm", action="store_true", help="use the keyword parser only")
 
-    ui = sub.add_parser("ui", help="start the chat web app")
-    ui.add_argument("--port", type=int, default=7860)
+    ui = sub.add_parser("web", aliases=["ui"], help="start the web app (upload videos, browse events, chat)")
+    ui.add_argument("--port", type=int, default=8000)
     ui.add_argument("--no-llm", action="store_true")
 
     spike = sub.add_parser("spike", help="M0: measure detector/VLM latency and memory on this machine")
@@ -99,12 +99,11 @@ def main(argv: list[str] | None = None) -> int:
         print(_service(settings, not args.no_llm).ask(args.question).text)
         return 0
 
-    if args.cmd == "ui":
-        from minerva.ui.app import build_ui
+    if args.cmd in ("web", "ui"):
+        from minerva.web.server import serve
 
-        demo = build_ui(_service(settings, not args.no_llm))
-        demo.launch(server_name="127.0.0.1", server_port=args.port,
-                    allowed_paths=[str(Path(settings.data_dir).resolve())])
+        cams = load_cameras(args.cameras) if Path(args.cameras).exists() else []
+        serve(settings, _service(settings, not args.no_llm), cams, port=args.port)
         return 0
 
     if args.cmd == "spike":
