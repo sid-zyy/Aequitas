@@ -496,3 +496,11 @@ def test_file_sources_analyse_every_window_even_with_a_slow_vlm(periodic_pipelin
     n = store._conn.execute("SELECT COUNT(*) FROM stage_timings WHERE kind='window'").fetchone()[0]
     assert n == 10  # one per second of video, none stretched or dropped
     assert store._conn.execute("SELECT COUNT(*) FROM dropped_candidates").fetchone()[0] == 0
+
+
+def test_chat_reports_its_response_time_per_step(store, monkeypatch):
+    svc = _chat(store, StreamingLlm(_tailgating_filter(), ["One event [#1]."]), monkeypatch)
+    ans = svc.ask("Show all tailgating events from camera 2 today")
+    assert {"parse_ms", "query_ms", "total_ms"} <= set(ans.timings)
+    done = list(svc.ask_stream("Show all tailgating events from camera 2 today"))[-1]
+    assert {"parse_ms", "query_ms", "summary_ttft_ms", "summary_ms", "elapsed_ms"} <= set(done)

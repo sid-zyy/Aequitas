@@ -36,6 +36,7 @@ class ChatAnswer:
     parsed: ParseResult | None = None
     total: int = 0
     summary: str | None = None
+    timings: dict = field(default_factory=dict)  # ms: parse, query, summary, total
 
 
 def _fmt_time(ms: int, tz: tzinfo | None, with_date: bool = True) -> str:
@@ -120,10 +121,14 @@ class ChatService:
         self.parser = parser
         self.summarize = summarize
 
-    def _retrieve(self, question: str) -> tuple[ParseResult, int, list[dict], list[str], list[str]]:
-        """Parse and query. Returns (parsed, total, rows, lines before the summary, lines after it)."""
+    def _retrieve(self, question: str) -> tuple[ParseResult, int, list[dict], list[str], list[str], dict]:
+        """Parse and query. Returns (parsed, total, rows, lines before the summary, lines after it,
+        timings in ms: parse = question -> filter (the LLM call), query = the database)."""
+        t0 = time.perf_counter()
         cameras = self.store.cameras()
         parsed = self.parser.parse(question, cameras)
+        timings = {"parse_ms": round((time.perf_counter() - t0) * 1000)}
+        t1 = time.perf_counter()
         f = parsed.filter
         total = self.store.count(f)
         desc = describe(f, cameras, total)
@@ -138,18 +143,23 @@ class ChatService:
             shown = f" (showing {len(rows)})" if total > len(rows) else ""
             tail.append(f"Found {total} {desc}{shown}:")
             tail.extend(format_row(r, self.parser.tz) for r in rows)
-        return parsed, total, rows, head, tail
+        timings["query_ms"] = round((time.perf_counter() - t1) * 1000)
+        return parsed, total, rows, head, tail, timings
 
     def _wants_summary(self, rows: list[dict]) -> bool:
         return bool(rows) and self.summarize and self.parser.llm is not None
 
     def ask(self, question: str) -> ChatAnswer:
-        parsed, total, rows, head, tail = self._retrieve(question)
+        t0 = time.perf_counter()
+        parsed, total, rows, head, tail, timings = self._retrieve(question)
         summary = None
         if self._wants_summary(rows):
+            t1 = time.perf_counter()
             summary = grounded_summary(self.parser.llm, question, rows, self.parser.tz)
+            timings["summary_ms"] = round((time.perf_counter() - t1) * 1000)
+        timings["total_ms"] = round((time.perf_counter() - t0) * 1000)
         mid = [summary, ""] if summary else []
-        return ChatAnswer("\n".join(head + mid + tail), rows, parsed, total, summary)
+        return ChatAnswer("\n".join(head + mid + tail), rows, parsed, total, summary, timings)
 
     def ask_stream(self, question: str) -> Iterator[dict]:
         """The same answer as ask(), as events for streaming:
@@ -162,10 +172,10 @@ class ChatService:
 
         The summary is checked only once it is complete, so streamed text is provisional until then."""
         t0 = time.perf_counter()
-        parsed, total, rows, head, tail = self._retrieve(question)
+        parsed, total, rows, head, tail, timings = self._retrieve(question)
         retrieve_ms = (time.perf_counter() - t0) * 1000
         yield {"type": "retrieved", "parsed": parsed, "total": total, "rows": rows, "head": head, "tail": tail,
-               "retrieve_ms": round(retrieve_ms)}
+               "retrieve_ms": round(retrieve_ms), **timings}
         summary_ms = ttft_ms = None
         if self._wants_summary(rows):
             t1 = time.perf_counter()
@@ -187,5 +197,5 @@ class ChatService:
                 summary = grounded_summary(llm, question, rows, self.parser.tz)
             summary_ms = round((time.perf_counter() - t1) * 1000)
             yield {"type": "summary", "summary": summary}
-        yield {"type": "done", "retrieve_ms": round(retrieve_ms), "summary_ttft_ms": ttft_ms,
+        yield {"type": "done", "retrieve_ms": round(retrieve_ms), **timings, "summary_ttft_ms": ttft_ms,
                "summary_ms": summary_ms, "elapsed_ms": round((time.perf_counter() - t0) * 1000)}
