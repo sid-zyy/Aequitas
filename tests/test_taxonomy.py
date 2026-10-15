@@ -120,3 +120,31 @@ def test_categories_endpoint(tmp_path, monkeypatch):
     cats = TestClient(app).get("/api/categories").json()
     assert {"name": "person_down", "label": "person down",
             "definition": DEFAULT_CATEGORIES["person_down"]} in cats
+
+
+# ---------- eval-classify ----------
+
+def test_metrics_accuracy_macro_f1_and_incident_rates():
+    from minerva.eval.classify_eval import metrics
+
+    m = metrics(["fire", "fire", "riot", "none"], ["fire", "none", "riot", "riot"])
+    assert m["accuracy"] == 0.5 and m["valid"] == 4
+    assert m["per_class_f1"] == {"fire": pytest.approx(0.6667, abs=1e-4), "none": 0.0,
+                                 "riot": pytest.approx(0.6667, abs=1e-4)}
+    assert m["incident_precision"] == pytest.approx(2 / 3, abs=1e-4) and m["incident_recall"] == pytest.approx(2 / 3, abs=1e-4)
+    assert m["confusion"]["fire"] == {"fire": 1, "none": 1}
+
+
+def test_dev_set_covers_every_default_category(tmp_path):
+    from minerva.eval.classify_eval import load_items, run_eval
+
+    items, cats = load_items("config/classify_eval.yaml")
+    labels = {i["label"] for i in items}
+    assert set(DEFAULT_CATEGORIES) | {"none"} == labels
+
+    class Oracle(Echo):  # answers the gold label: the plumbing must then score 100 %
+        def classify_text(self, summary, evidence="", categories=None):
+            return next(i["label"] for i in items if i["summary"] == summary), 0.9, 5.0
+
+    r = run_eval(Oracle(""), items, None, concurrency=3, label="oracle", out_dir=tmp_path)
+    assert r["accuracy"] == 1.0 and r["macro_f1"] == 1.0 and r["errors"] == []

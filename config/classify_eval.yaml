@@ -1,0 +1,53 @@
+# Hand-written development set for stage 2 (classify the summary). 3 per category + hard negatives.
+# Use: quick comparison of models / quantization schemes on the SAME labels. It is small and written by
+# us, so it is a sanity check, not an accuracy claim. The faculty dataset replaces it (same format).
+items:
+  - {label: fighting, summary: "Two men exchange punches near the bus stop while others step back."}
+  - {label: fighting, summary: "A man kicks another man who is pushed against the wall."}
+  - {label: fighting, summary: "Two people grapple and fall to the floor, hitting each other."}
+  - {label: riot, summary: "A group of people throw stones at a line of police officers holding shields."}
+  - {label: riot, summary: "Several people smash the windows of a parked bus while a crowd shouts."}
+  - {label: riot, summary: "People in a crowd hurl bottles and bricks across the road at another group."}
+  - {label: weapon, summary: "A man holds a knife and points it at a shopkeeper behind the counter."}
+  - {label: weapon, summary: "A person raises a long iron rod above his head and moves towards another man."}
+  - {label: weapon, summary: "A man takes out a pistol from his waistband and aims it at the door."}
+  - {label: fire, summary: "Flames and thick black smoke rise from a parked car on the roadside."}
+  - {label: fire, summary: "A shop front is on fire and smoke fills the street."}
+  - {label: fire, summary: "A small fire burns in a dustbin next to the wall, with smoke drifting up."}
+  - {label: arrest, summary: "Two police officers hold a man by the arms and put handcuffs on him."}
+  - {label: arrest, summary: "An officer escorts a handcuffed man to a police van and opens the door."}
+  - {label: arrest, summary: "Officers pin a man to the ground and restrain his hands behind his back."}
+  - {label: chase, summary: "A man runs fast down the street and an officer sprints after him."}
+  - {label: chase, summary: "A motorcycle speeds away and a police jeep follows it closely through traffic."}
+  - {label: chase, summary: "One person runs between the stalls while two others run after him shouting."}
+  - {label: person_down, summary: "An elderly man collapses on the platform and lies still on the ground."}
+  - {label: person_down, summary: "A woman slips on the stairs and stays lying at the bottom."}
+  - {label: person_down, summary: "A person is lying motionless on the pavement while people walk past."}
+  - {label: accident, summary: "A car hits a scooter at the junction and the rider falls onto the road."}
+  - {label: accident, summary: "Two cars collide head-on and one of them spins across the lane."}
+  - {label: accident, summary: "A truck overturns on the highway and its load spills onto the road."}
+  - {label: theft, summary: "A man on a bike snatches a woman's chain and rides away quickly."}
+  - {label: theft, summary: "A person grabs a bag from a parked scooter and runs off."}
+  - {label: theft, summary: "Someone lifts a phone from a table at the stall and walks away fast."}
+  - {label: vandalism, summary: "A man sprays paint on the wall of the government office at night."}
+  - {label: vandalism, summary: "A person kicks and breaks the glass of a bus shelter, alone."}
+  - {label: vandalism, summary: "A young man smashes the side mirror of a parked car with a stick, then walks off."}
+  - {label: crowd_incident, summary: "The crowd at the temple gate suddenly runs in all directions and people fall."}
+  - {label: crowd_incident, summary: "The station entrance is packed so tightly that people are being crushed against the barrier."}
+  - {label: crowd_incident, summary: "People push and surge towards a narrow exit and several are pressed against the railing."}
+  - {label: tailgating, summary: "Two people walk through the office entrance one right behind the other on a single card swipe."}
+  - {label: tailgating, summary: "A man follows closely behind an employee through the security door before it closes."}
+  - {label: tailgating, summary: "Three people pass the turnstile together, the second and third right behind the first."}
+  - {label: suspicious_activity, summary: "A backpack is left alone near the pillar for a long time after its owner walks away."}
+  - {label: suspicious_activity, summary: "A man stands in the same corner of the parking lot for twenty minutes, looking around."}
+  - {label: suspicious_activity, summary: "A suitcase stays unattended on the platform bench while no one is near it."}
+  # hard negatives: busy or emotional scenes that are not incidents (guardrail: peaceful gatherings are none)
+  - {label: none, summary: "A large crowd walks in a peaceful procession carrying flags and banners and chanting."}
+  - {label: none, summary: "People dance and play drums on the street during a festival."}
+  - {label: none, summary: "Shoppers walk between the market stalls and a vendor talks to a customer."}
+  - {label: none, summary: "A couple jogs along the park path at an even pace."}
+  - {label: none, summary: "Two friends hug and laugh near the gate."}
+  - {label: none, summary: "Police officers stand near their vehicle and talk with a shopkeeper."}
+  - {label: none, summary: "A cook lights a gas stove at a food stall and a small flame burns under the pan."}
+  - {label: none, summary: "People sit quietly on the ground at a protest site listening to a speaker."}
+  - {label: none, summary: "Children play cricket in the lane and one of them runs to catch the ball."}
