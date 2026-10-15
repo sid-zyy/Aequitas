@@ -84,8 +84,8 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
         "- Name the main action with a specific verb (walking, running, punching, pushing, handcuffing, "
         "falling, crashing, burning). Never write vague phrases such as 'some action', 'interacting' or "
         "'engaged in an activity'. Do not start with 'Four frames show'; describe the scene directly.\n"
-        "- Mention police or other uniforms, handcuffs, weapons, fire, smoke, and crashed or damaged vehicles "
-        "whenever they are visible.\n"
+        "- Mention police or other uniforms, handcuffs, knives, guns or raised sticks, flames, smoke, and "
+        "crashed or damaged vehicles whenever they are visible.\n"
         f"{length}"
         "Respond with JSON only."
     )
