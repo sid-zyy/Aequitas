@@ -71,7 +71,16 @@ class JobQueue:
         with self._cv:
             if not self._jobs and not self._cv.wait(timeout):
                 return None
-            return self._jobs.pop(0) if self._jobs else None
+            job = self._jobs.pop(0) if self._jobs else None
+            self._cv.notify_all()  # wakes a file source waiting for room
+            return job
+
+    def wait_room(self, camera_id: str, limit: int, stop: threading.Event) -> None:
+        """Blocks while this camera already has `limit` jobs waiting. File sources use it so every
+        window gets analysed (backpressure) instead of being stretched or dropped."""
+        with self._cv:
+            while not stop.is_set() and sum(j.camera_id == camera_id for j in self._jobs) >= limit:
+                self._cv.wait(0.5)
 
     def pending(self, camera_id: str) -> int:
         with self._cv:
@@ -158,7 +167,8 @@ class Pipeline:
     def _camera_loop(self, cam: CameraCfg) -> None:
         source = FrameSource(cam, self.s.sample_fps).start()
         ring = RingBuffer(self.s.ring_buffer_s, self.s.ring_buffer_max_width)
-        step = self._triggered_step(cam, ring) if self.mode == "triggered" else self._periodic_step(cam, ring)
+        step = (self._triggered_step(cam, ring) if self.mode == "triggered"
+                else self._periodic_step(cam, ring, live=source.live))
         n = 0
         for frame in source.frames():
             if self._stop.is_set():
@@ -233,7 +243,9 @@ class Pipeline:
 
         return step
 
-    def _periodic_step(self, cam: CameraCfg, ring: RingBuffer):
+    def _periodic_step(self, cam: CameraCfg, ring: RingBuffer, live: bool = True):
+        """live: a camera stream that cannot wait, so windows stretch when the VLM is slow. A file
+        (live=False) gets fixed-length windows and waits for the VLM instead, so none of it is skipped."""
         window_ms = int(self.s.analysis.window_s * 1000)
 
         state = {"start": None, "last": None, "last_vlm": None}
@@ -263,9 +275,15 @@ class Pipeline:
             state["last"] = (frame.ts_ms, frame.wall_ns)
             if state["start"] is None:
                 state["start"] = frame.ts_ms
-            # Queue a window only once the previous one has been taken: if the VLM is slower than
-            # real time, windows grow longer instead of piling up.
-            if frame.ts_ms - state["start"] >= window_ms and not self.queue.pending(cam.camera_id):
+            if frame.ts_ms - state["start"] < window_ms:
+                return
+            if not live:
+                # File: every window is analysed; reading waits while `concurrency` windows are queued.
+                self.queue.wait_room(cam.camera_id, max(1, self.s.vlm.concurrency), self._stop)
+                emit(frame.ts_ms, frame.wall_ns)
+            elif not self.queue.pending(cam.camera_id):
+                # Live: queue a window only once the previous one has been taken; if the VLM is slower
+                # than real time, windows grow longer instead of piling up.
                 emit(frame.ts_ms, frame.wall_ns)
 
         def flush() -> None:

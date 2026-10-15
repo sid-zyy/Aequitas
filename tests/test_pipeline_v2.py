@@ -468,3 +468,31 @@ def test_static_windows_skip_the_vlm(periodic_pipeline):
     assert rows == s["skipped_static"]
     # ...but the VLM still looks at least every max_skip_s: windows queued = 10 s / ~3 s + first one
     assert p.order.ticket("cam1") >= 3
+
+
+def test_file_sources_analyse_every_window_even_with_a_slow_vlm(periodic_pipeline):
+    """Regression: uploads used to stretch windows while the VLM was busy, so most of a video was never
+    analysed (and total time looked fast for the wrong reason)."""
+    import numpy as np
+
+    from aequitas.ingest.ring_buffer import RingBuffer
+    from aequitas.types import Frame
+
+    p, store = periodic_pipeline
+    p.s.analysis.window_s = 1.0
+    p.s.vlm.concurrency = 2
+    p.vlm.delay = 0.05  # VLM much slower than reading frames
+    done = threading.Event()
+    workers = [threading.Thread(target=p._vlm_loop, args=(done,)) for _ in range(2)]
+    for w in workers:
+        w.start()
+    step = p._periodic_step(p.cameras[0], RingBuffer(12, 320), live=False)
+    rng = np.random.default_rng(1)
+    for i in range(41):  # 10 s at 4 fps, fed as fast as possible
+        step(Frame("cam1", i, i * 250, 0, rng.integers(0, 255, (60, 80, 3), dtype=np.uint8)))
+    done.set()
+    for w in workers:
+        w.join()
+    n = store._conn.execute("SELECT COUNT(*) FROM stage_timings WHERE kind='window'").fetchone()[0]
+    assert n == 10  # one per second of video, none stretched or dropped
+    assert store._conn.execute("SELECT COUNT(*) FROM dropped_candidates").fetchone()[0] == 0

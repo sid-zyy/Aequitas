@@ -50,6 +50,7 @@ class LlmEndpoint(BaseModel):
     # Output caps. Decode time grows with every output token, so the summary is kept short.
     max_tokens: int = 384  # any structured call (chat filter, grounded answer)
     summary_max_tokens: int = 128  # stage 1 JSON: <=35-word summary + <=8-word evidence
+    concise_summary: bool = True  # False = the original longer prompt (only to measure the time saved)
 
 
 class VlmCfg(LlmEndpoint):

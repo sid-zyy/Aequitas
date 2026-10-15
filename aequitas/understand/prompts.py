@@ -61,20 +61,26 @@ def _category_list(categories: dict[str, str] | None = None) -> str:
     return definition_list(categories or DEFAULT_CATEGORIES)
 
 
-def summarize_prompt(highlighted: bool = True) -> str:
+def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
+    """concise=False is the original, longer wording, kept only to measure the time the short one saves."""
     if highlighted:
         focus = _HIGHLIGHT + "Describe what the highlighted people or objects do.\n"
     else:
         focus = "\nDescribe what happens in the scene.\n"
+    if concise:
+        length = ("- summary: one or two short sentences (at most 35 words) describing what happens across the "
+                  "four frames.\n"
+                  "- visible_evidence: at most 8 words naming the most important thing you saw.\n")
+    else:
+        length = ("- summary: one or two plain sentences describing what happens across the four frames.\n"
+                  "- visible_evidence: a short phrase naming the most important thing you saw.\n")
     return (
         f"{_GRID}{focus}\n"
         "Rules:\n"
         "- Describe only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
         "- Say how many people there are, their posture (standing, walking, running, sitting, lying on the "
         "ground) and any contact between them, and whether any bag or object is left alone.\n"
-        "- summary: one or two short sentences (at most 35 words) describing what happens across the "
-        "four frames.\n"
-        "- visible_evidence: at most 8 words naming the most important thing you saw.\n"
+        f"{length}"
         "Respond with JSON only."
     )
 

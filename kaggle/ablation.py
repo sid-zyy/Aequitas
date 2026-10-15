@@ -44,9 +44,11 @@ PRECISIONS = ["fp16", "w8a8", "w4a16"]
 SPEC_EXTRAS = [("mtp", 1), ("mtp", 2), ("ngram", 4)]  # run on Gemma's best precision only
 GEMMA_DRAFTER = "google/gemma-4-E2B-it-assistant"
 CALIB_SAMPLES = 128
-BENCH_REQUESTS = 16
+# QUICK = a few samples per measurement (enough for the slides, ~half the GPU time). False = fuller run.
+QUICK = True
+BENCH_REQUESTS = 8 if QUICK else 16
 BENCH_CONCURRENCY = [1, 8]
-REAL_CLIPS_PER_CLASS = 10
+REAL_CLIPS_PER_CLASS = 5 if QUICK else 10
 PORT = 8000
 REPO = "https://github.com/sid-zyy/Aequitas.git"
 # Quantized checkpoints to keep for running locally (the rest are deleted to save disk). 4-bit ones are
@@ -544,11 +546,15 @@ def real_clips_eval(client, tile: int) -> dict:
     return {"real_accuracy": round(correct / len(REAL), 3), "real_clip_s": round(times[len(times) // 2], 3)}
 
 
-def make_test_video(path: Path, quiet_s: int = 20, fps: int = 8) -> float:
-    """Real clips separated by quiet stretches (a still frame), like CCTV: mostly nothing happens."""
+def make_test_video(path: Path, quiet_s: int = 20, fps: int = 8, n_clips: int = 8) -> float:
+    """Real clips separated by quiet stretches (a still frame), like CCTV: mostly nothing happens.
+    Alternates fight / no-fight clips. Returns the video length in seconds."""
     vw = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (640, 360))
     n = 0
-    for v_name, _, _ in REAL[: 2 * min(4, REAL_CLIPS_PER_CLASS)]:
+    fights = [r for r in REAL if r[1] == "fighting"]
+    calm = [r for r in REAL if r[1] != "fighting"]
+    order = [x for pair in zip(fights, calm) for x in pair][:n_clips]
+    for v_name, _, _ in order:
         cap = cv2.VideoCapture(str(REAL_PATHS[v_name]))
         src_fps = cap.get(cv2.CAP_PROP_FPS) or 25
         k, last = 0, None
@@ -569,15 +575,16 @@ def make_test_video(path: Path, quiet_s: int = 20, fps: int = 8) -> float:
     return n / fps
 
 
-def run_video(video: Path, concurrency: int, skip_static: float) -> dict:
+def run_video(video: Path, concurrency: int, skip_static: float, **vlm) -> dict:
+    """The real pipeline on a file, start to finish (the faculty's 'total execution time').
+    vlm: extra VlmCfg settings, e.g. concise_summary, summary_max_tokens, tile_px."""
     from aequitas.pipeline import Pipeline
 
-    s = Settings(data_dir=SCRATCH / f"run-{concurrency}-{skip_static}")
-    shutil.rmtree(s.data_dir, ignore_errors=True)
+    s = Settings(data_dir=SCRATCH / f"run-{time.time_ns()}")
     s.analysis.mode = "periodic"
     s.analysis.skip_static_below = skip_static
     s.vlm = s.vlm.model_copy(update={"backend": "openai", "host": f"http://127.0.0.1:{PORT}", "model": "m",
-                                     "concurrency": concurrency})
+                                     "concurrency": concurrency, **vlm})
     store = EventStore(s.db_path)
     cam = CameraCfg(camera_id="test", name="Test", source=str(video), realtime=False)
     t0 = time.perf_counter()
@@ -600,15 +607,16 @@ else:
     try:
         url = f"http://127.0.0.1:{PORT}"
         # 1. concurrency
-        b = run_bench(url, "m", ["summarize", "classify"], [1, 2, 4, 8, 16], 16, label="levers-concurrency",
+        levels = [1, 4, 8] if QUICK else [1, 2, 4, 8, 16]
+        b = run_bench(url, "m", ["summarize", "classify"], levels, BENCH_REQUESTS, label="levers-concurrency",
                       out_dir=OUT / "reports")
-        for c in ["1", "2", "4", "8", "16"]:
+        for c in map(str, levels):
             s_r, c_r = b["results"]["summarize"][c], b["results"]["classify"][c]
             lever("concurrency", int(c), window_s=secs((s_r["total_ms"].get("p50") or 0) + (c_r["total_ms"].get("p50") or 0)),
                   windows_per_s=s_r["requests_per_s"])
         # 2. image size, 3. summary cap
-        for tile in (224, 336, 448):
-            b = run_bench(url, "m", ["summarize"], [1, 8], 16, label=f"levers-tile{tile}", out_dir=OUT / "reports",
+        for tile in ((224, 448) if QUICK else (224, 336, 448)):
+            b = run_bench(url, "m", ["summarize"], [1, 8], BENCH_REQUESTS, label=f"levers-tile{tile}", out_dir=OUT / "reports",
                           grid_px=2 * tile)
             extra = {}
             if REAL:
@@ -617,7 +625,7 @@ else:
             lever("tile_px", tile, summary_s=secs(b["results"]["summarize"]["1"]["total_ms"].get("p50")),
                   summary_busy_s=secs(b["results"]["summarize"]["8"]["total_ms"].get("p50")), **extra)
         for cap in (64, 128):
-            b = run_bench(url, "m", ["summarize"], [1], 16, label=f"levers-cap{cap}", out_dir=OUT / "reports",
+            b = run_bench(url, "m", ["summarize"], [1], BENCH_REQUESTS, label=f"levers-cap{cap}", out_dir=OUT / "reports",
                           max_tokens={"summarize": cap})
             extra = {}
             if REAL:
@@ -625,8 +633,8 @@ else:
                 extra = real_clips_eval(client, 448)
             lever("summary_max_tokens", cap, summary_s=secs(b["results"]["summarize"]["1"]["total_ms"].get("p50")),
                   **extra)
-        # 4. whole video
-        if REAL:
+        # 4. whole video (QUICK: covered by the time-saved ladder below instead)
+        if REAL and not QUICK:
             video = SCRATCH / "test_video.mp4"
             dur = make_test_video(video)
             for conc, skip in [(1, 0.0), (8, 0.0), (8, 0.01)]:
@@ -649,3 +657,123 @@ else:
 
 shutil.make_archive(str(WORK / "ablation"), "zip", OUT)
 print("ablation.zip updated with the latency levers.")
+
+# %% [markdown]
+# ## Time saved by each fix (before → after, a few samples)
+#
+# One short test video (real clips with quiet stretches between them) through the real pipeline,
+# start to finish. Start from the original setup, then switch the fixes on one at a time:
+#
+# | Step | What changes |
+# |---|---|
+# | 0 baseline | 16-bit, one window at a time, original long summary, no output cap, 448 px tiles |
+# | 1 | + quantization (the recommended precision) |
+# | 2 | + 8 windows in flight (vLLM batching) |
+# | 3 | + short, capped summary |
+# | 4 | + skip static windows |
+# | 5 | + MTP speculative decoding (Gemma only) |
+#
+# Each step reports total execution time, the time saved against the baseline and against the previous
+# step, and how many events were found, so a fix that "saves" time by missing incidents is visible.
+# One video and one run per step: indicative, not a research-grade measurement.
+
+# %%
+LADDER = []
+LADDER_CLIPS = 4 if QUICK else 8
+
+
+def ladder_step(name: str, **kw) -> None:
+    try:
+        r = run_video(TEST_VIDEO, **kw)
+    except Exception as e:
+        r = {"error": str(e)[:300]}
+    base = LADDER[0]["total_execution_s"] if LADDER and "total_execution_s" in LADDER[0] else None
+    prev = next((x["total_execution_s"] for x in reversed(LADDER) if "total_execution_s" in x), None)
+    t = r.get("total_execution_s")
+    row = {"step": name, **r}
+    if t is not None and base:
+        row["saved_vs_baseline_s"] = round(base - t, 1)
+        row["saved_vs_baseline_pct"] = round(100 * (base - t) / base, 1)
+        row["speedup_x"] = round(base / t, 2) if t else None
+    if t is not None and prev:
+        row["saved_vs_previous_s"] = round(prev - t, 1)
+    LADDER.append(row)
+    with (OUT / "time_saved.jsonl").open("a") as f:
+        f.write(json.dumps(row) + "\n")
+    print(row)
+
+
+if not REAL:
+    print("Add the Real Life Violence Situations dataset to measure the time saved on a real video.")
+else:
+    lkey = best_row["model"] if best_row is not None else next(iter(MODELS))
+    lprec = best_row["precision"] if best_row is not None else "w4a16"
+    REAL_PATHS = {p.name: p for root in Path("/kaggle/input").glob("*") for p in root.rglob("*.mp4")}
+    TEST_VIDEO = SCRATCH / "time_saved.mp4"
+    video_s = make_test_video(TEST_VIDEO, quiet_s=15, n_clips=LADDER_CLIPS)
+    print(f"test video: {video_s:.0f} s, {LADDER_CLIPS} real clips; model {lkey}, recommended precision {lprec}")
+    ORIGINAL = dict(concise_summary=False, summary_max_tokens=512)  # the setup before the fixes
+
+    proc, _ = serve(MODELS[lkey], lkey)  # 16-bit
+    try:
+        ladder_step("0 baseline (16-bit, 1 at a time, long summary)", concurrency=1, skip_static=0.0, **ORIGINAL)
+        if lprec == "fp16":
+            ladder_step("1 + quantization (recommended is 16-bit: no change)", concurrency=1, skip_static=0.0,
+                        **ORIGINAL)
+    finally:
+        stop(proc)
+    if lprec != "fp16":
+        proc, _ = serve(str(quantize(MODELS[lkey], lprec)), lkey)
+        try:
+            ladder_step(f"1 + quantization ({lprec})", concurrency=1, skip_static=0.0, **ORIGINAL)
+            ladder_step("2 + 8 windows in flight (vLLM batching)", concurrency=8, skip_static=0.0, **ORIGINAL)
+            ladder_step("3 + short capped summary", concurrency=8, skip_static=0.0)
+            ladder_step("4 + skip static windows", concurrency=8, skip_static=0.01)
+        finally:
+            stop(proc)
+    else:
+        proc, _ = serve(MODELS[lkey], lkey)
+        try:
+            ladder_step("2 + 8 windows in flight (vLLM batching)", concurrency=8, skip_static=0.0, **ORIGINAL)
+            ladder_step("3 + short capped summary", concurrency=8, skip_static=0.0)
+            ladder_step("4 + skip static windows", concurrency=8, skip_static=0.01)
+        finally:
+            stop(proc)
+    if lkey == "gemma":
+        path = MODELS[lkey] if lprec == "fp16" else str(quantize(MODELS[lkey], lprec))
+        try:
+            proc, _ = serve(path, lkey, ("mtp", 1))
+            try:
+                ladder_step("5 + MTP speculative decoding", concurrency=8, skip_static=0.01)
+            finally:
+                stop(proc)
+        except Exception as e:
+            LADDER.append({"step": "5 + MTP speculative decoding", "error": str(e)[:300]})
+
+    td = pd.DataFrame(LADDER)
+    td.to_csv(OUT / "time_saved.csv", index=False)
+    cols = [c for c in ["step", "total_execution_s", "saved_vs_previous_s", "saved_vs_baseline_s",
+                        "saved_vs_baseline_pct", "speedup_x", "windows_analysed", "windows_skipped", "events",
+                        "error"] if c in td.columns]
+    text = ["", f"## Time saved by each fix ({lkey}, {video_s:.0f} s test video, one run per step, Kaggle T4)", "",
+            td[cols].astype(object).where(td[cols].notna(), "").to_markdown(index=False), ""]
+    ok = td.dropna(subset=["total_execution_s"]) if "total_execution_s" in td else td.iloc[0:0]
+    if len(ok) > 1:
+        first, last = ok.iloc[0], ok.iloc[-1]
+        text.append(f"**Overall: {first['total_execution_s']} s → {last['total_execution_s']} s for a "
+                    f"{video_s:.0f} s video ({first['total_execution_s'] / last['total_execution_s']:.1f}× faster, "
+                    f"{first['total_execution_s'] - last['total_execution_s']:.0f} s saved).**")
+        fig, ax = plt.subplots(figsize=(9, 4))
+        ax.barh([s.split(" (")[0] for s in ok["step"]][::-1], list(ok["total_execution_s"])[::-1], color="#3b82f6")
+        ax.axvline(video_s, color="grey", ls="--", lw=1)
+        ax.text(video_s, -0.6, " video length", color="grey", fontsize=8)
+        ax.set_xlabel("total execution time for the test video (s)  ← faster")
+        ax.set_title("Time saved by each fix (cumulative)")
+        fig.tight_layout()
+        fig.savefig(OUT / "time_saved.png", dpi=150)
+    with (OUT / "ABLATION.md").open("a", encoding="utf-8") as f:
+        f.write("\n".join(text) + "\n")
+    print("\n".join(text))
+
+shutil.make_archive(str(WORK / "ablation"), "zip", OUT)
+print("ablation.zip updated with the time-saved ladder.")

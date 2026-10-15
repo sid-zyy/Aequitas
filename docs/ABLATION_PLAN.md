@@ -4,7 +4,7 @@
 small, honest table and one chart: **latency vs accuracy vs memory** for each model × precision. This
 covers the quantization-study requirement and justifies the model we pick.
 
-**Budget.** $0, using Kaggle's free GPUs. About 4–5 GPU hours in one session (3–4 for the matrix, ~1 for the latency levers). Kaggle gives ~30 GPU
+**Budget.** $0, using Kaggle's free GPUs. About 2–3 GPU hours with QUICK = True (the default), 4–5 for the full run. Kaggle gives ~30 GPU
 hours per week, so this uses about a tenth of the weekly quota.
 
 ## 1. The matrix
@@ -75,6 +75,24 @@ A video's total time ≈ windows × time per window ÷ windows in flight.
 Summary: **all three faculty items help**, but in different places. vLLM batching cuts total video time
 the most; quantization and MTP cut per-request time. The levers that are ours (short output, smaller
 images, skipping static windows) stack on top.
+
+### Time saved by the fixes (the slide number)
+
+The notebook's last section runs one short test video (4 real clips with 15 s quiet stretches, ~80 s)
+through the real pipeline. It starts from the original setup and switches the fixes on cumulatively:
+baseline → + quantization → + 8 in flight → + short capped summary → + skip static windows
+(→ + MTP for Gemma). For each step it reports total execution time, seconds saved versus the
+previous step and the baseline, the speed-up (×), windows analysed/skipped and events found. Output:
+`time_saved.csv`, `time_saved.png`, and the "Overall: X s → Y s" line in `ABLATION.md`. It is a few
+samples, one run per step: indicative, labelled as such.
+
+**Bug found while building this (fixed):** uploaded files used to stretch windows while the VLM was
+busy, so most of a video was never analysed, and total time looked short for the wrong reason. File
+sources now get fixed windows and wait for the VLM (`JobQueue.wait_room`). Live cameras still stretch.
+Regression test: `test_file_sources_analyse_every_window_even_with_a_slow_vlm`.
+
+`QUICK = True` (default) keeps every measurement to a few samples: 8 bench requests, 5 real clips per
+class, a shorter lever sweep. About half the GPU time of the full run.
 
 ## 3. Procedure (Kaggle notebook `kaggle/ablation.ipynb`)
 
