@@ -166,6 +166,29 @@ class EventStore:
                 (end_ts, status, round(min(1.0, max(0.0, confidence)), 4), event_uid),
             )
 
+    def record_window(self, camera_id: str, start_ts: int, end_ts: int, summary: str | None, label: str | None,
+                      confidence: float | None, summarize_ms: float | None, classify_ms: float | None,
+                      lag_ms: float | None, keep: int = 200) -> None:
+        with self._lock, self._conn:
+            self._conn.execute(
+                "INSERT INTO windows(camera_id, start_ts, end_ts, summary, label, confidence, summarize_ms, "
+                "classify_ms, lag_ms, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (camera_id, start_ts, end_ts, summary, label, confidence, summarize_ms, classify_ms, lag_ms,
+                 int(time.time() * 1000)),
+            )
+            self._conn.execute(  # keep only the latest `keep` per camera
+                "DELETE FROM windows WHERE camera_id=? AND id <= "
+                "(SELECT id FROM windows WHERE camera_id=? ORDER BY id DESC LIMIT 1 OFFSET ?)",
+                (camera_id, camera_id, keep),
+            )
+
+    def recent_windows(self, camera_id: str, n: int = 5) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM windows WHERE camera_id=? ORDER BY id DESC LIMIT ?", (camera_id, n)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def record_stage(self, run_id: str | None, camera_id: str, kind: str, queue_ms: float | None,
                      summarize_ms: float | None, classify_ms: float | None, ok: bool) -> None:
         with self._lock, self._conn:

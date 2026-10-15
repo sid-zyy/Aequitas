@@ -150,3 +150,19 @@ CREATE TABLE IF NOT EXISTS reports (
 );
 CREATE INDEX IF NOT EXISTS ix_reports_sha ON reports(sha256);
 CREATE INDEX IF NOT EXISTS ix_reports_created ON reports(created_at);
+
+-- Every analysed window (incident or not): what the live dashboard shows per camera.
+CREATE TABLE IF NOT EXISTS windows (
+  id            INTEGER PRIMARY KEY,
+  camera_id     TEXT NOT NULL,
+  start_ts      INTEGER NOT NULL,
+  end_ts        INTEGER NOT NULL,
+  summary       TEXT,
+  label         TEXT,                       -- stage-2 category, or none; NULL if a stage failed
+  confidence    REAL,
+  summarize_ms  REAL,
+  classify_ms   REAL,
+  lag_ms        REAL,                       -- last frame captured -> result ready ("behind live")
+  created_at    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_windows_cam ON windows(camera_id, id);

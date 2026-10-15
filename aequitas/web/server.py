@@ -29,6 +29,7 @@ from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
 from aequitas.types import Status
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
+from aequitas.web.live import LiveManager, load_localities
 
 log = logging.getLogger(__name__)
 
@@ -372,6 +373,48 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             raise HTTPException(404, "video not found")
         media = {".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime"}
         return FileResponse(u["path"], media_type=media.get(Path(u["path"]).suffix.lower(), "application/octet-stream"))
+
+    # ---------- live CCTV dashboard ----------
+
+    live = LiveManager(settings, store, load_localities(settings.live.localities_file))
+    app.state.live = live
+
+    @app.get("/api/live/localities")
+    def live_localities():
+        return [{"id": loc.id, "name": loc.name,
+                 "cameras": [{"id": c.id, "name": c.name, "has_footage": live.has_footage(c.id)} for c in loc.cameras]}
+                for loc in live.localities.values()]
+
+    @app.post("/api/live/{locality_id}/start")
+    def live_start(locality_id: str, request: Request):
+        try:
+            live.start(locality_id)
+        except KeyError:
+            raise HTTPException(404, "unknown locality")
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "live_started", locality_id,
+                   ip=request.client.host if request.client else "")
+        return live.state(locality_id)
+
+    @app.post("/api/live/stop")
+    def live_stop():
+        live.stop()
+        return {"ok": True}
+
+    @app.get("/api/live/{locality_id}")
+    def live_state(locality_id: str):
+        try:
+            st = live.state(locality_id)
+        except KeyError:
+            raise HTTPException(404, "unknown locality")
+        st["concerns"] = [_event_json(e, store) for e in st["concerns"]]
+        return st
+
+    @app.get("/api/live/cameras/{camera_id}/video")
+    def live_video(camera_id: str):
+        if not live.has_footage(camera_id):  # only files named in the localities config are served
+            raise HTTPException(404, "no footage for this camera")
+        return FileResponse(live.cameras[camera_id].file, media_type="video/mp4")
 
     # ---------- citizen portal (public) ----------
 
