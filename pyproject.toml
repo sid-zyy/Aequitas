@@ -23,6 +23,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 nvidia = ["nvidia-ml-py>=12"]
+# AI-likelihood frame detector for citizen videos (aequitas/authenticity.py); c2pa reads content credentials
+detector = ["transformers>=4.40", "pillow>=10", "c2pa-python>=0.6"]
 
 [project.scripts]
 aequitas = "aequitas.cli:main"

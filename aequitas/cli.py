@@ -44,6 +44,10 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("init-db", help="create the database and register cameras")
 
+    cu = sub.add_parser("create-user", help="create a police account (prompts for the password)")
+    cu.add_argument("--username", required=True)
+    cu.add_argument("--role", choices=["admin", "officer"], default="officer")
+
     run = sub.add_parser("run", help="process camera streams and record events")
     run.add_argument("--camera", action="append", help="only these camera IDs (repeatable)")
     run.add_argument("--no-vlm", action="store_true", help="trigger-only mode, no VLM verification")
@@ -99,6 +103,24 @@ def main(argv: list[str] | None = None) -> int:
         for cam in load_cameras(args.cameras):
             store.upsert_camera(cam)
         print(f"Database ready at {settings.db_path}")
+        return 0
+
+    if args.cmd == "create-user":
+        import getpass
+
+        from aequitas.auth import Auth
+        from aequitas.store.db import EventStore
+
+        password = getpass.getpass("Password (10+ characters): ")
+        if password != getpass.getpass("Repeat password: "):
+            print("Passwords do not match.", file=sys.stderr)
+            return 2
+        try:
+            Auth(EventStore(settings.db_path)).create_user(args.username, password, args.role)
+        except Exception as e:  # bad input, or the username exists
+            print(f"Could not create the account: {e}", file=sys.stderr)
+            return 2
+        print(f"Created {args.role} account '{args.username}'.")
         return 0
 
     if args.cmd == "run":

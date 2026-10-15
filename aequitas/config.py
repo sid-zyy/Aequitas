@@ -8,6 +8,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
+from aequitas.authenticity import AuthenticityCfg
 from aequitas.taxonomy import DEFAULT_CATEGORIES, validate
 
 Point = tuple[float, float]  # normalised [0, 1] image coordinates
@@ -183,6 +184,19 @@ class TriggersCfg(BaseModel):
     abandoned_object: AbandonedCfg = AbandonedCfg()
 
 
+class AuthCfg(BaseModel):
+    required: bool = True  # police endpoints need a signed-in account; citizen endpoints never do
+    session_hours: float = 12
+    cookie_secure: bool = False  # True when served over HTTPS
+    max_failures: int = 5
+    lockout_s: float = 900
+
+
+class CitizenCfg(BaseModel):
+    max_upload_mb: int = 500
+    reports_per_hour_per_ip: int = 5
+
+
 class Settings(BaseModel):
     # Stage 2 label set: name -> one-line definition shown to the classifier (aequitas/taxonomy.py).
     categories: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_CATEGORIES))
@@ -200,6 +214,9 @@ class Settings(BaseModel):
     chat: ChatCfg = ChatCfg()
     fusion: FusionCfg = FusionCfg()
     triggers: TriggersCfg = TriggersCfg()
+    auth: AuthCfg = AuthCfg()
+    citizen: CitizenCfg = CitizenCfg()
+    authenticity: AuthenticityCfg = AuthenticityCfg()
 
     @field_validator("categories")
     @classmethod

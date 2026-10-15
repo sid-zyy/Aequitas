@@ -314,7 +314,7 @@ def test_upload_json_reports_total_execution_time_and_stages(tmp_path, monkeypat
     from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
-    s = Settings(data_dir=tmp_path)
+    s = Settings(data_dir=tmp_path, auth={"required": False})
     store = EventStore(s.db_path)
     app = web.create_app(s, ChatService(store, QuestionParser(None)),
                          [CameraCfg(camera_id="cam1", name="Gate", source="x.mp4")])
@@ -389,7 +389,7 @@ def test_stream_endpoint_emits_server_sent_events(tmp_path, monkeypatch):
     from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
-    s = Settings(data_dir=tmp_path)
+    s = Settings(data_dir=tmp_path, auth={"required": False})
     st = EventStore(s.db_path)
     app = web.create_app(s, ChatService(st, QuestionParser(None)), [CameraCfg(camera_id="cam1", name="Gate",
                                                                                source="x.mp4")])
