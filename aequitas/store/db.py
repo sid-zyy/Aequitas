@@ -62,6 +62,8 @@ MIGRATIONS = [
     ("events", "review", "TEXT"),       # officer decision: confirmed | dismissed (NULL = not reviewed yet)
     ("events", "reviewed_by", "TEXT"),
     ("events", "reviewed_at", "INTEGER"),
+    ("uploads", "summary_json", "TEXT"),  # bodycam: whole-recording overview + key points
+    ("uploads", "summary_ms", "REAL"),
 ]
 
 

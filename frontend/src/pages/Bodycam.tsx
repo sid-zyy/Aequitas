@@ -7,7 +7,7 @@ const mmss = (s: number) => {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 };
 const day = (ms: number) => new Date(ms).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-const running = (s: string) => s === "queued" || s === "processing" || s === "verifying";
+const running = (s: string) => ["queued", "processing", "verifying", "summarising"].includes(s);
 
 function UploadForm({ onDone }: { onDone: (r: Recording) => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -116,6 +116,8 @@ export default function Bodycam() {
   const [d, setD] = useState<RecordingDetail | null>(null);
   const [now, setNow] = useState(0);
   const [showLog, setShowLog] = useState(false);
+  const [summarising, setSummarising] = useState(false);
+  const [sumError, setSumError] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const choose = (id: string) => setParams({ id });
 
@@ -141,6 +143,20 @@ export default function Bodycam() {
     if (!d) return;
     const upd = await api.reviewMoment(d.id, ev.id, decision);
     setD({ ...d, events: d.events.map((e) => (e.id === upd.id ? upd : e)) });
+  }
+
+  async function resummarise() {
+    if (!d) return;
+    setSummarising(true);
+    setSumError(null);
+    try {
+      const r = await api.summarizeRecording(d.id);
+      setD({ ...d, summary: r.summary, summary_s: r.summary_s });
+    } catch (err) {
+      setSumError((err as Error).message);
+    } finally {
+      setSummarising(false);
+    }
   }
 
   const s = d?.stages;
@@ -184,6 +200,28 @@ export default function Bodycam() {
             </div>
             <div className="card-body" style={{ display: "grid", gap: 14 }}>
               {d.error && <div className="error">{d.error}</div>}
+              {d.summary ? (
+                <div className="bc-summary">
+                  <div className="section-label">Summary of the recording · AI draft</div>
+                  <p>{d.summary.overview}</p>
+                  {d.summary.key_points.length > 0 && (
+                    <ol>
+                      {d.summary.key_points.map((k, i) => (
+                        <li key={i}><button className="btn ghost mono" onClick={() => seek(k.t)}>▶ {k.time}</button> {k.point}</li>
+                      ))}
+                    </ol>
+                  )}
+                  <div className="note" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    Written from the 4 s summaries{d.summary_s != null ? ` in ${d.summary_s.toFixed(1)} s` : ""}.
+                    <button className="btn ghost" disabled={summarising} onClick={resummarise} style={{ marginLeft: "auto" }}>
+                      {summarising ? "Rewriting…" : "Rewrite with officer decisions"}
+                    </button>
+                  </div>
+                </div>
+              ) : d.status === "done" && (
+                <div className="note">No summary yet. <button className="btn ghost" disabled={summarising} onClick={resummarise}>{summarising ? "Writing…" : "Write summary"}</button></div>
+              )}
+              {sumError && <div className="error">{sumError}</div>}
               <video ref={video} className="player" src={d.video_url} controls onTimeUpdate={(e) => setNow(e.currentTarget.currentTime)} />
               <Timeline d={d} now={now} seek={seek} />
               {current?.summary && (

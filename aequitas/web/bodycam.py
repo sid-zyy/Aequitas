@@ -7,6 +7,7 @@ AI-detected moment waits for an officer's decision (confirm / dismiss); the repo
 from __future__ import annotations
 
 import html
+import json
 import time
 import uuid
 from datetime import datetime
@@ -47,6 +48,16 @@ def timeline(upload: dict, windows: list[dict], events: list[dict]) -> dict:
     }
 
 
+def overview_html(upload: dict) -> str:
+    if not upload.get("summary_json"):
+        return ""
+    s = json.loads(upload["summary_json"])
+    e = html.escape
+    points = "".join(f"<li><b>{e(k['time'])}</b> {e(k['point'])}</li>" for k in s.get("key_points", []))
+    return (f"<h2>Summary of the recording (AI draft)</h2><p>{e(s.get('overview', ''))}</p>"
+            + (f"<h2>Points to review</h2><ul>{points}</ul>" if points else ""))
+
+
 def report_html(upload: dict, tl: dict, total_s: float | None) -> str:
     """A printable report. Officer decisions are shown next to the AI's; unreviewed moments are marked."""
     e = html.escape
@@ -78,11 +89,29 @@ th{{background:#eee}}.warn{{border:1px solid #c80;background:#fff6e0;padding:8px
 <dt>Analysed in</dt><dd>{f'{total_s:.1f} s' if total_s is not None else '-'} (model {e(upload['vlm_model'] or '')})</dd></dl>
 <p class="warn">AI-generated draft. The AI describes what is visible and never identifies people. Every moment must
 be checked against the video by an officer; {unreviewed} of {len(tl['events'])} are not reviewed yet.</p>
-<h2>Key moments</h2><table>{head}{rows(moments)}</table>
+{overview_html(upload)}
+<h2>Key moments (AI-detected incidents)</h2><table>{head}{rows(moments)}</table>
 <h2>Dismissed by an officer</h2><table>{head}{rows(dismissed)}</table>
 <h2>Full timeline (every analysed {e('4 s')} window)</h2><table><tr><th>Time</th><th>Label</th><th>Summary</th></tr>{log_rows}</table>
 <p style="color:#666;margin-top:24px">Generated {datetime.now().astimezone():%d %b %Y, %H:%M} by Aequitas.</p>
 </body></html>"""
+
+
+def make_summary(settings: Settings, store: EventStore, upload: dict) -> dict | None:
+    """Overview + key points from the recording's window summaries (aequitas/understand/recording_summary.py),
+    stored on the upload. Officer-confirmed moments are passed in so the overview can mention them."""
+    from aequitas.understand.recording_summary import mmss as _mmss
+    from aequitas.understand.recording_summary import summarize_recording
+    from aequitas.understand.vlm_client import make_client
+
+    tl = timeline(upload, store.windows_for(upload["camera_id"]), store.events_for(upload["camera_id"]))
+    confirmed = [f"{_mmss(e['t'])} {cat_label(e['category'])}" for e in tl["events"] if e["review"] == "confirmed"]
+    ep = settings.chat.endpoint(settings.vlm).model_copy(update={"model": upload.get("vlm_model") or settings.vlm.model})
+    summary, ms = summarize_recording(make_client(ep), tl["windows"], confirmed)
+    if summary is not None:
+        summary["model"] = ep.model
+        store.update_upload(upload["upload_id"], summary_json=json.dumps(summary), summary_ms=round(ms, 1))
+    return summary
 
 
 def register(app: FastAPI, settings: Settings, store: EventStore, jobs, auth, upload_dir: Path,
@@ -98,7 +127,8 @@ def register(app: FastAPI, settings: Settings, store: EventStore, jobs, auth, up
     def _json(u: dict) -> dict:
         cam = store.camera(u["camera_id"]) or {}
         return {**upload_json({**u, "camera_name": cam.get("name")}), "officer": u.get("officer"),
-                "view": u.get("view")}
+                "view": u.get("view"), "summary": json.loads(u["summary_json"]) if u.get("summary_json") else None,
+                "summary_s": round(u["summary_ms"] / 1000, 2) if u.get("summary_ms") else None}
 
     def _get(upload_id: str) -> dict:
         u = store.upload(upload_id)
@@ -172,6 +202,17 @@ def register(app: FastAPI, settings: Settings, store: EventStore, jobs, auth, up
         store.review_event(event_id, body.decision, by)
         _audit(request, "bodycam_event_reviewed", f"{upload_id}/{event_id}", {"decision": body.decision})
         return timeline(u, [], [store.event(event_id)])["events"][0]
+
+    @app.post("/api/bodycam/{upload_id}/summary")
+    def bodycam_summary(upload_id: str, request: Request):
+        """(Re)write the overview, e.g. after an officer confirmed moments."""
+        u = _get(upload_id)
+        if u["status"] != "done":
+            raise HTTPException(409, "The recording is still being analysed")
+        if make_summary(settings, store, u) is None:
+            raise HTTPException(503, "The AI could not write a summary (no window summaries, or the model is offline)")
+        _audit(request, "bodycam_summary_written", upload_id)
+        return _json(store.upload(upload_id))
 
     @app.get("/api/bodycam/{upload_id}/report", response_class=HTMLResponse)
     def bodycam_report(upload_id: str, request: Request):

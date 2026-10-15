@@ -278,8 +278,8 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         done = live.get("frames_done", u["frames_done"])
         total = u["frames_total"] or 0
         status = u["status"]
-        if status == "processing" and live.get("phase") == "verifying":
-            status = "verifying"
+        if status == "processing" and live.get("phase") in ("verifying", "summarising"):
+            status = live["phase"]
         return {
             "id": u["upload_id"], "camera_id": u["camera_id"], "camera_name": u.get("camera_name"),
             "filename": u["filename"], "status": status, "mode": u["mode"], "vlm_model": u["vlm_model"],

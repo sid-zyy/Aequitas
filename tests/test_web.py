@@ -174,3 +174,27 @@ def test_bodycam_jobs_use_close_view_and_keep_every_window(tmp_path):
     for i in range(5):
         store.record_window("bodycam-x", i * 4000, i * 4000 + 4000, "s", "none", None, 1, 1, 1, keep=3)
     assert len(store.windows_for("bodycam-x")) == 3  # the default keeps the newest; bodycam jobs raise the limit
+
+
+def test_bodycam_summary_endpoint_and_report(client, monkeypatch):
+    from aequitas.understand import recording_summary as rs
+    from aequitas.web import bodycam
+
+    vid = _video(client.tmp / "b2.mp4", seconds=3)
+    rec = client.post("/api/bodycam", files={"file": ("c.mp4", vid.read_bytes())}).json()
+    up = client.store.upload(rec["id"])
+    assert client.post(f"/api/bodycam/{rec['id']}/summary").status_code == 409  # still queued
+    client.store.update_upload(rec["id"], status="done")
+    t0 = up["start_ts"]
+    client.store.record_window(up["camera_id"], t0, t0 + 4000, "A man runs past the officer.", "chase", None, 1, 1, 1)
+
+    class Fake:
+        def structured(self, messages, model_cls, retries=1, max_tokens=None):
+            return rs.RecordingSummary(overview="A man runs past.", key_points=[rs.KeyPoint(time="00:00", point="run")])
+    monkeypatch.setattr("aequitas.understand.vlm_client.make_client", lambda ep: Fake())
+    d = client.post(f"/api/bodycam/{rec['id']}/summary").json()
+    assert d["summary"]["overview"] == "A man runs past." and d["summary"]["key_points"][0]["time"] == "00:00"
+    assert client.get(f"/api/bodycam/{rec['id']}").json()["summary"]["key_points"][0]["point"] == "run"
+    rep = client.get(f"/api/bodycam/{rec['id']}/report").text
+    assert "Summary of the recording (AI draft)" in rep and "A man runs past." in rep
+    assert bodycam.overview_html({"summary_json": None}) == ""

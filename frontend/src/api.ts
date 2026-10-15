@@ -80,6 +80,8 @@ export type Recording = {
   id: string; filename: string; officer: string | null; status: string; progress: number; duration_s: number;
   start_ts: number; created_at: number; total_s: number | null; events_found: number; error: string | null;
   vlm_model: string; vlm_backlog: number; stages: StageSummary; view: string | null;
+  summary: { overview: string; key_points: { time: string; t: number; point: string }[]; model?: string } | null;
+  summary_s: number | null;
 };
 export type BodyWindow = { t: number; end: number; label: string | null; summary: string | null; source: string | null; violence: number | null };
 export type BodyEvent = {
@@ -111,6 +113,7 @@ export const api = {
   recordings: () => request<Recording[]>("/api/bodycam"),
   recording: (id: string) => request<RecordingDetail>(`/api/bodycam/${id}`),
   uploadRecording: (form: FormData) => request<Recording>("/api/bodycam", { method: "POST", body: form }),
+  summarizeRecording: (id: string) => request<Recording>(`/api/bodycam/${id}/summary`, { method: "POST" }),
   reviewMoment: (id: string, eventId: number, decision: "confirmed" | "dismissed" | null) =>
     request<BodyEvent>(`/api/bodycam/${id}/events/${eventId}/review`, json({ decision })),
   reportStatus: (id: string, code: string) =>

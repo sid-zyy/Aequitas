@@ -65,7 +65,7 @@ class JobManager:
         with self._lock:
             live = dict(self._live.get(upload_id, {}))
             p = self._pipelines.get(upload_id)
-        if p is not None:
+        if p is not None and live.get("phase") != "summarising":
             live["vlm_backlog"] = len(p.queue)
             live["phase"] = p.phase
         return live
@@ -136,6 +136,15 @@ class JobManager:
         pipeline.run()
 
         cancelled = upload_id in self._cancelled
+        if row.get("kind") == "bodycam" and use_vlm and not cancelled:
+            from aequitas.web.bodycam import make_summary
+
+            with self._lock:
+                self._live[upload_id]["phase"] = "summarising"
+            try:
+                make_summary(s, self.store, self.store.upload(upload_id))
+            except Exception:
+                log.exception("recording summary failed for %s", upload_id)
         with self._lock:
             done = self._live.get(upload_id, {}).get("frames_done", 0)
         self.store.update_upload(
