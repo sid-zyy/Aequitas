@@ -33,7 +33,7 @@ Backend = Literal["ollama", "openai"]  # openai = any OpenAI-compatible LOCAL se
 class LlmEndpoint(BaseModel):
     backend: Backend = "ollama"
     host: str = "http://127.0.0.1:11434"
-    model: str = "qwen2.5vl:3b"
+    model: str = "gemma4:e2b"
     api_key_env: str | None = None  # env var holding a key, for local servers that require one
     allow_remote: bool = False  # refuse non-local hosts so no cloud API is used by accident
     # Ollama 'think' flag. False keeps reasoning models (Gemma 4, Qwen3) from spending time on hidden
