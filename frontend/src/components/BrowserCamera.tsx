@@ -70,7 +70,7 @@ export default function BrowserCamera({ cameraId, running }: { cameraId: string;
   return (
     <>
       <video ref={video} autoPlay muted playsInline style={{ transform: "scaleX(-1)" }} />
-      <div className="video-overlay right mono" style={{ top: 8, bottom: "auto" }}>
+      <div className="video-overlay mono" style={{ top: "auto", bottom: 8 }}>
         {running ? `sending ${FPS} fps · ${sent} frames` : "select this locality to start analysis"}
       </div>
     </>
