@@ -1,0 +1,11 @@
+# Demo-clip run A: what the dashboard does (periodic 4 s windows, Gemma E2B + violence clip model).
+data_dir: data/eval/demo
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: gemma4:e2b
+  tile_px: 448

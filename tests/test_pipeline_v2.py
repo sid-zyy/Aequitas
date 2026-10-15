@@ -613,3 +613,20 @@ def test_pipeline_rechecks_flagged_windows_with_the_big_model(periodic_pipeline)
     w = store.recent_windows("cam1", 1)[0]
     assert w["label"] == "none" and "rechecked:big-model" in w["source"]
     assert store._conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0  # false alarm avoided
+
+
+def test_missing_violence_model_folder_does_not_stop_the_pipeline(tmp_path, monkeypatch):
+    from aequitas.pipeline import Pipeline
+
+    class Fake(FakeVlm):
+        def __init__(self, cfg):
+            FakeVlm.__init__(self)
+            self.cfg, self.model = cfg, cfg.model
+
+        def ping(self):
+            return True
+
+    monkeypatch.setattr(vlm_client, "make_client", lambda cfg: Fake(cfg))
+    s = Settings(data_dir=tmp_path, analysis={"mode": "periodic"}, models={"violence_dir": str(tmp_path / "nope")})
+    p = Pipeline(s, [], EventStore(s.db_path))
+    assert p.violence_model is None

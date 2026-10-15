@@ -1,0 +1,13 @@
+# Demo-clip run B: run A + Gemma E4B re-checks the windows E2B flags or the clip model scores >= 0.35.
+data_dir: data/eval/demo_cascade
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+escalation:
+  model: gemma4:e4b-it-qat
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: gemma4:e2b
+  tile_px: 448

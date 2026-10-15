@@ -200,6 +200,9 @@ class AuthCfg(BaseModel):
     cookie_secure: bool = False  # True when served over HTTPS
     max_failures: int = 5
     lockout_s: float = 900
+    # Fresh clone = empty database = nobody can sign in. Create admin/admin when there are no users at all
+    # (flagged in the audit log). Demo only: the server listens on 127.0.0.1; set false for real use.
+    demo_admin: bool = True
 
 
 class CitizenCfg(BaseModel):

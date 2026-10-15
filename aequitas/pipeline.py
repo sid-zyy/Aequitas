@@ -8,6 +8,7 @@ connected by a bounded job queue. Understanding is two stages: [1] the VLM summa
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 import threading
 import time
 import uuid
@@ -117,7 +118,11 @@ class Pipeline:
             self.pose = PoseEstimator(settings.detector.pose_weights, settings.detector.backend, self.device)
         self.violence_model = self.hazard_detector = None
         m = settings.models
-        if m.violence_dir:  # triggered: fight trigger; periodic: second signal per window
+        if m.violence_dir and not (Path(m.violence_dir) / "violence_clip.onnx").exists():
+            # not in git (127 MB): a fresh clone runs without it rather than failing to start
+            log.warning("violence model not found in %s (download violence_clip.zip from the Kaggle run "
+                        "or the release); running without it", m.violence_dir)
+        elif m.violence_dir:  # triggered: fight trigger; periodic: second signal per window
             from aequitas.vision.violence import ViolenceModel
 
             self.violence_model = ViolenceModel(m.violence_dir)
