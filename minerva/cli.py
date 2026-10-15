@@ -63,6 +63,15 @@ def main(argv: list[str] | None = None) -> int:
     spike.add_argument("--video", default=None, help="sample frames from this video instead of a stock image")
     spike.add_argument("--vlm-iters", type=int, default=3)
 
+    bench = sub.add_parser("bench", help="latency of summarize/classify/chat on an OpenAI-compatible server")
+    bench.add_argument("--host", default=None, help="server URL (default: vlm.host from settings)")
+    bench.add_argument("--model", default=None, help="served model name (default: vlm.model)")
+    bench.add_argument("--tasks", nargs="+", default=["summarize", "classify", "chat"],
+                       choices=["summarize", "classify", "chat"])
+    bench.add_argument("--concurrency", nargs="+", type=int, default=[1, 4, 16])
+    bench.add_argument("--requests", type=int, default=16, help="requests per concurrency level")
+    bench.add_argument("--label", default="", help="e.g. w4a16-mtp, used in the report name")
+
     sub.add_parser("stats", help="per-stage latency summary of recorded events")
 
     rep = sub.add_parser("eval-report", help="score recorded events per clip against expected labels")
@@ -113,6 +122,19 @@ def main(argv: list[str] | None = None) -> int:
         from minerva.eval.spike import run_spike, summarize
 
         print(summarize(run_spike(settings, args.models, args.video, vlm_iters=args.vlm_iters)))
+        return 0
+
+    if args.cmd == "bench":
+        from minerva.eval.bench import run_bench
+
+        host = args.host or settings.vlm.host
+        if args.host is None and settings.vlm.backend == "ollama":
+            host = host.rstrip("/") + "/v1"  # Ollama's OpenAI-compatible endpoint
+        report = run_bench(host, args.model or settings.vlm.model, args.tasks, args.concurrency, args.requests,
+                           label=args.label, out_dir=settings.data_dir / "reports",
+                           allow_remote=settings.vlm.allow_remote)
+        print(Path(report["_path"]).read_text(encoding="utf-8"))
+        print(f"Report: {report['_path']}")
         return 0
 
     if args.cmd == "stats":

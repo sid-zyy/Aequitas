@@ -13,6 +13,36 @@
 
 The dataset arrives soon. Everything below is built so the dataset only needs an adapter and labels.
 
+## The GPU laptop (recorded 2026-10-15)
+
+| Fact | Value |
+|---|---|
+| GPU | NVIDIA GeForce RTX 4050 Laptop GPU |
+| VRAM | **6 GB** (6141 MiB) |
+| Compute capability | **8.9** (Ada): FP8 is supported |
+| Driver | 592.82 (CUDA 13.1) |
+
+**What 6 GB means.** Gemma 4 E2B has 5.1 B parameters in total (2.3 B effective; the rest are
+per-layer embeddings), so its **BF16 weights are ~10 GB and do not fit** in VRAM. vLLM's recipe lists
+E2B/E4B for 24 GB+ GPUs. Consequences:
+- The BF16 baseline can only run with `--cpu-offload-gb` (slow). Measure it anyway: it is the
+  accuracy reference, and its latency shows what quantization buys.
+- Quantization is what makes the model fit here at all: FP8 (~5 GB of weights) is borderline once the
+  KV cache and the Windows desktop are counted, and W4A16 is the likely default. This is a real finding
+  for the quantization report, not a footnote.
+- Whether the per-layer embeddings are quantized decides most of the size. Check it per recipe.
+- E4B will not fit unquantized; try it only at 4 bit.
+
+**Verified model IDs (HF, Apache 2.0, not gated):** `google/gemma-4-E2B-it`, `google/gemma-4-E4B-it`.
+MTP drafters: `google/gemma-4-E2B-it-assistant`, `google/gemma-4-E4B-it-assistant`.
+
+**Correction to the earlier plan:** Gemma 4 MTP in vLLM *does* use a separate checkpoint. The
+`-assistant` model is passed as the speculator:
+`--speculative-config '{"method":"mtp","model":"google/gemma-4-E2B-it-assistant","num_speculative_tokens":1}'`.
+Older vLLM releases treat it as a generic draft model and fail on multimodal targets
+(vllm-project/vllm#42005). If the log shows `method='draft_model'`, upgrade vLLM.
+`scripts/vllm/serve.sh` builds these flags.
+
 ## Pipeline v2: the three tasks
 
 ```

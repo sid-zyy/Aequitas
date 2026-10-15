@@ -44,6 +44,16 @@ class Timings:
     db_ms: float | None = None
     proc_ms: float | None = None
     e2e_ms: float | None = None
+    summarize_ms: float | None = None
+    classify_ms: float | None = None
+
+
+# Columns added after the first release: (table, column, type). Older databases get them on open.
+MIGRATIONS = [
+    ("event_timings", "summarize_ms", "REAL"),
+    ("event_timings", "classify_ms", "REAL"),
+    ("uploads", "started_at", "INTEGER"),
+]
 
 
 class EventStore:
@@ -59,6 +69,14 @@ class EventStore:
         schema = resources.files("minerva.store").joinpath("schema.sql").read_text(encoding="utf-8")
         with self._lock:
             self._conn.executescript(schema)
+            self._migrate()
+
+    def _migrate(self) -> None:
+        for table, column, kind in MIGRATIONS:
+            have = {r["name"] for r in self._conn.execute(f"PRAGMA table_info({table})")}
+            if column not in have:
+                self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
+        self._conn.commit()
 
     def close(self) -> None:
         with self._lock:
@@ -97,9 +115,9 @@ class EventStore:
                 timings.db_ms = (time.perf_counter() - t0) * 1000
                 self._conn.execute(
                     "INSERT INTO event_timings(event_id, detect_ms, trigger_ms, queue_ms, vlm_ms, db_ms, proc_ms, "
-                    "e2e_ms) VALUES (?,?,?,?,?,?,?,?)",
+                    "e2e_ms, summarize_ms, classify_ms) VALUES (?,?,?,?,?,?,?,?,?,?)",
                     (event_id, timings.detect_ms, timings.trigger_ms, timings.queue_ms, timings.vlm_ms,
-                     timings.db_ms, timings.proc_ms, timings.e2e_ms),
+                     timings.db_ms, timings.proc_ms, timings.e2e_ms, timings.summarize_ms, timings.classify_ms),
                 )
         return event_id
 
@@ -122,6 +140,32 @@ class EventStore:
                 "UPDATE events SET end_ts=MAX(end_ts, ?), status=?, confidence=? WHERE event_uid=?",
                 (end_ts, status, round(min(1.0, max(0.0, confidence)), 4), event_uid),
             )
+
+    def record_stage(self, run_id: str | None, camera_id: str, kind: str, queue_ms: float | None,
+                     summarize_ms: float | None, classify_ms: float | None, ok: bool) -> None:
+        with self._lock, self._conn:
+            self._conn.execute(
+                "INSERT INTO stage_timings(run_id, camera_id, kind, queue_ms, summarize_ms, classify_ms, ok, "
+                "created_at) VALUES (?,?,?,?,?,?,?,?)",
+                (run_id, camera_id, kind, queue_ms, summarize_ms, classify_ms, int(ok), int(time.time() * 1000)),
+            )
+
+    def stage_summary(self, run_id: str) -> dict:
+        """Per-stage totals for one run: job count, and sum/mean ms of each stage."""
+        with self._lock:
+            r = self._conn.execute(
+                "SELECT COUNT(*) AS jobs, SUM(ok) AS ok, SUM(summarize_ms) AS sum_s, AVG(summarize_ms) AS avg_s, "
+                "SUM(classify_ms) AS sum_c, AVG(classify_ms) AS avg_c, AVG(queue_ms) AS avg_q "
+                "FROM stage_timings WHERE run_id=?", (run_id,),
+            ).fetchone()
+
+        def rnd(v):
+            return round(v, 1) if v is not None else None
+
+        return {"jobs": r["jobs"], "ok": r["ok"] or 0,
+                "summarize_ms": {"total": rnd(r["sum_s"]), "mean": rnd(r["avg_s"])},
+                "classify_ms": {"total": rnd(r["sum_c"]), "mean": rnd(r["avg_c"])},
+                "queue_ms": {"mean": rnd(r["avg_q"])}}
 
     def record_dropped(self, camera_id: str, ts: int, category: str, score: float, reason: str) -> None:
         with self._lock, self._conn:

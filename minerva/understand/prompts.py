@@ -1,5 +1,10 @@
-"""VLM prompt and its forced output schema. The prompt never says which rule fired, so the
-VLM's answer is an independent check rather than an echo."""
+"""Prompts and forced output schemas for the two understanding stages (docs/HACKATHON_PLAN.md):
+
+1. summarize: the VLM describes what is visible. It is never shown the category list, so the summary
+   is not steered towards a label.
+2. classify: a text-only call labels the summary, constrained to the category list plus "none".
+
+The prompts never say which rule fired, so the answer is an independent check rather than an echo."""
 
 from __future__ import annotations
 
@@ -7,37 +12,93 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from minerva.types import CATEGORY_DEFINITIONS
+from minerva.types import CATEGORY_DEFINITIONS, Category
 
 VlmCategory = Literal[
     "person_down", "fighting", "tailgating", "crowd_incident", "suspicious_activity", "none"
 ]
+CHOICES: list[str] = [c.value for c in Category] + ["none"]
 
 
-class VlmAnswer(BaseModel):
-    category: VlmCategory
+class SummaryAnswer(BaseModel):
+    """Stage 1 output."""
+
     summary: str = Field(max_length=500)
     visible_evidence: str = Field(default="", max_length=300)
 
 
-def classify_prompt(highlighted: bool = True) -> str:
+class LabelAnswer(BaseModel):
+    """Stage 2 output, for backends without choice-constrained decoding (Ollama: JSON-schema enum)."""
+
+    category: VlmCategory
+
+
+class VlmAnswer(BaseModel):
+    """Both stages combined. `confidence` is the classifier's label probability when the backend
+    reports log-probabilities (vLLM), else None. The single-call legacy prompt also returns this."""
+
+    category: VlmCategory
+    summary: str = Field(max_length=500)
+    visible_evidence: str = Field(default="", max_length=300)
+    confidence: float | None = None
+
+
+_GRID = (
+    "You are reviewing footage from a security camera.\n"
+    "The image is a 2x2 grid of four frames from the same camera in time order: "
+    "top-left, top-right, bottom-left, bottom-right. Each frame shows its time in seconds "
+    "relative to the last frame. "
+)
+_HIGHLIGHT = (
+    "Red boxes (labelled P = person, B = bag) mark the people or objects to focus on. "
+    "An amber line or outline marks an entrance line or zone.\n\n"
+)
+
+
+def _category_list() -> str:
     cats = "\n".join(f"- {c.value}: {d}" for c, d in CATEGORY_DEFINITIONS.items())
+    return f"{cats}\n- none: none of the above; ordinary activity\n"
+
+
+def summarize_prompt(highlighted: bool = True) -> str:
     if highlighted:
-        focus = (
-            "Red boxes (labelled P = person, B = bag) mark the people or objects to focus on. "
-            "An amber line or outline marks an entrance line or zone.\n\n"
-            "Choose the ONE category that best describes what the highlighted people or objects are doing:\n"
-        )
+        focus = _HIGHLIGHT + "Describe what the highlighted people or objects do.\n"
+    else:
+        focus = "\nDescribe what happens in the scene.\n"
+    return (
+        f"{_GRID}{focus}\n"
+        "Rules:\n"
+        "- Describe only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
+        "- Say how many people there are, their posture (standing, walking, running, sitting, lying on the "
+        "ground) and any contact between them, and whether any bag or object is left alone.\n"
+        "- summary: one or two plain sentences describing what happens across the four frames.\n"
+        "- visible_evidence: a short phrase naming the most important thing you saw.\n"
+        "Respond with JSON only."
+    )
+
+
+def classify_text_prompt(summary: str, evidence: str = "") -> str:
+    ev = f"\nKey evidence: {evidence.strip()}" if evidence.strip() else ""
+    return (
+        "A security camera clip was described as follows.\n"
+        f"Description: {summary.strip()}{ev}\n\n"
+        "Choose the ONE category that best matches the description:\n"
+        f"{_category_list()}\n"
+        "Use only the description. If it does not clearly describe one of the categories, answer none.\n"
+        "Answer with the category name only."
+    )
+
+
+def classify_prompt(highlighted: bool = True) -> str:
+    """Legacy single-call prompt (category + summary in one VLM call). Kept for `minerva spike`
+    comparisons; the pipeline uses summarize_prompt + classify_text_prompt."""
+    if highlighted:
+        focus = _HIGHLIGHT + "Choose the ONE category that best describes what the highlighted people or objects are doing:\n"
     else:
         focus = "\nChoose the ONE category that best describes what is happening in the scene:\n"
     return (
-        "You are reviewing footage from a security camera.\n"
-        "The image is a 2x2 grid of four frames from the same camera in time order: "
-        "top-left, top-right, bottom-left, bottom-right. Each frame shows its time in seconds "
-        "relative to the last frame. "
-        f"{focus}"
-        f"{cats}\n"
-        "- none: none of the above; ordinary activity\n\n"
+        f"{_GRID}{focus}"
+        f"{_category_list()}\n"
         "Rules:\n"
         "- Use only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
         "- If you are unsure, answer none.\n"

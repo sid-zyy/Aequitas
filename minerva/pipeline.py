@@ -1,8 +1,9 @@
-"""Wires the stages together: one thread per camera and a single VLM worker thread, connected by a
-bounded job queue.
+"""Wires the stages together: one thread per camera and `vlm.concurrency` understanding workers,
+connected by a bounded job queue. Understanding is two stages: [1] the VLM summarizes the key frames,
+[2] a text-only call classifies the summary.
 
-- triggered mode: ingest -> YOLO/ByteTrack -> rules -> candidate -> VLM check -> fusion -> store
-- periodic mode (no YOLO): ingest -> window of frames -> VLM -> cross-window agreement -> store"""
+- triggered mode: ingest -> YOLO/ByteTrack -> rules -> candidate -> summarize -> classify -> fusion -> store
+- periodic mode (no YOLO): ingest -> window -> summarize -> classify -> cross-window agreement -> store"""
 
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from minerva.types import Candidate
 from minerva.understand.fusion import fuse
 from minerva.understand.keyframes import encode_jpeg, make_grid
 from minerva.understand.periodic import WindowAggregator
+from minerva.understand.stages import InOrder, Understanding, understand
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ class VlmJob:
     end_ms: int = 0  # extended while a triggered episode is ongoing
     event_uid: str | None = None
     last_flush_ms: int = 0
+    seq: int | None = None  # periodic mode: order of this window within its camera
 
     @property
     def score(self) -> float:
@@ -81,8 +84,9 @@ class JobQueue:
 
 class Pipeline:
     def __init__(self, settings: Settings, cameras: list[CameraCfg], store: EventStore, use_vlm: bool = True,
-                 on_frame=None):
+                 on_frame=None, run_id: str | None = None):
         self.on_frame = on_frame  # optional callback(camera_id, frames_processed), for progress reporting
+        self.run_id = run_id  # tags stage_timings rows (the upload ID for web uploads)
         self.phase = "processing"  # -> "verifying" once streams end -> "done" once the VLM queue drains
         self.s = settings
         self.cameras = cameras
@@ -114,7 +118,7 @@ class Pipeline:
         self._det_lock = threading.Lock()  # YOLO models are not thread-safe
         self._pose_lock = threading.Lock()
 
-        self.vlm = None
+        self.vlm = self.classifier = None
         if use_vlm:
             from minerva.understand.vlm_client import make_client
 
@@ -124,6 +128,13 @@ class Pipeline:
                     f"VLM '{settings.vlm.model}' not reachable at {settings.vlm.host} ({settings.vlm.backend}). "
                     f"For Ollama run `ollama pull {settings.vlm.model}`; or pass --no-vlm in triggered mode."
                 )
+            self.classifier = self.vlm
+            if settings.classifier.overridden:
+                ep = settings.classifier.endpoint(settings.vlm)
+                self.classifier = make_client(ep)
+                if not self.classifier.ping():
+                    raise RuntimeError(f"classifier '{ep.model}' not reachable at {ep.host} ({ep.backend})")
+        self.order = InOrder()
         self.aggregator = WindowAggregator(settings.analysis.confirm_votes, int(settings.analysis.max_gap_s * 1000))
         self.queue = JobQueue(settings.vlm.max_queue_per_camera, self._on_drop)
         self._open: dict[tuple[str, tuple], VlmJob] = {}
@@ -134,6 +145,7 @@ class Pipeline:
             "mode": self.mode,
             "detector": settings.detector.weights if self.mode == "triggered" else None,
             "vlm": f"{settings.vlm.backend}:{settings.vlm.model}" if use_vlm else None,
+            "classifier": f"{self.classifier.cfg.backend}:{self.classifier.model}" if self.classifier else None,
             "rules": RULES_VERSION if self.mode == "triggered" else None,
             "violence": self.violence_model.meta.get("trained_at") if self.violence_model else None,
             "hazards": self.hazard_detector.meta.get("trained_at") if self.hazard_detector else None,
@@ -232,7 +244,8 @@ class Pipeline:
                 log.debug("%s: window stretched to %.1f s (VLM slower than real time)",
                           cam.camera_id, (end_ms - start) / 1000)
             grid = make_grid(ring.pick(start, end_ms), None, cam.zones, self.s.vlm.tile_px)
-            self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms)))
+            self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms),
+                                  seq=self.order.ticket(cam.camera_id)))
             state["start"] = end_ms
 
         def step(frame) -> None:
@@ -270,6 +283,8 @@ class Pipeline:
         ts = job.cand.trigger_ms if job.cand else job.window[1]
         log.warning("dropped %s job on %s: %s", category, job.camera_id, reason)
         self.store.record_dropped(job.camera_id, ts, category, job.score, reason)
+        if job.seq is not None:
+            self.order.skip(job.camera_id, job.seq, self._apply_window)
 
     def _save_keyframe(self, camera_id: str, uid: str, ts_ms: int, jpeg: bytes) -> str:
         day = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).astimezone().strftime("%Y-%m-%d")
@@ -284,12 +299,22 @@ class Pipeline:
         self.store.finish_timings(event_id, proc_ms, proc_ms + onset_to_trigger_ms)
         return event_id
 
+    def _record_stage(self, job: VlmJob, kind: str, queue_ms: float, u: Understanding) -> None:
+        try:
+            self.store.record_stage(self.run_id, job.camera_id, kind, queue_ms, u.summarize_ms, u.classify_ms,
+                                    u.answer is not None)
+        except Exception:
+            log.exception("failed to record stage timings")
+
     def _process_candidate(self, job: VlmJob, queue_ms: float) -> None:
         c = job.cand
-        ans, vlm_ms = (None, None)
+        u = Understanding(None, None, None, None)
         if self.vlm is not None:
-            ans, vlm_ms = self.vlm.classify(job.grid_jpeg, highlighted=True)
-        fused = fuse(c, ans, self.s.fusion)
+            u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=True)
+            self._record_stage(job, "candidate", queue_ms, u)
+        fused = fuse(c, u.answer, self.s.fusion)
+        if fused.summary is None and u.summary:  # summarized but not classified: keep the description
+            fused.summary = u.summary
         uid = uuid.uuid4().hex
         rec = EventRecord(
             event_uid=uid, camera_id=c.camera_id, start_ts=c.onset_ms, end_ts=max(job.end_ms, c.trigger_ms),
@@ -299,19 +324,33 @@ class Pipeline:
             keyframe_path=self._save_keyframe(c.camera_id, uid, c.onset_ms, job.grid_jpeg),
             model_versions=self.versions,
         )
-        timings = Timings(detect_ms=job.detect_ms, trigger_ms=job.trigger_ms, queue_ms=queue_ms, vlm_ms=vlm_ms)
+        timings = Timings(detect_ms=job.detect_ms, trigger_ms=job.trigger_ms, queue_ms=queue_ms, vlm_ms=u.vlm_ms,
+                          summarize_ms=u.summarize_ms, classify_ms=u.classify_ms)
         event_id = self._commit(rec, timings, job.capture_ns, c.trigger_ms - c.onset_ms)
         job.event_uid = uid
-        log.info("event %s: %s/%s %s conf=%.2f vlm=%s (%.1f s) - %s", event_id, c.category.value,
-                 c.subtype or "-", fused.status.value, fused.confidence, fused.vlm_category,
-                 (vlm_ms or 0) / 1000, fused.summary)
+        log.info("event %s: %s/%s %s conf=%.2f label=%s (summarize %.1f s, classify %.2f s) - %s", event_id,
+                 c.category.value, c.subtype or "-", fused.status.value, fused.confidence, fused.vlm_category,
+                 (u.summarize_ms or 0) / 1000, (u.classify_ms or 0) / 1000, fused.summary)
 
     def _process_window(self, job: VlmJob, queue_ms: float) -> None:
+        """Understanding runs concurrently; results are applied in window order per camera."""
+        u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False)
+        self._record_stage(job, "window", queue_ms, u)
+        self.order.finish(job.camera_id, job.seq, (job, u, queue_ms), self._apply_window)
+
+    def _apply_window(self, item) -> None:
+        job, u, queue_ms = item
+        try:
+            self._apply_window_result(job, u, queue_ms)
+        except Exception:
+            log.exception("failed to store window from %s", job.camera_id)
+
+    def _apply_window_result(self, job: VlmJob, u: Understanding, queue_ms: float) -> None:
         start, end = job.window
-        ans, vlm_ms = self.vlm.classify(job.grid_jpeg, highlighted=False)
+        ans = u.answer
         d = self.aggregator.add(job.camera_id, start, end, ans)
-        log.debug("%s window %.1f s: %s (%.1f s)", job.camera_id, (end - start) / 1000,
-                  ans.category if ans else "error", vlm_ms / 1000)
+        log.debug("%s window %.1f s: %s (summarize %.1f s, classify %.2f s)", job.camera_id, (end - start) / 1000,
+                  ans.category if ans else "error", (u.summarize_ms or 0) / 1000, (u.classify_ms or 0) / 1000)
         if d.action == "new":
             ev = d.event
             rec = EventRecord(
@@ -321,9 +360,11 @@ class Pipeline:
                 keyframe_path=self._save_keyframe(job.camera_id, ev.event_uid, start, job.grid_jpeg),
                 model_versions=self.versions,
             )
-            event_id = self._commit(rec, Timings(queue_ms=queue_ms, vlm_ms=vlm_ms), job.capture_ns, 0)
+            timings = Timings(queue_ms=queue_ms, vlm_ms=u.vlm_ms, summarize_ms=u.summarize_ms,
+                              classify_ms=u.classify_ms)
+            event_id = self._commit(rec, timings, job.capture_ns, 0)
             log.info("event %s: %s %s conf=%.2f (%.1f s) - %s", event_id, ev.category, d.status.value,
-                     d.confidence, vlm_ms / 1000, d.summary)
+                     d.confidence, (u.vlm_ms or 0) / 1000, d.summary)
         elif d.action == "update":
             self.store.update_event(d.event.event_uid, d.event.end_ms, d.status.value, d.confidence)
             log.info("event %s… now %s conf=%.2f (%d windows)", d.event.event_uid[:8], d.status.value,
@@ -355,10 +396,11 @@ class Pipeline:
         cameras_done = threading.Event()
         cam_threads = [threading.Thread(target=self._camera_loop, args=(c,), name=f"cam-{c.camera_id}", daemon=True)
                        for c in self.cameras]
-        vlm_thread = threading.Thread(target=self._vlm_loop, args=(cameras_done,), name="vlm", daemon=True)
-        for t in cam_threads:
+        n_workers = self.s.vlm.concurrency if self.vlm is not None else 1
+        vlm_threads = [threading.Thread(target=self._vlm_loop, args=(cameras_done,), name=f"vlm-{i}", daemon=True)
+                       for i in range(n_workers)]
+        for t in cam_threads + vlm_threads:
             t.start()
-        vlm_thread.start()
         deadline = time.monotonic() + max_seconds if max_seconds else None
         try:
             while any(t.is_alive() for t in cam_threads):
@@ -376,6 +418,7 @@ class Pipeline:
             self._stop.set()
         self.phase = "verifying"
         cameras_done.set()
-        vlm_thread.join()
+        for t in vlm_threads:
+            t.join()
         self.phase = "done"
         log.info("pipeline stopped")

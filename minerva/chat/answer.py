@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import logging
 import re
+import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime, tzinfo
 
@@ -92,17 +94,28 @@ def _summary_prompt(question: str, rows: list[dict], tz: tzinfo | None) -> str:
     )
 
 
+def _stream_prompt(question: str, rows: list[dict], tz: tzinfo | None) -> str:
+    """Plain-text variant for streaming: citations are read from the [#id] references in the text."""
+    return _summary_prompt(question, rows, tz).replace(
+        "Put every event ID you mention in cited_event_ids.", "Cite at least one event. Answer in plain text."
+    )
+
+
+def is_grounded(text: str, rows: list[dict], extra_cited: list[int] = ()) -> bool:
+    """True if the text cites at least one event and only events that were retrieved."""
+    allowed = {r["event_id"] for r in rows}
+    cited = {int(m) for m in re.findall(r"\[#(\d+)\]", text)} | set(extra_cited)
+    if not cited or not cited <= allowed:
+        log.warning("discarding ungrounded summary (cited %s, allowed %s)", sorted(cited), sorted(allowed))
+        return False
+    return True
+
+
 def grounded_summary(llm, question: str, rows: list[dict], tz: tzinfo | None) -> str | None:
     """LLM summary of the retrieved rows. Discarded if it cites anything that was not retrieved."""
     rows = rows[:MAX_SUMMARY_ROWS]
     res = llm.structured([{"role": "user", "content": _summary_prompt(question, rows, tz)}], GroundedSummary)
-    if res is None:
-        return None
-    allowed = {r["event_id"] for r in rows}
-    mentioned = {int(m) for m in re.findall(r"\[#(\d+)\]", res.answer)}
-    cited = set(res.cited_event_ids) | mentioned
-    if not cited or not cited <= allowed:
-        log.warning("discarding ungrounded summary (cited %s, allowed %s)", sorted(cited), sorted(allowed))
+    if res is None or not is_grounded(res.answer, rows, res.cited_event_ids):
         return None
     return res.answer.strip()
 
@@ -113,26 +126,72 @@ class ChatService:
         self.parser = parser
         self.summarize = summarize
 
-    def ask(self, question: str) -> ChatAnswer:
+    def _retrieve(self, question: str) -> tuple[ParseResult, int, list[dict], list[str], list[str]]:
+        """Parse and query. Returns (parsed, total, rows, lines before the summary, lines after it)."""
         cameras = self.store.cameras()
         parsed = self.parser.parse(question, cameras)
         f = parsed.filter
         total = self.store.count(f)
         desc = describe(f, cameras, total)
-        lines = list(parsed.warnings)
-        summary = None
+        head, tail = list(parsed.warnings), []
         rows: list[dict] = []
         if f.intent == "count":
-            lines.append(f"{total} {desc}.")
+            head.append(f"{total} {desc}.")
         elif not total:
-            lines.append(f"No {desc}.")
+            head.append(f"No {desc}.")
         else:
             rows = self.store.query(f)
-            if self.summarize and self.parser.llm is not None:
-                summary = grounded_summary(self.parser.llm, question, rows, self.parser.tz)
-            if summary:
-                lines += [summary, ""]
             shown = f" (showing {len(rows)})" if total > len(rows) else ""
-            lines.append(f"Found {total} {desc}{shown}:")
-            lines.extend(format_row(r, self.parser.tz) for r in rows)
-        return ChatAnswer("\n".join(lines), rows, parsed, total, summary)
+            tail.append(f"Found {total} {desc}{shown}:")
+            tail.extend(format_row(r, self.parser.tz) for r in rows)
+        return parsed, total, rows, head, tail
+
+    def _wants_summary(self, rows: list[dict]) -> bool:
+        return bool(rows) and self.summarize and self.parser.llm is not None
+
+    def ask(self, question: str) -> ChatAnswer:
+        parsed, total, rows, head, tail = self._retrieve(question)
+        summary = None
+        if self._wants_summary(rows):
+            summary = grounded_summary(self.parser.llm, question, rows, self.parser.tz)
+        mid = [summary, ""] if summary else []
+        return ChatAnswer("\n".join(head + mid + tail), rows, parsed, total, summary)
+
+    def ask_stream(self, question: str) -> Iterator[dict]:
+        """The same answer as ask(), as events for streaming:
+
+        - retrieved: the event list, straight from the database (sent before any LLM text)
+        - token: a piece of the summary as the LLM writes it
+        - summary: the final summary, or null if it failed the grounding check (clients then drop
+          the streamed text)
+        - done: timings
+
+        The summary is checked only once it is complete, so streamed text is provisional until then."""
+        t0 = time.perf_counter()
+        parsed, total, rows, head, tail = self._retrieve(question)
+        retrieve_ms = (time.perf_counter() - t0) * 1000
+        yield {"type": "retrieved", "parsed": parsed, "total": total, "rows": rows, "head": head, "tail": tail,
+               "retrieve_ms": round(retrieve_ms)}
+        summary_ms = ttft_ms = None
+        if self._wants_summary(rows):
+            t1 = time.perf_counter()
+            llm, shown = self.parser.llm, rows[:MAX_SUMMARY_ROWS]
+            text, summary = "", None
+            if hasattr(llm, "stream_text"):
+                try:
+                    for delta in llm.stream_text([{"role": "user", "content": _stream_prompt(question, shown,
+                                                                                            self.parser.tz)}]):
+                        if ttft_ms is None:
+                            ttft_ms = round((time.perf_counter() - t1) * 1000)
+                        text += delta
+                        yield {"type": "token", "text": delta}
+                    summary = text.strip() if is_grounded(text, shown) else None
+                except Exception as e:
+                    log.warning("streamed summary failed: %s", e)
+                    text = ""
+            if not text:  # no streaming support, or it failed before any text: one structured call
+                summary = grounded_summary(llm, question, rows, self.parser.tz)
+            summary_ms = round((time.perf_counter() - t1) * 1000)
+            yield {"type": "summary", "summary": summary}
+        yield {"type": "done", "retrieve_ms": round(retrieve_ms), "summary_ttft_ms": ttft_ms,
+               "summary_ms": summary_ms, "elapsed_ms": round((time.perf_counter() - t0) * 1000)}

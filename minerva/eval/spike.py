@@ -86,6 +86,7 @@ def _sample_frames(video: str | None, n: int) -> list[np.ndarray]:
 def run_spike(settings: Settings, models: list[str], video: str | None = None,
               det_iters: int = 30, vlm_iters: int = 3) -> dict:
     from minerva.understand.keyframes import encode_jpeg, make_grid
+    from minerva.understand.stages import understand
     from minerva.understand.vlm_client import VlmClient
     from minerva.chat.parser import LlmFilter, _prompt
     from minerva.vision.detector import Detector
@@ -165,15 +166,19 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
             continue
         log.info("VLM %s: cold call (includes model load)", model)
         t0 = time.perf_counter()
-        ans, _ = client.classify(unique_grid(1000 + len(report["vlm"])))
+        u = understand(client, client, unique_grid(1000 + len(report["vlm"])), highlighted=True)
         cold_ms = (time.perf_counter() - t0) * 1000
-        warm, answers, valid = [], [ans.model_dump() if ans else None], int(ans is not None)
+        ans = u.answer
+        warm, warm_s, warm_c = [], [], []
+        answers, valid = [ans.model_dump() if ans else None], int(ans is not None)
         for i in range(vlm_iters):
             log.info("VLM %s: warm call %d/%d (unique image)", model, i + 1, vlm_iters)
-            ans, ms = client.classify(unique_grid(i))
-            warm.append(ms)
-            valid += ans is not None
-            answers.append(ans.model_dump() if ans else None)
+            u = understand(client, client, unique_grid(i), highlighted=True)
+            warm.append(u.vlm_ms or 0)
+            warm_s.append(u.summarize_ms or 0)
+            warm_c.append(u.classify_ms or 0)
+            valid += u.answer is not None
+            answers.append(u.answer.model_dump() if u.answer else None)
         chat_times = []
         for q in ["Show all tailgating events from camera 2 today", "How many falls this week?"]:
             t0 = time.perf_counter()
@@ -181,7 +186,8 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
                                [{"camera_id": "cam2", "name": "Corridor", "aliases": ["camera 2"]}])}], LlmFilter)
             chat_times.append((time.perf_counter() - t0) * 1000)
         report["vlm"][model] = {
-            "cold_ms": round(cold_ms), "warm": _stats(warm), "valid_json": f"{valid}/{vlm_iters + 1}",
+            "cold_ms": round(cold_ms), "warm": _stats(warm), "warm_summarize": _stats(warm_s),
+            "warm_classify": _stats(warm_c), "valid_json": f"{valid}/{vlm_iters + 1}",
             "chat_parse": _stats(chat_times), "ollama_rss_gb": _ollama_rss_gb(), "vram_used_gb": _vram_used_gb(),
             "answers": answers,
         }
@@ -203,8 +209,9 @@ def summarize(report: dict) -> str:
         if "skipped" in r:
             lines.append(f"VLM {model}: skipped - {r['skipped']}")
         else:
-            lines.append(f"VLM {model}: cold {r['cold_ms'] / 1000:.1f} s, warm p50 {r['warm']['p50_ms'] / 1000:.1f} s, "
-                         f"valid JSON {r['valid_json']}, chat parse p50 {r['chat_parse']['p50_ms'] / 1000:.1f} s, "
+            lines.append(f"VLM {model}: cold {r['cold_ms'] / 1000:.1f} s, warm p50 {r['warm']['p50_ms'] / 1000:.1f} s "
+                         f"(summarize {r['warm_summarize']['p50_ms'] / 1000:.1f} s + classify "
+                         f"{r['warm_classify']['p50_ms'] / 1000:.2f} s), valid JSON {r['valid_json']}, chat parse p50 {r['chat_parse']['p50_ms'] / 1000:.1f} s, "
                          f"Ollama RSS {r['ollama_rss_gb']} GB, VRAM used {r['vram_used_gb']}")
     lines.append(f"Report: {report.get('_path')}")
     return "\n".join(lines)
