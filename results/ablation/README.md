@@ -43,3 +43,37 @@ The table in ABLATION.md says 59.6 s -> 5.3 s (11x), but steps 0 and 1 were the 
 and most of the last step comes from skipping static windows on a test video that is mostly quiet stretches.
 Run 2 warms the server up after every start. One window was dropped at the end of the video (fixed: the last
 window now waits for room too).
+
+## Run 3 (2026-10-15, Kaggle T4 x2, vLLM 0.31): `run3/`
+
+This run used the **older imported notebook** (its quantizer environment had no `torchvision`), so every
+4-/8-bit config failed again with "VideoProcessor requires the Torchvision library" (Gemma's shows up as
+"Could not import module 'Gemma4Processor'", the same missing package). The repo notebook already installs
+it: re-import `kaggle/ablation.ipynb` from the repo before the next run.
+
+**Gemma 4 on vLLM, root cause found** (`run3/logs/vllm-gemma-*.log`): while vLLM profiles CUDA-graph memory,
+a Triton kernel asks for 96 KB of shared memory per block; the T4 has 64 KB
+(`OutOfResources: out of resource: shared memory, Required: 98304, Hardware limit: 65536`). It fails the
+same way in FP16 and FP32, so it is the GPU generation, not the precision. Fix in the notebook: Gemma starts
+with `--enforce-eager` (no CUDA graphs), then eager + FlexAttention, then FP32 over both T4s; a start only
+counts if the warm-up requests succeed. The laptop's RTX 4050 (Ada, 100 KB shared memory) is not affected.
+
+| Config | Window alone / 8 at once | Summary full | Label | Chat first word | Dev F1 | Real clips (n=10) |
+|---|---|---|---|---|---|---|
+| Qwen3-VL-2B FP16 | 1.94 s / 7.29 s | 1.77 s | 0.18 s | 0.05 s | 0.93 | acc 0.7, precision 1.0, recall 0.4 |
+| SmolVLM2-2.2B FP16 | 4.19 s / 18.38 s | 4.04 s | 0.15 s | 0.04 s | 0.09 | acc 0.6, precision 0.67, recall 0.4 |
+
+SmolVLM is 2× slower and its labels are near random on the dev set (macro-F1 0.09): ruled out.
+
+Time-saved ladder (Qwen FP16, 20 windows of real video, warm server):
+
+| Step | Total | Saved vs baseline |
+|---|---|---|
+| 0 baseline: 1 at a time, long summary | 54.1 s | |
+| 1 same config again (quantization not applied: no quantized model ran) | 33.1 s | 21.0 s * |
+| 2 + 8 windows in flight (vLLM batching) | 20.1 s | 34.0 s |
+| 3 + short capped summary | 15.0 s | 39.1 s |
+| 4 + skip static windows | 5.4 s | 48.7 s (10× faster) |
+
+\* Step 1 changed nothing, yet ran 21 s faster: run-to-run variance on a shared Kaggle GPU is that large on
+the first step. Honest figure for the levers we actually changed: **33.1 s → 5.4 s (6.1×)**.

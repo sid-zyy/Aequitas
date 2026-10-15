@@ -1,0 +1,8 @@
+lever,setting,window_s,windows_per_s,summary_s,summary_busy_s,real_accuracy,real_clip_s
+concurrency,1,2.021,0.536,,,,
+concurrency,4,4.065,0.942,,,,
+concurrency,8,6.348,1.166,,,,
+tile_px,224,,,1.377,2.717,0.5,1.613
+tile_px,448,,,1.654,6.714,0.7,1.99
+summary_max_tokens,64,,,1.682,,0.5,2.53
+summary_max_tokens,128,,,1.582,,0.7,1.49

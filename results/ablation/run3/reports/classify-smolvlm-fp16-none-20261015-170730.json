@@ -1,0 +1,279 @@
+{
+  "label": "smolvlm-fp16-none",
+  "model": "m",
+  "host": "http://127.0.0.1:8000",
+  "run": "2026-10-15T17:07:30",
+  "n": 52,
+  "accuracy": 0.2692,
+  "macro_f1": 0.0872,
+  "valid": 52,
+  "per_class_f1": {
+    "accident": 0.0,
+    "arrest": 0.0,
+    "chase": 0.0,
+    "crowd_incident": 0.0,
+    "fighting": 0.4,
+    "fire": 0.0,
+    "harassment": 0.0,
+    "none": 0.4082,
+    "person_down": 0.5,
+    "riot": 0.0,
+    "suspicious_activity": 0.0,
+    "tailgating": 0.0,
+    "theft": 0.0,
+    "vandalism": 0.0,
+    "weapon": 0.0
+  },
+  "incident_precision": 1.0,
+  "incident_recall": 0.3095,
+  "confusion": {
+    "accident": {
+      "none": 3
+    },
+    "arrest": {
+      "none": 2,
+      "fighting": 1
+    },
+    "chase": {
+      "none": 3
+    },
+    "crowd_incident": {
+      "none": 3
+    },
+    "fighting": {
+      "fighting": 3
+    },
+    "fire": {
+      "fighting": 3
+    },
+    "harassment": {
+      "none": 3
+    },
+    "none": {
+      "none": 10
+    },
+    "person_down": {
+      "none": 2,
+      "person_down": 1
+    },
+    "riot": {
+      "none": 1,
+      "fighting": 2
+    },
+    "suspicious_activity": {
+      "none": 3
+    },
+    "tailgating": {
+      "none": 3
+    },
+    "theft": {
+      "none": 3
+    },
+    "vandalism": {
+      "none": 2,
+      "fighting": 1
+    },
+    "weapon": {
+      "fighting": 2,
+      "none": 1
+    }
+  },
+  "latency_ms": {
+    "p50": 896.5,
+    "p95": 996.0,
+    "mean": 880.8
+  },
+  "mean_confidence": 0.511,
+  "errors": [
+    {
+      "summary": "A group of people throw stones at a line of police officers holding shields.",
+      "gold": "riot",
+      "pred": "none"
+    },
+    {
+      "summary": "Several people smash the windows of a parked bus while a crowd shouts.",
+      "gold": "riot",
+      "pred": "fighting"
+    },
+    {
+      "summary": "People in a crowd hurl bottles and bricks across the road at another group.",
+      "gold": "riot",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A man holds a knife and points it at a shopkeeper behind the counter.",
+      "gold": "weapon",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A person raises a long iron rod above his head and moves towards another man.",
+      "gold": "weapon",
+      "pred": "none"
+    },
+    {
+      "summary": "A man takes out a pistol from his waistband and aims it at the door.",
+      "gold": "weapon",
+      "pred": "fighting"
+    },
+    {
+      "summary": "Flames and thick black smoke rise from a parked car on the roadside.",
+      "gold": "fire",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A shop front is on fire and smoke fills the street.",
+      "gold": "fire",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A small fire burns in a dustbin next to the wall, with smoke drifting up.",
+      "gold": "fire",
+      "pred": "fighting"
+    },
+    {
+      "summary": "Two police officers hold a man by the arms and put handcuffs on him.",
+      "gold": "arrest",
+      "pred": "none"
+    },
+    {
+      "summary": "An officer escorts a handcuffed man to a police van and opens the door.",
+      "gold": "arrest",
+      "pred": "none"
+    },
+    {
+      "summary": "Officers pin a man to the ground and restrain his hands behind his back.",
+      "gold": "arrest",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A man runs fast down the street and an officer sprints after him.",
+      "gold": "chase",
+      "pred": "none"
+    },
+    {
+      "summary": "A motorcycle speeds away and a police jeep follows it closely through traffic.",
+      "gold": "chase",
+      "pred": "none"
+    },
+    {
+      "summary": "One person runs between the stalls while two others run after him shouting.",
+      "gold": "chase",
+      "pred": "none"
+    },
+    {
+      "summary": "An elderly man collapses on the platform and lies still on the ground.",
+      "gold": "person_down",
+      "pred": "none"
+    },
+    {
+      "summary": "A person is lying motionless on the pavement while people walk past.",
+      "gold": "person_down",
+      "pred": "none"
+    },
+    {
+      "summary": "A car hits a scooter at the junction and the rider falls onto the road.",
+      "gold": "accident",
+      "pred": "none"
+    },
+    {
+      "summary": "Two cars collide head-on and one of them spins across the lane.",
+      "gold": "accident",
+      "pred": "none"
+    },
+    {
+      "summary": "A truck overturns on the highway and its load spills onto the road.",
+      "gold": "accident",
+      "pred": "none"
+    },
+    {
+      "summary": "A man on a bike snatches a woman's chain and rides away quickly.",
+      "gold": "theft",
+      "pred": "none"
+    },
+    {
+      "summary": "A person grabs a bag from a parked scooter and runs off.",
+      "gold": "theft",
+      "pred": "none"
+    },
+    {
+      "summary": "Someone lifts a phone from a table at the stall and walks away fast.",
+      "gold": "theft",
+      "pred": "none"
+    },
+    {
+      "summary": "A man sprays paint on the wall of the government office at night.",
+      "gold": "vandalism",
+      "pred": "none"
+    },
+    {
+      "summary": "A person kicks and breaks the glass of a bus shelter, alone.",
+      "gold": "vandalism",
+      "pred": "fighting"
+    },
+    {
+      "summary": "A young man smashes the side mirror of a parked car with a stick, then walks off.",
+      "gold": "vandalism",
+      "pred": "none"
+    },
+    {
+      "summary": "The crowd at the temple gate suddenly runs in all directions and people fall.",
+      "gold": "crowd_incident",
+      "pred": "none"
+    },
+    {
+      "summary": "The station entrance is packed so tightly that people are being crushed against the barrier.",
+      "gold": "crowd_incident",
+      "pred": "none"
+    },
+    {
+      "summary": "People push and surge towards a narrow exit and several are pressed against the railing.",
+      "gold": "crowd_incident",
+      "pred": "none"
+    },
+    {
+      "summary": "Two people walk through the office entrance one right behind the other on a single card swipe.",
+      "gold": "tailgating",
+      "pred": "none"
+    },
+    {
+      "summary": "A man follows closely behind an employee through the security door before it closes.",
+      "gold": "tailgating",
+      "pred": "none"
+    },
+    {
+      "summary": "Three people pass the turnstile together, the second and third right behind the first.",
+      "gold": "tailgating",
+      "pred": "none"
+    },
+    {
+      "summary": "A backpack is left alone near the pillar for a long time after its owner walks away.",
+      "gold": "suspicious_activity",
+      "pred": "none"
+    },
+    {
+      "summary": "A man stands in the same corner of the parking lot for twenty minutes, looking around.",
+      "gold": "suspicious_activity",
+      "pred": "none"
+    },
+    {
+      "summary": "A suitcase stays unattended on the platform bench while no one is near it.",
+      "gold": "suspicious_activity",
+      "pred": "none"
+    },
+    {
+      "summary": "A man keeps following a woman along the footpath and blocks her way when she tries to step aside.",
+      "gold": "harassment",
+      "pred": "none"
+    },
+    {
+      "summary": "On the crowded bus a man repeatedly touches a woman who pushes his hand away and moves.",
+      "gold": "harassment",
+      "pred": "none"
+    },
+    {
+      "summary": "Two youths on a scooter circle a girl walking alone, shouting at her as she hurries away.",
+      "gold": "harassment",
+      "pred": "none"
+    }
+  ]
+}

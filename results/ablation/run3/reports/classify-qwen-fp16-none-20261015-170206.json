@@ -1,0 +1,108 @@
+{
+  "label": "qwen-fp16-none",
+  "model": "m",
+  "host": "http://127.0.0.1:8000",
+  "run": "2026-10-15T17:02:06",
+  "n": 52,
+  "accuracy": 0.9231,
+  "macro_f1": 0.9278,
+  "valid": 52,
+  "per_class_f1": {
+    "accident": 1.0,
+    "arrest": 1.0,
+    "chase": 0.8571,
+    "crowd_incident": 1.0,
+    "fighting": 1.0,
+    "fire": 0.8571,
+    "harassment": 1.0,
+    "none": 0.8889,
+    "person_down": 1.0,
+    "riot": 0.8,
+    "suspicious_activity": 0.8,
+    "tailgating": 1.0,
+    "theft": 0.8571,
+    "vandalism": 0.8571,
+    "weapon": 1.0
+  },
+  "incident_precision": 0.9545,
+  "incident_recall": 1.0,
+  "confusion": {
+    "accident": {
+      "accident": 3
+    },
+    "arrest": {
+      "arrest": 3
+    },
+    "chase": {
+      "chase": 3
+    },
+    "crowd_incident": {
+      "crowd_incident": 3
+    },
+    "fighting": {
+      "fighting": 3
+    },
+    "fire": {
+      "fire": 3
+    },
+    "harassment": {
+      "harassment": 3
+    },
+    "none": {
+      "none": 8,
+      "fire": 1,
+      "chase": 1
+    },
+    "person_down": {
+      "person_down": 3
+    },
+    "riot": {
+      "riot": 2,
+      "vandalism": 1
+    },
+    "suspicious_activity": {
+      "suspicious_activity": 2,
+      "theft": 1
+    },
+    "tailgating": {
+      "tailgating": 3
+    },
+    "theft": {
+      "theft": 3
+    },
+    "vandalism": {
+      "vandalism": 3
+    },
+    "weapon": {
+      "weapon": 3
+    }
+  },
+  "latency_ms": {
+    "p50": 844.0,
+    "p95": 1125.6,
+    "mean": 840.6
+  },
+  "mean_confidence": 0.9896,
+  "errors": [
+    {
+      "summary": "Several people smash the windows of a parked bus while a crowd shouts.",
+      "gold": "riot",
+      "pred": "vandalism"
+    },
+    {
+      "summary": "A suitcase stays unattended on the platform bench while no one is near it.",
+      "gold": "suspicious_activity",
+      "pred": "theft"
+    },
+    {
+      "summary": "A cook lights a gas stove at a food stall and a small flame burns under the pan.",
+      "gold": "none",
+      "pred": "fire"
+    },
+    {
+      "summary": "Children play cricket in the lane and one of them runs to catch the ball.",
+      "gold": "none",
+      "pred": "chase"
+    }
+  ]
+}

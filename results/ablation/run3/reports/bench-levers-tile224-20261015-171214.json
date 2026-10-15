@@ -1,0 +1,64 @@
+{
+  "label": "levers-tile224",
+  "host": "http://127.0.0.1:8000",
+  "model": "m",
+  "started": "2026-10-15T17:11:58",
+  "requests_per_level": 8,
+  "max_tokens": {
+    "summarize": 128,
+    "classify": 16,
+    "chat": 160
+  },
+  "results": {
+    "summarize": {
+      "1": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 11672.4,
+        "requests_per_s": 0.685,
+        "output_tokens_per_s": 53.6,
+        "total_ms": {
+          "p50": 1377.5,
+          "p95": 1822.3,
+          "mean": 1451.8
+        },
+        "ttft_ms": {
+          "p50": 126.4,
+          "p95": 131.0,
+          "mean": 126.7
+        },
+        "tpot_ms": {
+          "p50": 16.9,
+          "p95": 17.0,
+          "mean": 16.9
+        },
+        "errors": [],
+        "speculation": null
+      },
+      "8": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 3150.4,
+        "requests_per_s": 2.539,
+        "output_tokens_per_s": 197.1,
+        "total_ms": {
+          "p50": 2716.8,
+          "p95": 3098.4,
+          "mean": 2722.3
+        },
+        "ttft_ms": {
+          "p50": 674.0,
+          "p95": 713.1,
+          "mean": 644.9
+        },
+        "tpot_ms": {
+          "p50": 26.8,
+          "p95": 30.5,
+          "mean": 27.1
+        },
+        "errors": [],
+        "speculation": null
+      }
+    }
+  }
+}
