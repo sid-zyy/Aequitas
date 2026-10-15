@@ -20,6 +20,28 @@ combinations (fast model + bigger re-checker) from the saved results without ext
 4. Download `model_compare.zip` → `results/model_compare/`. `COMPARE.md` + `compare.png` (accuracy vs time) for
    the slides; the winner goes into `config/settings.yaml` (`vlm.model`, or `escalation.model` for the cascade).
 
+## Fine-tune Gemma 4 E2B on 12B's summaries: `finetune_gemma.ipynb`
+
+12B caught 70 % of SCVD incidents, E2B 15 % (`model_compare`). 12B summarises the training clips with our real
+prompts; summaries whose label agrees with the dataset label teach E2B (QLoRA, Unsloth). Stage 2 is unchanged.
+Tested on the same 60 held-out SCVD clips as `model_compare`, against base E2B in the same run.
+
+1. Import `finetune_gemma.ipynb`; **GPU T4 x2**, Internet **On**.
+2. **Add Input**: SCVD (needed, it is the test set), RWF-2000, Real Life Violence Situations; optionally a
+   UCF-Crime video dataset with class folders (adds arrest, fire, accident, theft).
+3. **Save Version → Save & Run All**. About 3-4 h.
+4. Output tab → download `finetune_gemma.zip` (FINETUNE.md, chart, LoRA adapter) → `results/finetune/`, and
+   `aequitas-e2b-ollama.tar` (~3-4 GB, the model already in Ollama's format).
+5. On the laptop (Ollama closed from the tray first):
+   ```bash
+   tar -xf %USERPROFILE%\Downloads\aequitas-e2b-ollama.tar -C %USERPROFILE%\.ollama\models
+   ollama list
+   ```
+   `aequitas-e2b` appears. To use it set `vlm: {model: aequitas-e2b}` in `config/settings.yaml`, then rerun the
+   demo set (`config/eval_demo_final.yaml`) to compare with base E2B on Bengaluru footage.
+   If the notebook says the Ollama import failed, there is no tar: the LoRA adapter in the zip still works with
+   vLLM (`--enable-lora`) on WSL, and the results were measured in transformers.
+
 ## Improve fight / weapon detection: train `violence_clip.ipynb` on CCTV data
 
 Why: on the faculty's sample clips (v001-v026, w001) Gemma's summaries are too vague to label ("people
