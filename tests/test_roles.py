@@ -226,3 +226,13 @@ def test_report_gets_its_authenticity_result(app_client, tmp_path):
     _login(app_client)
     a = app_client.get(f"/api/reports/{rid}").json()["authenticity"]
     assert a["verdict"] == "likely_ai" and a["ai_likelihood_pct"] == 90
+
+
+def test_weak_demo_password_only_with_explicit_opt_in(tmp_path):
+    a = Auth(EventStore(tmp_path / "t.db"))
+    with pytest.raises(ValueError):
+        a.create_user("admin", "admin", "admin")
+    a.create_user("admin", "admin", "admin", allow_weak=True)
+    assert a.login("admin", "admin") is not None
+    detail = a.store._conn.execute("SELECT detail FROM audit_log WHERE action='user_created'").fetchone()[0]
+    assert '"weak_password": true' in detail  # flagged in the audit trail
