@@ -147,6 +147,90 @@ class EventStore:
         with self._lock:
             return self._conn.execute(sql, params).fetchone()[0]
 
+    # ---------- web app helpers ----------
+
+    def camera(self, camera_id: str) -> dict | None:
+        with self._lock:
+            r = self._conn.execute("SELECT * FROM cameras WHERE camera_id=?", (camera_id,)).fetchone()
+        if r is None:
+            return None
+        d = dict(r)
+        d["aliases"] = json.loads(d["aliases"])
+        d["zones"] = json.loads(d["zones"])
+        return d
+
+    def event(self, event_id: int) -> dict | None:
+        with self._lock:
+            r = self._conn.execute(
+                "SELECT e.*, c.name AS camera_name FROM events e LEFT JOIN cameras c USING(camera_id) "
+                "WHERE e.event_id=?", (event_id,),
+            ).fetchone()
+        if r is None:
+            return None
+        d = dict(r)
+        d["track_ids"] = json.loads(d["track_ids"])
+        d["model_versions"] = json.loads(d["model_versions"])
+        return d
+
+    def stats(self, since_ms: int) -> dict:
+        with self._lock:
+            q = self._conn.execute
+            by_status = dict(q("SELECT status, COUNT(*) FROM events GROUP BY status").fetchall())
+            by_category = dict(q("SELECT category, COUNT(*) FROM events WHERE status='confirmed' "
+                                 "GROUP BY category").fetchall())
+            today = q("SELECT COUNT(*) FROM events WHERE status='confirmed' AND start_ts>=?", (since_ms,)).fetchone()[0]
+            cameras = q("SELECT COUNT(*) FROM cameras").fetchone()[0]
+            videos = q("SELECT COUNT(*) FROM uploads WHERE status='done'").fetchone()[0]
+        return {"by_status": by_status, "by_category": by_category, "confirmed_today": today,
+                "cameras": cameras, "videos_analyzed": videos}
+
+    def count_events_since(self, camera_id: str, created_after_ms: int) -> int:
+        with self._lock:
+            return self._conn.execute(
+                "SELECT COUNT(*) FROM events WHERE camera_id=? AND created_at>=?", (camera_id, created_after_ms)
+            ).fetchone()[0]
+
+    def insert_upload(self, u: dict) -> None:
+        cols = ",".join(u)
+        with self._lock, self._conn:
+            self._conn.execute(f"INSERT INTO uploads({cols}) VALUES ({','.join('?' * len(u))})", tuple(u.values()))
+
+    def update_upload(self, upload_id: str, **fields) -> None:
+        if not fields:
+            return
+        sets = ",".join(f"{k}=?" for k in fields)
+        with self._lock, self._conn:
+            self._conn.execute(f"UPDATE uploads SET {sets} WHERE upload_id=?", (*fields.values(), upload_id))
+
+    def uploads(self, limit: int = 50) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT u.*, c.name AS camera_name FROM uploads u LEFT JOIN cameras c USING(camera_id) "
+                "ORDER BY u.created_at DESC LIMIT ?", (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def upload(self, upload_id: str) -> dict | None:
+        with self._lock:
+            r = self._conn.execute("SELECT * FROM uploads WHERE upload_id=?", (upload_id,)).fetchone()
+        return dict(r) if r else None
+
+    def upload_for_event(self, camera_id: str, ts_ms: int) -> dict | None:
+        """The uploaded video that covers this moment on this camera, if any."""
+        with self._lock:
+            r = self._conn.execute(
+                "SELECT * FROM uploads WHERE camera_id=? AND start_ts<=? AND start_ts+COALESCE(duration_ms,0)>=? "
+                "ORDER BY created_at DESC LIMIT 1", (camera_id, ts_ms, ts_ms),
+            ).fetchone()
+        return dict(r) if r else None
+
+    def fail_interrupted_uploads(self) -> int:
+        with self._lock, self._conn:
+            return self._conn.execute(
+                "UPDATE uploads SET status='failed', error='interrupted by restart' "
+                "WHERE status IN ('queued','processing','verifying')"
+            ).rowcount
+
     def timings(self) -> list[dict]:
         with self._lock:
             rows = self._conn.execute(

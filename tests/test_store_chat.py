@@ -123,7 +123,20 @@ def test_chat_falls_back_to_keywords_when_llm_fails(store, monkeypatch):
     monkeypatch.setattr(parser, "now", lambda: NOW)
     ans = ChatService(store, parser).ask("how many tailgating events on camera 2 today")
     assert ans.parsed.method == "keywords"
-    assert ans.text.startswith("1 confirmed tailgating events")
+    assert ans.text.startswith("1 confirmed tailgating event on")
+
+
+def test_llm_hallucinations_are_reconciled_with_the_question(store, monkeypatch):
+    # Seen live: asked about falls, the model returned every camera and no category.
+    llm = FakeLlm(LlmFilter(cameras=["Corridor", "Lobby entrance"], intent="list"))
+    parser = QuestionParser(llm)
+    monkeypatch.setattr(parser, "now", lambda: NOW)
+    f = parser.parse("How many people fell this week?", [
+        {"camera_id": c.camera_id, "name": c.name, "aliases": c.aliases} for c in CAMS]).filter
+    assert f.camera_ids == []
+    assert f.categories == [Category.PERSON_DOWN]
+    assert f.intent == "count"
+    assert f.start is not None
 
 
 def test_unknown_camera_is_reported(store, monkeypatch):

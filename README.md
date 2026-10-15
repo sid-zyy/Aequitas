@@ -28,7 +28,24 @@ ollama pull qwen2.5vl:3b
 On an NVIDIA machine, install the CUDA build of PyTorch first (see pytorch.org), then the line above.
 `device: auto` in `config/settings.yaml` picks the GPU automatically.
 
-## Use
+## Web app
+
+```bash
+.venv\Scripts\python -m minerva web      # http://127.0.0.1:8000
+```
+
+- **Analyze video:** upload footage (MP4/MOV/AVI/MKV/WebM, up to 4 GB), pick or create a camera, choose
+  tracking-triggered or VLM-review mode and the vision model. Jobs run in the background with live progress.
+- **Ask Minerva:** chat in plain language. Answers list matching events with `[#id]` references and key frames.
+- **Event log:** filter by camera, category, status or summary text. Open an event to see its key frames,
+  details, and the uploaded video at the moment it happened.
+- **Overview:** incident counts by category and the latest confirmed incidents.
+
+The server binds to localhost only. The API is documented at `/api/docs`.
+Cameras created from the upload form have no zones yet, so the tailgating, crowd and loitering rules
+only run on cameras whose zones are defined in `config/cameras.yaml`.
+
+## Command line
 
 ```bash
 # M0: measure detector and VLM speed and memory on this machine
@@ -41,7 +58,6 @@ On an NVIDIA machine, install the CUDA build of PyTorch first (see pytorch.org),
 
 # Ask questions
 .venv\Scripts\python -m minerva ask "Show all tailgating events from camera 2 today"
-.venv\Scripts\python -m minerva ui        # http://127.0.0.1:7860
 
 # Latency summary of recorded events
 .venv\Scripts\python -m minerva stats
@@ -74,6 +90,6 @@ minerva/triggers    one rule per category + the engine (cooldown, episodes)
 minerva/understand  keyframe grid, VLM prompt/client, fusion
 minerva/store       SQLite schema, EventStore, QueryFilter -> SQL
 minerva/chat        question -> QueryFilter (LLM, keyword fallback), templated answers
-minerva/ui          Gradio app
+minerva/web         FastAPI server, upload job runner, single-page frontend (static/)
 minerva/eval        M0 spike, latency report
 ```

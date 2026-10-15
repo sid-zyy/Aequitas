@@ -208,6 +208,25 @@ def keyword_filter(question: str, now: datetime, cameras: list[dict]) -> LlmFilt
     )
 
 
+def reconcile(lf: LlmFilter, kw: LlmFilter, question: str) -> LlmFilter:
+    """Check a small LLM's filter against what the question literally says. Small models invent
+    cameras and drop categories; the keyword parse is a reliable floor for both."""
+    q = question.lower()
+    cams = [c for c in lf.cameras if c.strip() and c.lower() in q]  # only cameras the user actually named
+    for c in kw.cameras:
+        if c not in cams:
+            cams.append(c)
+    return lf.model_copy(update={
+        "cameras": cams,
+        "categories": lf.categories or kw.categories,
+        "subtypes": lf.subtypes or kw.subtypes,
+        "start": lf.start or kw.start,
+        "end": lf.end or kw.end,
+        "intent": "count" if kw.intent == "count" else lf.intent,
+        "include_unconfirmed": lf.include_unconfirmed or kw.include_unconfirmed,
+    })
+
+
 class QuestionParser:
     def __init__(self, llm=None, tz: tzinfo | None = None):
         self.llm = llm  # a VlmClient, or None for keyword-only
@@ -221,8 +240,7 @@ class QuestionParser:
         if self.llm is not None:
             lf = self.llm.structured([{"role": "user", "content": _prompt(question, now, cameras)}], LlmFilter)
             if lf is not None:
-                # Small models miss this flag often; an explicit status word always wins.
-                lf.include_unconfirmed = lf.include_unconfirmed or wants_unconfirmed(question)
+                lf = reconcile(lf, keyword_filter(question, now, cameras), question)
                 res = finalize(lf, now, cameras)
                 res.method = "llm"
                 return res

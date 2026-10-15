@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minerva · Video Event Intelligence</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M6 16s4-7 10-7 10 7 10 7-4 7-10 7S6 16 6 16z' fill='none' stroke='white' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Minerva</div>
+        <div class="brand-sub">Video event intelligence</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Main">
+      <a href="#/overview" data-route="overview">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Overview
+      </a>
+      <a href="#/analyze" data-route="analyze">
+        <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+        Analyze video
+        <span class="nav-badge" id="nav-jobs" hidden></span>
+      </a>
+      <a href="#/ask" data-route="ask">
+        <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
+        Ask Minerva
+      </a>
+      <a href="#/events" data-route="events">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        Event log
+      </a>
+    </nav>
+
+    <div class="sys" id="sys">
+      <div class="sys-title">System</div>
+      <div class="sys-row"><span class="dot" id="sys-vlm-dot"></span><span id="sys-vlm">Checking model…</span></div>
+      <div class="sys-row muted" id="sys-device">—</div>
+      <div class="sys-foot">Local inference · no cloud APIs</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Overview -->
+    <section class="page" data-page="overview">
+      <header class="page-head">
+        <div>
+          <h1>Overview</h1>
+          <p class="sub">Confirmed incidents across all cameras and analyzed videos.</p>
+        </div>
+        <a class="btn btn-primary" href="#/analyze">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          Analyze a video
+        </a>
+      </header>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Incidents by category</h2><span class="muted small">confirmed</span></div>
+          <div id="cat-bars" class="bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Recent incidents</h2><a class="link small" href="#/events">View all</a></div>
+          <div id="recent" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analyze -->
+    <section class="page" data-page="analyze">
+      <header class="page-head">
+        <div>
+          <h1>Analyze video</h1>
+          <p class="sub">Upload recorded footage. Minerva detects, classifies and summarizes incidents, then makes them searchable.</p>
+        </div>
+      </header>
+      <div class="grid-analyze">
+        <form class="card" id="upload-form" novalidate>
+          <div class="card-head"><h2>New analysis</h2></div>
+          <label class="drop" id="drop">
+            <input type="file" id="file" accept="video/*,.mp4,.mov,.avi,.mkv,.webm,.m4v" hidden>
+            <svg viewBox="0 0 24 24"><path d="M15 10l4.6-2.3A1 1 0 0121 8.6v6.8a1 1 0 01-1.4.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <div class="drop-title" id="drop-title">Drop a video here or <u>browse</u></div>
+            <div class="drop-sub" id="drop-sub">MP4, MOV, AVI, MKV or WebM · up to 4 GB</div>
+          </label>
+
+          <div class="field">
+            <label for="camera">Camera</label>
+            <select id="camera"></select>
+            <input id="new-camera" type="text" placeholder="New camera name, e.g. Loading dock" maxlength="60" hidden>
+          </div>
+
+          <div class="field">
+            <label for="recorded">Recorded at <span class="muted">(optional)</span></label>
+            <input id="recorded" type="datetime-local" step="1">
+            <div class="hint">Used to timestamp incidents. Defaults to the upload time.</div>
+          </div>
+
+          <div class="field">
+            <span class="label">Analysis mode</span>
+            <div class="seg" role="radiogroup" id="mode">
+              <button type="button" role="radio" aria-checked="true" data-value="triggered">
+                <strong>Tracking-triggered</strong><span>YOLO tracking decides when the VLM looks. Fast.</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-value="periodic">
+                <strong>VLM review</strong><span>No tracking; the VLM reviews every window. Slower.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="model">Vision-language model</label>
+            <select id="model"></select>
+          </div>
+
+          <div class="upload-bar" id="upload-bar" hidden><div></div></div>
+          <div class="form-error" id="form-error" role="alert" hidden></div>
+          <button class="btn btn-primary btn-block" id="submit" type="submit" disabled>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Start analysis
+          </button>
+        </form>
+
+        <div class="card">
+          <div class="card-head"><h2>Analysis jobs</h2><span class="muted small" id="jobs-count"></span></div>
+          <div id="jobs" class="jobs"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ask -->
+    <section class="page page-chat" data-page="ask">
+      <header class="page-head">
+        <div>
+          <h1>Ask Minerva</h1>
+          <p class="sub">Ask about recorded incidents in plain language. Every answer is drawn from the event database.</p>
+        </div>
+        <button class="btn btn-ghost" id="chat-clear" type="button">New conversation</button>
+      </header>
+      <div class="chat card">
+        <div class="thread" id="thread" aria-live="polite">
+          <div class="chat-empty" id="chat-empty">
+            <div class="chat-empty-icon"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg></div>
+            <h3>What would you like to know?</h3>
+            <p class="muted">Try one of these:</p>
+            <div class="chips" id="suggestions"></div>
+          </div>
+        </div>
+        <form class="composer" id="composer">
+          <textarea id="question" rows="1" maxlength="500" placeholder="e.g. Show all tailgating events from camera 2 today" aria-label="Question"></textarea>
+          <button class="btn btn-primary btn-icon" type="submit" id="send" aria-label="Send">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Events -->
+    <section class="page" data-page="events">
+      <header class="page-head">
+        <div>
+          <h1>Event log</h1>
+          <p class="sub" id="events-sub">All recorded incidents.</p>
+        </div>
+      </header>
+      <div class="filters card">
+        <select id="f-camera" aria-label="Camera"></select>
+        <select id="f-category" aria-label="Category"></select>
+        <select id="f-status" aria-label="Status">
+          <option value="confirmed">Confirmed</option>
+          <option value="all">All statuses</option>
+          <option value="disputed">Disputed</option>
+          <option value="unverified">Unverified</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input id="f-q" type="search" placeholder="Search summaries…" aria-label="Search summaries">
+      </div>
+      <div class="event-grid" id="event-grid"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Event detail -->
+<dialog class="modal" id="modal">
+  <div class="modal-head">
+    <div>
+      <div class="modal-title" id="m-title"></div>
+      <div class="muted small" id="m-sub"></div>
+    </div>
+    <button class="btn btn-ghost btn-icon" id="m-close" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="media">
+      <div class="tabs" id="m-tabs" hidden>
+        <button class="tab active" data-tab="frames">Key frames</button>
+        <button class="tab" data-tab="video">Video</button>
+      </div>
+      <img id="m-img" alt="Key frames of the event">
+      <video id="m-video" controls preload="metadata" hidden></video>
+    </div>
+    <div class="details">
+      <p id="m-summary" class="m-summary"></p>
+      <dl id="m-meta" class="meta"></dl>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

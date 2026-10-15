@@ -47,7 +47,7 @@ def _fmt_time(ms: int, tz: tzinfo | None, with_date: bool = True) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S" if with_date else "%H:%M:%S")
 
 
-def describe(f: QueryFilter, cameras: list[dict]) -> str:
+def describe(f: QueryFilter, cameras: list[dict], count: int = 2) -> str:
     parts = []
     if f.subtypes:
         parts.append(" / ".join(s.replace("_", " ") for s in f.subtypes))
@@ -56,7 +56,7 @@ def describe(f: QueryFilter, cameras: list[dict]) -> str:
     statuses = {s.value for s in f.statuses}
     if statuses == {Status.CONFIRMED.value}:
         parts.insert(0, "confirmed")
-    s = " ".join(parts + ["events"])
+    s = " ".join(parts + ["event" if count == 1 else "events"])
     if f.camera_ids:
         names = {c["camera_id"]: c["name"] for c in cameras}
         s += " on " + ", ".join(f"{names.get(i, i)} ({i})" for i in f.camera_ids)
@@ -118,7 +118,7 @@ class ChatService:
         parsed = self.parser.parse(question, cameras)
         f = parsed.filter
         total = self.store.count(f)
-        desc = describe(f, cameras)
+        desc = describe(f, cameras, total)
         lines = list(parsed.warnings)
         summary = None
         rows: list[dict] = []
