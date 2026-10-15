@@ -31,9 +31,12 @@ IGNORE = [
     "lm_head",
     "re:.*embed.*",  # embed_tokens, embed_tokens_per_layer (PLE), embed_vision, embed_audio
     "re:.*per_layer_model_projection.*",
-    "re:.*vision_tower.*",
+    "re:.*vision_tower.*",  # Gemma 4
     "re:.*audio_tower.*",
     "re:.*multi_modal_projector.*",
+    "re:.*visual.*",  # Qwen3-VL vision encoder + merger
+    "re:.*vision_model.*",  # SmolVLM2 / Idefics3 vision encoder
+    "re:.*connector.*",  # SmolVLM2 projector
     "re:.*router",
 ]
 
