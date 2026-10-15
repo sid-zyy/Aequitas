@@ -57,6 +57,9 @@ if not REPO.exists():
 sys.path.insert(0, str(REPO))
 sh("pip install -q ollama pydantic pyyaml httpx")
 if not shutil.which("ollama"):
+    # The installer unpacks a .tar.zst; Kaggle's image has no zstd (seen 2026-10-16: "requires zstd")
+    if not shutil.which("zstd"):
+        sh("(apt-get update -qq && apt-get install -y -qq zstd) || (sudo apt-get update -qq && sudo apt-get install -y -qq zstd)")
     sh("curl -fsSL https://ollama.com/install.sh | sh")
 server = subprocess.Popen(["ollama", "serve"], stdout=open(OUT / "ollama.log", "w"), stderr=subprocess.STDOUT,
                           env={**os.environ, "OLLAMA_KEEP_ALIVE": "30m"})
