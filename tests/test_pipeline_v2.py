@@ -504,3 +504,45 @@ def test_chat_reports_its_response_time_per_step(store, monkeypatch):
     assert {"parse_ms", "query_ms", "total_ms"} <= set(ans.timings)
     done = list(svc.ask_stream("Show all tailgating events from camera 2 today"))[-1]
     assert {"parse_ms", "query_ms", "summary_ttft_ms", "summary_ms", "elapsed_ms"} <= set(done)
+
+
+# ---------- violence clip model as the second signal (periodic / live mode) ----------
+
+def test_fuse_window_rules():
+    from aequitas.understand.fusion import fuse_window
+    from aequitas.understand.prompts import VlmAnswer
+
+    vague = VlmAnswer(category="none", summary="People are gathered in an outdoor area.")
+    ans, src = fuse_window(vague, 0.93, 0.6)
+    assert ans.category == "fighting" and ans.confidence == 0.93 and src == "clip_model"
+    assert ans.summary == vague.summary  # the description is kept; only the label is upgraded
+    fight = VlmAnswer(category="fighting", summary="Two men exchange punches.")
+    assert fuse_window(fight, 0.9, 0.6) == (fight, "both")
+    assert fuse_window(fight, 0.1, 0.6) == (fight, "vlm")  # a fight the VLM saw is never downgraded
+    assert fuse_window(vague, 0.3, 0.6) == (vague, "vlm")
+    assert fuse_window(vague, None, 0.6) == (vague, "vlm")
+    ans, src = fuse_window(None, 0.95, 0.6)  # VLM failed but the clip model is sure
+    assert ans.category == "fighting" and "clip model" in ans.summary and src == "clip_model"
+
+
+def test_window_with_high_violence_score_becomes_a_fighting_event(periodic_pipeline):
+    from aequitas.pipeline import VlmJob
+    from aequitas.understand.stages import Understanding
+    from aequitas.understand.prompts import VlmAnswer
+
+    p, store = periodic_pipeline
+
+    class FakeViolence:
+        threshold = 0.6
+
+    p.violence_model = FakeViolence()
+    for i in range(2):
+        job = VlmJob("cam1", b"jpeg", time.perf_counter_ns(), window=(i * 4000, (i + 1) * 4000),
+                     seq=p.order.ticket("cam1"), violence=0.9)
+        u = Understanding(VlmAnswer(category="none", summary="People are gathered."), "People are gathered.", 800, 40)
+        p._apply_window_result(job, u, 1.0)
+    w = store.recent_windows("cam1", 2)
+    assert [x["label"] for x in w] == ["fighting", "fighting"] and w[0]["source"] == "clip_model"
+    assert w[0]["violence"] == 0.9
+    ev = store._conn.execute("SELECT category, status FROM events").fetchall()
+    assert [tuple(e) for e in ev] == [("fighting", "confirmed")]

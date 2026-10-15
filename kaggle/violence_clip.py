@@ -6,9 +6,11 @@
 #
 # **Kaggle setup**
 # 1. Settings → Accelerator → **GPU T4 x2** (or P100). Internet **on** (for the pretrained weights).
-# 2. *Add data*: a violence dataset with class folders, e.g. **RWF-2000** (`Fight/NonFight`) or
-#    **Real Life Violence Situations** (`Violence/NonViolence`). Optional: your own hard-negative
-#    clips (festivals, sports, dancing, processions) in a folder named `NonViolence`.
+# 2. *Add data* (any of these; every attached dataset is searched):
+#    - **Smart-City CCTV Violence Detection (SCVD)**: real CCTV, `Violence` / `Weaponized` / `NonViolence`.
+#      The faculty's sample clips (v001, w001...) look like SCVD: it is the closest match to their data.
+#    - **RWF-2000** (`Fight/NonFight`, real CCTV) and/or **Real Life Violence Situations** (`Violence/NonViolence`).
+#    - Optional: your own hard negatives (festivals, sports, dancing, processions) in a folder `NonViolence`.
 # 3. Edit `SOURCES` below if your paths differ, then *Run all*.
 # 4. Download `/kaggle/working/violence_clip.zip` and unzip it into Aequitas's `models/` folder.
 #
@@ -41,10 +43,10 @@ WORK = Path(os.environ.get("AEQUITAS_WORK", "/kaggle/working"))
 # retrain with `clip_fps=8, clip_len=16`.
 
 # %%
-SOURCES = [
-    "/kaggle/input/rwf2000",
-    "/kaggle/input/real-life-violence-situations-dataset",
-]
+# Every dataset attached to the notebook is searched; labels come from folder names.
+SOURCES = sorted(str(p) for p in Path("/kaggle/input").glob("*")) if Path("/kaggle/input").exists() else []
+# The faculty's sample clips are the test set: never train on them, or their score means nothing.
+EXCLUDE_STEMS = {"v001", "v006", "v011", "v026", "w001"}
 CFG = dict(
     arch="r3d_18",          # r3d_18 | mc3_18 | r2plus1d_18 (torchvision, Kinetics-400 pretrained)
     clip_fps=4, clip_len=8, short_side=128, crop=112,
@@ -52,7 +54,8 @@ CFG = dict(
     workers=4, seed=0, val_frac=0.15, degrade_p=0.3,
     cache_dir=str(WORK / "cache"), out_dir=str(WORK / "violence_clip"),
 )
-POSITIVE = {"fight", "fights", "violence", "violent", "riot", "fighting"}
+POSITIVE = {"fight", "fights", "violence", "violent", "riot", "fighting",
+            "weaponized", "weaponised", "weapon", "weapons", "weaponizedviolence"}
 NEGATIVE = {"nonfight", "non_fight", "nofight", "nonviolence", "non_violence", "non-violence",
             "nonviolent", "noviolence", "normal", "negative"}
 VIDEO_EXTS = {".avi", ".mp4", ".mov", ".mkv", ".mpg", ".mpeg", ".webm", ".m4v"}
@@ -125,6 +128,8 @@ for src in SOURCES:
         print(f"WARNING: {src} not found, skipped (add it via 'Add data' or edit SOURCES)")
         continue
     for p in root.rglob("*"):
+        if p.stem.split("_")[0].lower() in EXCLUDE_STEMS:
+            continue  # held-out faculty clips
         if p.suffix.lower() in VIDEO_EXTS and (lab := label_of(p.relative_to(root))) is not None:
             split = split_of(p.relative_to(root)) or ("val" if random.random() < CFG["val_frac"] else "train")
             items.append({"path": str(p), "label": lab, "split": split})

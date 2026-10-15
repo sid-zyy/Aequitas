@@ -8,6 +8,24 @@ memory, and outputs `ablation.zip` with `ABLATION.md` (table) and `ablation.png`
 **Steps, budget and decision rule: [docs/ABLATION_PLAN.md](../docs/ABLATION_PLAN.md) §7.** About 3–4 GPU hours on
 GPU T4 x2.
 
+## Improve fight / weapon detection: train `violence_clip.ipynb` on CCTV data
+
+Why: on the faculty's sample clips (v001-v026, w001) Gemma's summaries are too vague to label ("people
+gathered in an outdoor area"): 0/5 caught. A 3D CNN that watches 2 s of motion is the second signal; in live
+mode a confident score upgrades a window to `fighting` (aequitas/understand/fusion.py `fuse_window`).
+
+1. Import `violence_clip.ipynb`; Accelerator **GPU T4 x2**, Internet **On**.
+2. **Add Input** (search these names):
+   - **"Smart-City CCTV Violence Detection Dataset (SCVD)"**: real CCTV with Violence / Weaponized / NonViolence;
+     the faculty's clips look like this dataset.
+   - **"RWF-2000"** (real CCTV fights) and/or **"Real Life Violence Situations"**.
+   Every attached dataset is used; labels come from folder names. The 5 faculty clips are excluded by name.
+3. **Save Version → Save & Run All**. About 1-2 h on a T4.
+4. Download `violence_clip.zip` → unzip into `Aequitas/models/violence_clip/`, then in `config/settings.yaml`:
+   `models: {violence_dir: models/violence_clip}`.
+5. Held-out check on the faculty clips:
+   `.venv/Scripts/python scripts/eval_violence.py --model models/violence_clip --videos data/footage/faculty`
+
 ## Training notebooks
 
 Two models that fix what the CAVIAR real-footage test exposed (see docs/ROADMAP.md):
