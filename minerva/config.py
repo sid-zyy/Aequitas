@@ -8,6 +8,8 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
+from minerva.taxonomy import DEFAULT_CATEGORIES, validate
+
 Point = tuple[float, float]  # normalised [0, 1] image coordinates
 
 
@@ -174,6 +176,8 @@ class TriggersCfg(BaseModel):
 
 
 class Settings(BaseModel):
+    # Stage 2 label set: name -> one-line definition shown to the classifier (minerva/taxonomy.py).
+    categories: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_CATEGORIES))
     device: str = "auto"  # auto | cpu | cuda:0 | mps
     sample_fps: float = 4.0
     ring_buffer_s: float = 12.0
@@ -188,6 +192,11 @@ class Settings(BaseModel):
     chat: ChatCfg = ChatCfg()
     fusion: FusionCfg = FusionCfg()
     triggers: TriggersCfg = TriggersCfg()
+
+    @field_validator("categories")
+    @classmethod
+    def _categories(cls, v):
+        return validate(v)
 
     @property
     def db_path(self) -> Path:

@@ -16,17 +16,11 @@ from pydantic import BaseModel, Field
 from minerva.chat.parser import ParseResult, QuestionParser
 from minerva.store.db import EventStore
 from minerva.store.query import QueryFilter
+from minerva.taxonomy import label
 from minerva.types import Status
 
 log = logging.getLogger(__name__)
 
-_LABELS = {
-    "person_down": "person down",
-    "fighting": "fighting",
-    "tailgating": "tailgating",
-    "crowd_incident": "crowd incident",
-    "suspicious_activity": "suspicious activity",
-}
 MAX_SUMMARY_ROWS = 15  # keep the prompt small on CPU-only machines
 
 
@@ -54,7 +48,7 @@ def describe(f: QueryFilter, cameras: list[dict], count: int = 2) -> str:
     if f.subtypes:
         parts.append(" / ".join(s.replace("_", " ") for s in f.subtypes))
     elif f.categories:
-        parts.append(" / ".join(_LABELS[c.value] for c in f.categories))
+        parts.append(" / ".join(label(c) for c in f.categories))
     statuses = {s.value for s in f.statuses}
     if statuses == {Status.CONFIRMED.value}:
         parts.insert(0, "confirmed")

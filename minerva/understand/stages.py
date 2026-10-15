@@ -23,11 +23,12 @@ class Understanding:
         return sum(parts) if parts else None
 
 
-def understand(vlm, classifier, grid_jpeg: bytes, highlighted: bool) -> Understanding:
+def understand(vlm, classifier, grid_jpeg: bytes, highlighted: bool,
+               categories: dict[str, str] | None = None) -> Understanding:
     s, summarize_ms = vlm.summarize(grid_jpeg, highlighted=highlighted)
     if s is None:
         return Understanding(None, None, summarize_ms, None)
-    label, conf, classify_ms = classifier.classify_text(s.summary, s.visible_evidence)
+    label, conf, classify_ms = classifier.classify_text(s.summary, s.visible_evidence, categories)
     summary = s.summary.strip()
     if label is None:
         return Understanding(None, summary, summarize_ms, classify_ms)
