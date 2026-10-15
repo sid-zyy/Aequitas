@@ -84,6 +84,13 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--concurrency", type=int, default=4)
     ev.add_argument("--label", default="", help="e.g. w4a16, used in the report name")
 
+    ds = sub.add_parser("eval-dataset", help="run a labelled video dataset (e.g. the faculty's) through all stages")
+    ds.add_argument("--data", required=True, help="dataset folder")
+    ds.add_argument("--manifest", default=None, help="CSV/JSON/JSONL listing videos (default: auto-detect)")
+    ds.add_argument("--label-map", default=None, help="YAML {dataset label: our category}")
+    ds.add_argument("--limit", type=int, default=None, help="only the first N videos (quick check)")
+    ds.add_argument("--label", default="")
+
     sub.add_parser("stats", help="per-stage latency summary of recorded events")
 
     rep = sub.add_parser("eval-report", help="score recorded events per clip against expected labels")
@@ -177,6 +184,22 @@ def main(argv: list[str] | None = None) -> int:
         items, cats = load_items(args.labels)
         report = run_eval(make_client(ep), items, cats or settings.categories, args.concurrency, args.label,
                           settings.data_dir / "reports")
+        print(summary_line(report))
+        return 0
+
+    if args.cmd == "eval-dataset":
+        from aequitas.eval.dataset import load_dataset, load_label_map, map_labels, run_dataset_eval, summary_line
+        from aequitas.understand.vlm_client import make_client
+
+        items = load_dataset(args.data, args.manifest)[: args.limit]
+        if not items:
+            print("No videos found.", file=sys.stderr)
+            return 2
+        items, own = map_labels(items, load_label_map(args.label_map))
+        vlm = make_client(settings.vlm)
+        clf = make_client(settings.classifier.endpoint(settings.vlm)) if settings.classifier.overridden else vlm
+        report = run_dataset_eval(vlm, clf, items, own or settings.categories, settings.vlm.tile_px, args.label,
+                                  settings.data_dir / "reports")
         print(summary_line(report))
         return 0
 
