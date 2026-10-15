@@ -51,6 +51,23 @@ def test_none_or_other_category_closes_event_and_failures_are_ignored():
     assert other.action == "new"
 
 
+def test_clip_model_vote_confirms_fight_when_vlm_label_differs():
+    F = frozenset({"fighting"})
+    agg = WindowAggregator()
+    fight = agg.add("cam1", 0, 4000, ans("fighting"), F)
+    d = agg.add("cam1", 4000, 8000, ans("person_down"), F)  # VLM says person_down, clip model 0.99
+    assert d.action == "update" and d.event.event_uid == fight.event.event_uid and d.status == Status.CONFIRMED
+    # VLM label first, then fighting: the earlier window's clip vote counts towards the new fight event
+    agg = WindowAggregator()
+    agg.add("cam2", 0, 4000, ans("suspicious_activity"), F)
+    d = agg.add("cam2", 4000, 8000, ans("fighting"), F)
+    assert d.action == "new" and d.status == Status.CONFIRMED and d.event.start_ms == 0
+    # without the clip vote nothing changes
+    agg = WindowAggregator()
+    agg.add("cam3", 0, 4000, ans("fighting"))
+    assert agg.add("cam3", 4000, 8000, ans("person_down")).action == "new"
+
+
 def test_cameras_are_independent_and_gaps_split_events():
     agg = WindowAggregator(max_gap_ms=5000)
     a = agg.add("cam1", 0, 4000, ans("tailgating"))
