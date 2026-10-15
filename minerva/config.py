@@ -27,19 +27,52 @@ class TrackerCfg(BaseModel):
     matching_threshold: float = 0.8
 
 
-class VlmCfg(BaseModel):
+Backend = Literal["ollama", "openai"]  # openai = any OpenAI-compatible LOCAL server (llama.cpp, vLLM, LM Studio)
+
+
+class LlmEndpoint(BaseModel):
+    backend: Backend = "ollama"
     host: str = "http://127.0.0.1:11434"
     model: str = "qwen2.5vl:3b"
+    api_key_env: str | None = None  # env var holding a key, for local servers that require one
+    allow_remote: bool = False  # refuse non-local hosts so no cloud API is used by accident
+    # Ollama 'think' flag. False keeps reasoning models (Gemma 4, Qwen3) from spending time on hidden
+    # reasoning; harmless for others. None = omit the flag (for servers that reject it).
+    think: bool | None = False
     num_ctx: int = 4096
     timeout_s: float = 300
     keep_alive: str = "30m"
+
+
+class VlmCfg(LlmEndpoint):
     tile_px: int = 448
     max_queue_per_camera: int = 8
 
 
 class ChatCfg(BaseModel):
-    model: str | None = None  # None = reuse the VLM model
+    # Any field left null falls back to the VLM endpoint, so by default one model serves both.
+    backend: Backend | None = None
+    host: str | None = None
+    model: str | None = None
+    api_key_env: str | None = None
+    think: bool | None = None
+    summarize: bool = True  # add an LLM-written summary that may only cite retrieved event IDs
     timezone: str | None = None  # IANA name; None = system local time
+
+    def endpoint(self, vlm: VlmCfg) -> LlmEndpoint:
+        base = vlm.model_dump(include=set(LlmEndpoint.model_fields))
+        own = {k: v for k, v in self.model_dump(include={"backend", "host", "model", "api_key_env", "think"}).items()
+               if v is not None}
+        return LlmEndpoint(**{**base, **own})
+
+
+class AnalysisCfg(BaseModel):
+    # triggered: YOLO + rules decide when the VLM runs (default, cheap).
+    # periodic: no YOLO; the VLM reviews every window of sampled frames.
+    mode: Literal["triggered", "periodic"] = "triggered"
+    window_s: float = 4.0
+    confirm_votes: int = 2
+    max_gap_s: float = 10.0  # windows further apart than this never merge into one event
 
 
 class FusionCfg(BaseModel):
@@ -111,6 +144,7 @@ class Settings(BaseModel):
     ring_buffer_s: float = 12.0
     ring_buffer_max_width: int = 960
     data_dir: Path = Path("data")
+    analysis: AnalysisCfg = AnalysisCfg()
     detector: DetectorCfg = DetectorCfg()
     tracker: TrackerCfg = TrackerCfg()
     vlm: VlmCfg = VlmCfg()

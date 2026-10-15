@@ -6,6 +6,17 @@ a quantized VLM in Ollama for verification and summaries, SQLite for storage, Gr
 
 Design and event definitions: [docs/DESIGN.md](docs/DESIGN.md).
 
+**Two analysis modes** (`analysis.mode` in `config/settings.yaml`):
+- `triggered` (default): YOLO tracking and rules decide when the VLM looks, so it runs a few times per event.
+- `periodic`: no YOLO; the VLM reviews every window of sampled frames. Simpler, but one VLM call per window per camera.
+
+**Models are independently replaceable.** The VLM (`vlm:`) and chat LLM (`chat:`) can each point at Ollama
+or at any local OpenAI-compatible server (llama.cpp, vLLM, LM Studio). Gemma 4 (`gemma4:e2b`, `gemma4:e4b`)
+and Qwen2.5-VL-3B are the tested candidates. Non-local hosts are refused unless `allow_remote: true`.
+
+**Grounded answers.** Every listed event has an `[#id]` reference. The optional LLM summary is kept only if it
+cites retrieved events and nothing else.
+
 ## Setup
 
 ```bash

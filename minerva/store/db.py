@@ -116,6 +116,13 @@ class EventStore:
                 "UPDATE events SET end_ts=MAX(end_ts, ?) WHERE event_uid=?", (end_ts, event_uid)
             )
 
+    def update_event(self, event_uid: str, end_ts: int, status: str, confidence: float) -> None:
+        with self._lock, self._conn:
+            self._conn.execute(
+                "UPDATE events SET end_ts=MAX(end_ts, ?), status=?, confidence=? WHERE event_uid=?",
+                (end_ts, status, round(min(1.0, max(0.0, confidence)), 4), event_uid),
+            )
+
     def record_dropped(self, camera_id: str, ts: int, category: str, score: float, reason: str) -> None:
         with self._lock, self._conn:
             self._conn.execute(

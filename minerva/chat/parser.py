@@ -155,6 +155,10 @@ _SUBTYPE_WORDS = {
 }
 
 
+def wants_unconfirmed(question: str) -> bool:
+    return bool(re.search(r"\b(unconfirmed|unverified|disputed|rejected|all statuses)\b", question.lower()))
+
+
 def keyword_filter(question: str, now: datetime, cameras: list[dict]) -> LlmFilter:
     q = question.lower()
     cats = [c for c, rx in _CATEGORY_WORDS.items() if re.search(rx, q)]
@@ -197,7 +201,7 @@ def keyword_filter(question: str, now: datetime, cameras: list[dict]) -> LlmFilt
     return LlmFilter(
         categories=cats, subtypes=subs, cameras=mentions,
         start=start.strftime(fmt) if start else None, end=end.strftime(fmt) if end else None,
-        include_unconfirmed=bool(re.search(r"\b(unconfirmed|disputed|rejected|all statuses)\b", q)),
+        include_unconfirmed=wants_unconfirmed(q),
         text=text,
         intent="count" if re.search(r"\b(how many|count|number of)\b", q) else "list",
         sort="oldest" if re.search(r"\b(first|earliest|oldest)\b", q) else "newest",
@@ -217,6 +221,8 @@ class QuestionParser:
         if self.llm is not None:
             lf = self.llm.structured([{"role": "user", "content": _prompt(question, now, cameras)}], LlmFilter)
             if lf is not None:
+                # Small models miss this flag often; an explicit status word always wins.
+                lf.include_unconfirmed = lf.include_unconfirmed or wants_unconfirmed(question)
                 res = finalize(lf, now, cameras)
                 res.method = "llm"
                 return res

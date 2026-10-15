@@ -5,6 +5,11 @@ sample_fps: 4
 ring_buffer_s: 12
 data_dir: data
 
+analysis:
+  mode: triggered       # triggered = YOLO + rules gate the VLM; periodic = no YOLO, VLM reviews every window
+  window_s: 4           # periodic mode only
+  confirm_votes: 2      # periodic mode: consecutive agreeing windows needed for 'confirmed'
+
 detector:
   weights: yolo11n.pt
   pose_weights: yolo11n-pose.pt
@@ -18,15 +23,22 @@ tracker:
   lost_track_buffer: 60   # frames (15 s at 4 fps) so short occlusions keep the same ID
 
 vlm:
+  backend: ollama         # ollama | openai (any local OpenAI-compatible server: llama.cpp, vLLM, LM Studio)
   host: http://127.0.0.1:11434
-  model: qwen2.5vl:3b
+  model: qwen2.5vl:3b     # team candidate: gemma4:e2b / gemma4:e4b
+  think: false
   num_ctx: 4096
   timeout_s: 300          # CPU-only machines can take a minute or more per event
   tile_px: 448
   max_queue_per_camera: 8
 
 chat:
-  model: null             # null = reuse the VLM (one heavy model at a time)
+  # Any key left null reuses the VLM endpoint (one heavy model at a time).
+  # Example for a separate text model: backend: openai, host: http://127.0.0.1:8080, model: llama-3.2-3b
+  backend: null
+  host: null
+  model: null
+  summarize: true         # short LLM summary that may only cite retrieved event IDs
   timezone: null          # e.g. Asia/Kolkata; null = system local time
 
 triggers:

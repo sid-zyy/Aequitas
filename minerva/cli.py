@@ -25,13 +25,14 @@ def _service(settings, use_llm: bool):
 
     llm = None
     if use_llm:
-        from minerva.understand.vlm_client import VlmClient
+        from minerva.understand.vlm_client import make_client
 
-        llm = VlmClient(settings.vlm, model=settings.chat.model)
+        llm = make_client(settings.chat.endpoint(settings.vlm))
         if not llm.ping():
-            logging.warning("Ollama model %s not reachable; using the keyword parser", llm.model)
+            logging.warning("chat model %s not reachable at %s; using the keyword parser", llm.model, llm.cfg.host)
             llm = None
-    return ChatService(EventStore(settings.db_path), QuestionParser(llm, _tz(settings.chat.timezone)))
+    return ChatService(EventStore(settings.db_path), QuestionParser(llm, _tz(settings.chat.timezone)),
+                       summarize=settings.chat.summarize)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -57,7 +58,8 @@ def main(argv: list[str] | None = None) -> int:
     ui.add_argument("--no-llm", action="store_true")
 
     spike = sub.add_parser("spike", help="M0: measure detector/VLM latency and memory on this machine")
-    spike.add_argument("--models", nargs="+", default=["qwen2.5vl:3b", "qwen3-vl:2b", "qwen3-vl:4b"])
+    spike.add_argument("--models", nargs="+",
+                       default=["qwen2.5vl:3b", "gemma4:e2b", "gemma4:e4b", "qwen3-vl:2b", "qwen3-vl:4b"])
     spike.add_argument("--video", default=None, help="sample frames from this video instead of a stock image")
     spike.add_argument("--vlm-iters", type=int, default=3)
 

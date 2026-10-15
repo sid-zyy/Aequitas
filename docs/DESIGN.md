@@ -12,6 +12,21 @@ Only §4.2 (model sizes) depends on the card.
 rule fires, not from duration (a duration score would always equal the sustain time). The exact
 formulas are in `minerva/triggers/*.py`; the score formulas in §2 are superseded.
 
+## 0. Requirements added at the team meeting (2026-10-15)
+
+The team's workflow slide extends the problem statement. It is binding alongside the PDF.
+
+| Slide requirement | How Minerva meets it |
+|---|---|
+| Capture: RTSP, webcam or file; single or multiple cameras | `FrameSource` per camera, one thread each (§4.1). |
+| Prepare: sample frames; **YOLO tracking is optional**; camera ID and timestamp | Two analysis modes (`analysis.mode`): **`triggered`** (YOLO + rules gate the VLM, the default) and **`periodic`** (no YOLO: the VLM reviews every sampled window). See §3.5. |
+| Understand: **Gemma 4 is the candidate VLM**; summarize and categorise | Gemma 4 (`gemma4:e2b` / `gemma4:e4b`, quantized in Ollama) is a first-class VLM option and part of the M0 comparison with Qwen2.5-VL-3B. Quantized models are allowed. |
+| Structure: summary, category, timestamp, camera ID, key-frame reference | `events` table (§5). |
+| Persist: event database plus key-frame storage | SQLite + JPEGs under `data/keyframes/`. |
+| Chatbot: **any local open-source LLM**; models are independently replaceable | VLM and chat LLM are configured separately. Backends: Ollama or any **local** OpenAI-compatible server (llama.cpp, vLLM, LM Studio). Non-local hosts are refused unless explicitly allowed, so no paid cloud API is used by accident. |
+| Retrieve: filter by time, camera, category | `QueryFilter` → parameterised SQL (§6). |
+| **Grounded response: summary + event references** | Each listed event carries an `[#id]` reference. An optional LLM summary may cite only IDs from the retrieved rows; if it cites anything else it is discarded and the template answer is used. |
+
 ---
 
 ## 1. Pipeline at a glance
@@ -150,6 +165,24 @@ The coefficients are starting values; they get re-fit on the validation split.
 VLM queue holds at most 8 candidates per camera. When full, drop the candidate with the lowest
 trigger score and log it in `dropped_candidates`. Dropped counts go in the latency report.
 
+### 3.5 Periodic mode (no YOLO)
+- Each camera's stream is cut into **windows** (`analysis.window_s`, default 4 s). Each window becomes
+  a 2×2 grid without boxes, and the VLM gets the same category list plus `none`.
+- A new window is only queued when the camera has no window still waiting. If the VLM is slower than
+  real time, windows simply get longer instead of piling up. The effective interval is logged.
+- Consecutive windows with the same category merge into one event, with `end_ts` extended.
+- There is no second signal, so agreement **across windows** replaces agreement with a rule:
+
+| Agreeing consecutive windows | `status` | `confidence` |
+|---|---|---|
+| 1 | `unverified` | 0.4 |
+| ≥ `confirm_votes` (default 2) | `confirmed` | 0.7, +0.05 per further window, capped at 0.9 |
+
+- `unverified` is a fifth status, used only in periodic mode. The chat hides it by default, like
+  `disputed` and `rejected`.
+- Trade-off: this costs one VLM call per window per camera, which is why `triggered` stays the default.
+  On this laptop's CPU (~4.5 s per call) periodic mode keeps up with about one camera.
+
 ---
 
 ## 4. Stack
@@ -187,6 +220,22 @@ Versions are pinned in `requirements.lock` at setup time; nothing above relies o
 | **Total** | **~4.8 GB**, leaving ~1 GB of headroom |
 
 If M0 measures above 5.5 GB: lower Ollama `num_ctx` to 2048, then drop to `qwen3-vl:2b` or SmolVLM2.
+
+### 4.3 M0 results on the dev laptop (CPU only, 2026-10-15)
+| Stage | Measured |
+|---|---|
+| YOLO11n, 640 px, torch CPU | 45–82 ms per frame (p50 across runs), so 4 fps per camera is comfortable |
+| YOLO11n-pose on one crop | 16–36 ms |
+| qwen2.5vl:3b, 896 px 2×2 grid, **uncached** | ~42–46 s per call; 3/3 valid JSON |
+| Chat question → filter (text only) | ~6 s |
+
+Lessons:
+- **Ollama caches identical prompts and images.** A repeated image returns in ~4 s, which is misleading.
+  The spike now uses a different image for every call.
+- At ~45 s per call on CPU, triggered mode is the only practical mode here. Periodic windows stretch to
+  ~45 s. A discrete GPU is expected to bring this down by an order of magnitude (to be measured on the target card).
+- Qwen2.5-VL-3B labelled a static scene as "tailgating" in 2 of 3 calls. The trigger + VLM agreement
+  rule turned that into `disputed`, which is the intended safety net.
 
 ---
 

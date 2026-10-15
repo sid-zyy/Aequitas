@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS events (
   category        TEXT NOT NULL CHECK (category IN
                     ('person_down','fighting','tailgating','crowd_incident','suspicious_activity')),
   subtype         TEXT,
-  status          TEXT NOT NULL CHECK (status IN ('confirmed','disputed','rejected')),
+  status          TEXT NOT NULL CHECK (status IN ('confirmed','disputed','rejected','unverified')),
   confidence      REAL NOT NULL CHECK (confidence BETWEEN 0 AND 1),
   trigger_score   REAL NOT NULL,
   vlm_category    TEXT,

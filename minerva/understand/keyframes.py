@@ -28,8 +28,10 @@ def _letterbox(img: np.ndarray, size: int) -> np.ndarray:
     return canvas
 
 
-def _draw_overlay(frame: BufferedFrame, cand: Candidate, zones: Zones) -> np.ndarray:
+def _draw_overlay(frame: BufferedFrame, cand: Candidate | None, zones: Zones) -> np.ndarray:
     img = frame.image.copy()
+    if cand is None:  # periodic mode: the VLM sees the raw scene
+        return img
     h, w = img.shape[:2]
     thick = max(2, w // 320)
     if cand.category == Category.TAILGATING and zones.entry_line is not None:
@@ -55,12 +57,14 @@ def _draw_overlay(frame: BufferedFrame, cand: Candidate, zones: Zones) -> np.nda
     return img
 
 
-def make_grid(frames: list[BufferedFrame], cand: Candidate, zones: Zones, tile_px: int = 448) -> np.ndarray:
-    """Up to 4 frames, oldest first, tiled 2x2. Each tile is labelled with its time relative to the trigger."""
+def make_grid(frames: list[BufferedFrame], cand: Candidate | None, zones: Zones, tile_px: int = 448) -> np.ndarray:
+    """Up to 4 frames, oldest first, tiled 2x2. Each tile is labelled with its time relative to the
+    trigger (or to the last frame when there is no candidate)."""
+    ref_ms = cand.trigger_ms if cand is not None else (frames[-1].ts_ms if frames else 0)
     tiles = []
     for f in frames[:4]:
         tile = _letterbox(_draw_overlay(f, cand, zones), tile_px)
-        label = f"{(f.ts_ms - cand.trigger_ms) / 1000:+.1f}s"
+        label = f"{(f.ts_ms - ref_ms) / 1000:+.1f}s"
         cv2.putText(tile, label, (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 4)
         cv2.putText(tile, label, (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         tiles.append(tile)

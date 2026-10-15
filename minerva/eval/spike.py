@@ -139,7 +139,13 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
             boxes[i + 1] = tuple(map(float, b))
     buf = [BufferedFrame(1000 * i, f, 1.0, boxes) for i, f in enumerate(frames[:4])]
     cand = Candidate("spike", Category.FIGHTING, None, 0, 3000, 0.7, tuple(boxes))
-    grid_jpeg = encode_jpeg(make_grid(buf, cand, Zones(), settings.vlm.tile_px))
+    grid_img = make_grid(buf, cand, Zones(), settings.vlm.tile_px)
+    grid_jpeg = encode_jpeg(grid_img)
+
+    def unique_grid(i: int) -> bytes:
+        # Every call gets a different image: Ollama caches identical prompts+images, which would
+        # make warm calls look ~10x faster than real events.
+        return encode_jpeg(np.roll(grid_img, shift=17 * (i + 1), axis=1))
     out_dir = settings.data_dir / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "spike-grid.jpg").write_bytes(grid_jpeg)
@@ -155,12 +161,12 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
             continue
         log.info("VLM %s: cold call (includes model load)", model)
         t0 = time.perf_counter()
-        ans, _ = client.classify(grid_jpeg)
+        ans, _ = client.classify(unique_grid(1000 + len(report["vlm"])))
         cold_ms = (time.perf_counter() - t0) * 1000
         warm, answers, valid = [], [ans.model_dump() if ans else None], int(ans is not None)
         for i in range(vlm_iters):
-            log.info("VLM %s: warm call %d/%d", model, i + 1, vlm_iters)
-            ans, ms = client.classify(grid_jpeg)
+            log.info("VLM %s: warm call %d/%d (unique image)", model, i + 1, vlm_iters)
+            ans, ms = client.classify(unique_grid(i))
             warm.append(ms)
             valid += ans is not None
             answers.append(ans.model_dump() if ans else None)

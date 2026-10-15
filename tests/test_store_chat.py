@@ -97,11 +97,14 @@ def test_finalize_clips_future_and_swaps_reversed_times():
 
 
 class FakeLlm:
-    def __init__(self, result):
+    """Returns `result` for filter requests and `summary` for summary requests."""
+
+    def __init__(self, result, summary=None):
         self.result = result
+        self.summary = summary
 
     def structured(self, messages, model_cls, retries=1):
-        return self.result
+        return self.summary if model_cls.__name__ == "GroundedSummary" else self.result
 
 
 def test_chat_service_end_to_end(store, monkeypatch):

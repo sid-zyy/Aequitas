@@ -20,15 +20,22 @@ class VlmAnswer(BaseModel):
     visible_evidence: str = Field(default="", max_length=300)
 
 
-def classify_prompt() -> str:
+def classify_prompt(highlighted: bool = True) -> str:
     cats = "\n".join(f"- {c.value}: {d}" for c, d in CATEGORY_DEFINITIONS.items())
+    if highlighted:
+        focus = (
+            "Red boxes (labelled P = person, B = bag) mark the people or objects to focus on. "
+            "An amber line or outline marks an entrance line or zone.\n\n"
+            "Choose the ONE category that best describes what the highlighted people or objects are doing:\n"
+        )
+    else:
+        focus = "\nChoose the ONE category that best describes what is happening in the scene:\n"
     return (
         "You are reviewing footage from a security camera.\n"
         "The image is a 2x2 grid of four frames from the same camera in time order: "
         "top-left, top-right, bottom-left, bottom-right. Each frame shows its time in seconds "
-        "relative to the last frame. Red boxes (labelled P = person, B = bag) mark the people or "
-        "objects to focus on. An amber line or outline marks an entrance line or zone.\n\n"
-        "Choose the ONE category that best describes what the highlighted people or objects are doing:\n"
+        "relative to the last frame. "
+        f"{focus}"
         f"{cats}\n"
         "- none: none of the above; ordinary activity\n\n"
         "Rules:\n"

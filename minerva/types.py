@@ -22,6 +22,7 @@ class Status(str, Enum):
     CONFIRMED = "confirmed"
     DISPUTED = "disputed"
     REJECTED = "rejected"
+    UNVERIFIED = "unverified"  # periodic mode: seen in one window only
 
 
 CATEGORY_DEFINITIONS: dict[Category, str] = {
