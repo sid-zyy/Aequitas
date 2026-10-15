@@ -52,7 +52,27 @@ small to show the context gain; the window-level test above is the better measur
 The scene gate skipped only normal street windows (13: Phoenix Mall 5, KSR station 2, 80 ft road 2, Forum 2,
 100 ft road 1, Brigade Road 1) and no incident window, for **28 % less Gemma time**. **On** in config/settings.yaml.
 
+## 4. Confirmation rule: replay of the saved windows of all six runs (no GPU, no run-to-run noise)
+
+Every incident clip was flagged at least once (10/10), but short clips missed *confirmation*. The per-window labels
+saved by the six runs above were replayed through each rule; the current rule reproduces the reported numbers exactly.
+
+| Rule | A | A rep | C ctx | B cascade | D gate | D rep | New false alarms |
+|---|---|---|---|---|---|---|---|
+| Current: 2 windows in a row, same label | 7/10 | 5/10 | 7/10 | 2/10 | 5/10 | 5/10 | |
+| 2 of any 3 windows, same label | 7/10 | 5/10 | 7/10 | 2/10 | 5/10 | 5/10 | 0 |
+| 2 in a row, any incident label | 8/10 | 6/10 | 8/10 | 3/10 | 6/10 | 6/10 | 1-3 (wrong labels) |
+| **Clip model votes "fighting" at >= 0.9** | **8/10** | **7/10** | **8/10** | **5/10** | **7/10** | **7/10** | **0** |
+
+Why "2 of 3" changes nothing: the faculty fight clips are only 8 s (two windows). The violence clip model scores
+both windows 0.86-1.0, but Gemma calls one of them person_down or suspicious_activity, and the fusion rule keeps
+Gemma's more specific label, so "fighting" got one vote. With `analysis.clip_votes: true`, a window at the clip
+model's stand-alone threshold (0.9, set earlier on the street clips) also votes "fighting". No normal street clip
+has any window at 0.9. **On.** The rule was chosen after looking at these clips, so this is a demo result, not a
+measured accuracy. Still missed: arrest-1 and arrest-2 (one arrest window each), fac-v001 when its second window
+scores 0.86; the fire-rescue "arrest" false alarm comes from Gemma, not from this rule.
+
 ## What limits accuracy now
 
-Every incident clip is flagged at least once (10/10), but short clips (2-4 windows) often miss *confirmation*
-because one window disagrees. A "2 of the last 3 windows" confirmation rule is the next thing to test.
+Arrests: Gemma labels only one window of arrest-1 and arrest-2 as arrest. The fire-rescue clip gets a confirmed
+"arrest" when previous-window context is on.

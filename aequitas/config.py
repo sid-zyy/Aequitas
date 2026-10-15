@@ -110,6 +110,10 @@ class AnalysisCfg(BaseModel):
     # Stage 2 also sees the previous window's summary from the same camera (sequences such as an arrest).
     # Measured (scripts/bench_variants.py, 72 windows): arrest 7->8/12, fire 6->8/10, 0 false alarms, +0.03 s.
     label_context: bool = True
+    # A window where the violence clip model reaches models.violence_alone_threshold also votes "fighting"
+    # towards confirmation, whatever label the VLM gave. Replay of the six saved demo runs: +1 to +3 confirmed
+    # incidents per run, no new false alarm (results/improvements/README.md, scripts/replay_confirm.py; chosen on those clips).
+    clip_votes: bool = True
     # Coarse stage: a SigLIP scene gate skips the VLM on windows that clearly look normal (aequitas/understand/gate.py).
     # None = off. Example: google/siglip-base-patch16-224 (Apache-2.0, ~0.8 GB).
     gate_model: str | None = None

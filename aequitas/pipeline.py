@@ -446,7 +446,11 @@ class Pipeline:
                                  ans.category if ans else None, ans.confidence if ans else None, u.summarize_ms,
                                  u.classify_ms, (time.perf_counter_ns() - job.capture_ns) / 1e6,
                                  violence=job.violence, source=source)
-        d = self.aggregator.add(job.camera_id, start, end, ans)
+        alone = self.s.models.violence_alone_threshold
+        also = frozenset({"fighting"}) if (self.s.analysis.clip_votes and alone is not None
+                                           and job.violence is not None and job.violence >= max(alone, threshold)
+                                           and "fighting" in self.s.categories) else frozenset()
+        d = self.aggregator.add(job.camera_id, start, end, ans, also)
         log.debug("%s window %.1f s: %s (summarize %.1f s, classify %.2f s)", job.camera_id, (end - start) / 1000,
                   ans.category if ans else "error", (u.summarize_ms or 0) / 1000, (u.classify_ms or 0) / 1000)
         if d.action == "new":
