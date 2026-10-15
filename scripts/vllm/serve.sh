@@ -30,7 +30,6 @@ args=(serve "$MODEL"
   --max-model-len "$MAX_LEN"
   --gpu-memory-utilization "$GPU_UTIL"
   --limit-mm-per-prompt '{"image":1,"audio":0}'
-  --mm-processor-kwargs "{\"max_soft_tokens\":${MAX_SOFT_TOKENS}}"
   --enable-prefix-caching
 )
 
@@ -41,6 +40,11 @@ case "$QUANT" in
         args[1]="$QUANT" ;;  # serve the quantized checkpoint; its config says how it is quantized
 esac
 [ "$CPU_OFFLOAD_GB" != "0" ] && args+=(--cpu-offload-gb "$CPU_OFFLOAD_GB")
+# Gemma-only option: Qwen3-VL and SmolVLM2 reject it
+if [[ "${MODEL,,} ${QUANT,,}" == *gemma* ]]; then
+  args+=(--mm-processor-kwargs "{\"max_soft_tokens\":${MAX_SOFT_TOKENS}}")
+fi
+[ -n "${DTYPE:-}" ] && args+=(--dtype "$DTYPE")  # e.g. half on GPUs without BF16
 
 case "$SPEC" in
   none)  ;;

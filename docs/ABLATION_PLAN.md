@@ -27,9 +27,20 @@ INT8 W8A8 on Turing, but **not FP8 and not BF16** (vLLM quantization hardware ta
 
 ## 2. What is measured (identical for all runs)
 
+**Response time comes first**, measured as a user feels it, in seconds (medians, p95 kept in `results.csv`):
+
+| Response time | Meaning |
+|---|---|
+| Summary: first word / full | image in → first word of the description streams back / whole description back |
+| Label | summary text in → category back |
+| Window total | summary + label for one analysis window; also "8 at once" = 8 cameras in flight |
+| Real clip: video → label | a real clip's 4 key frames in → category out, end to end |
+| Chat: first word / full answer | question with retrieved events in → first word / whole grounded answer |
+| Tokens/s, speculative acceptance | why a config is fast; MTP / n-gram effect |
+
 | Metric | How | Data |
 |---|---|---|
-| **Stage 1 latency**: summarize TTFT, TPOT, total; throughput at c=1 and c=8 | `aequitas bench --tasks summarize classify --concurrency 1 8 --requests 16` (unique image per request) | synthetic grids (latency only) |
+| **Response times** above, at 1 and 8 requests in flight | `aequitas bench --tasks summarize classify chat --concurrency 1 8 --requests 16` (unique image per request) | synthetic grids and prompts |
 | **Stage 2 latency + accuracy**: accuracy, macro-F1, incident precision/recall | `aequitas eval-classify` | `config/classify_eval.yaml` (48 labelled summaries) |
 | **End-to-end on real footage**: summary → label, fighting vs none | stage 1 + 2 on 2×2 grids from 20 clips (10 Violence, 10 NonViolence) | Real Life Violence Situations (Kaggle) |
 | **Quantization damage** to summaries | similarity (ROUGE-L) of each quantized summary to the same model's 16-bit summary of the same grid | the same 20 grids |
@@ -47,9 +58,15 @@ bench + eval), plus ~1 h to quantize, fits one Kaggle session.
 2. For each of the 9 configs: start `vllm serve` → wait for `/health` → run bench + eval-classify + real
    clips → record GPU memory → stop the server.
 3. Gemma's best config: repeat with `SPEC=mtp` (`NSPEC=1,2`) and `SPEC=ngram`.
-4. Write `ablation/results.csv`, `ablation/ABLATION.md` (the table) and `ablation/ablation.png` (chart),
-   then zip `ablation/` for download. Quantized checkpoints are optional outputs, because they are
-   large. The laptop needs only the chosen one.
+4. Save everything, as it happens:
+   - `results.jsonl`: one row per config, appended when the config finishes. If Kaggle times out,
+     re-running skips configs that already succeeded.
+   - `outputs/<config>.jsonl`: every real clip's summary, label, confidence and response times.
+   - `reports/`: raw bench and eval JSON.
+   - `results.csv`, `ABLATION.md` (slide table + the recommended config + why the others were excluded),
+     `ablation.png` (response time vs accuracy, alone and 8 at once), `speculation.png` (Gemma MTP / n-gram).
+   - All of it zipped as `ablation.zip`. The 4-bit checkpoints go to `checkpoints/` (and optionally to
+     private HF repos) so the winner can run on the laptop.
 
 ## 4. How we pick the model (decide before looking at the numbers)
 
@@ -79,6 +96,19 @@ bench + eval), plus ~1 h to quantize, fits one Kaggle session.
    Both run on Kaggle. Decide with the faculty dataset, not the 48-item dev set.
 4. Then the remaining faculty features (React live dashboard, bodycam panel) on the chosen model.
 
+## 7a. Running the winner locally (app + presentation only)
+
+The tests and the ablation run on Kaggle. Only the recommended config runs on the laptop:
+1. Download its checkpoint: from the Output panel (`checkpoints/<name>`) or, if `HF_USER` was set,
+   `huggingface-cli download <HF_USER>/aequitas-<name> --local-dir ~/models/<name>` inside WSL. HF downloads
+   resume, which helps on this connection.
+2. In WSL: `QUANT=~/models/<name> MODEL=<base model id> bash scripts/vllm/serve.sh`. Use `SPEC=mtp` if
+   the winner is Gemma and MTP helped. A Gemma 4-bit checkpoint (~7 GiB) needs `CPU_OFFLOAD_GB=3`; the
+   laptop has 15 GB RAM.
+3. `config/settings.yaml`: `vlm: {backend: openai, host: http://127.0.0.1:8000, model: gemma4}` (the
+   served name), then `aequitas web`.
+4. Re-run `aequitas bench` on the laptop for the demo slide: laptop numbers, not T4 numbers.
+
 ## 7. Exact Kaggle steps
 
 1. kaggle.com → **Create → New Notebook → File → Import Notebook** → upload `kaggle/ablation.ipynb`.
@@ -89,7 +119,9 @@ bench + eval), plus ~1 h to quantize, fits one Kaggle session.
 5. **Run all.** The first cell prints the GPU, and the plan cell prints the configs and an estimated
    time. Leave the tab open or use **Save Version → Save & Run All (Commit)** so it runs unattended
    (counts against GPU quota, max 12 h).
-6. When it finishes: **Output** panel → download `ablation.zip` → unzip into `Aequitas/data/ablation/`
-   → put `ABLATION.md` and `ablation.png` on the slide.
+6. When it finishes: **Output** panel → download `ablation.zip` → unzip into `Aequitas/results/ablation/`
+   and commit it (results are small; `data/` is gitignored, `results/` is not) → put `ABLATION.md`,
+   `ablation.png` and `speculation.png` on the slides.
+   **Save Version** also keeps the notebook's output on Kaggle permanently.
 7. Out of quota or time? Set `MODELS = ["gemma"]` and `PRECISIONS = ["fp16", "w4a16"]` in the config
    cell: the minimum that still shows a 16-vs-4-bit comparison (~1 h).
