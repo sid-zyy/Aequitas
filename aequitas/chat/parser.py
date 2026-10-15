@@ -203,21 +203,38 @@ def keyword_filter(question: str, now: datetime, cameras: list[dict],
     )
 
 
+# A time the keyword parser does not read: only then may the LLM's start/end stand on their own.
+_TIME_HINT = re.compile(r"\b(\d{1,2}\s*(:\d{2})?\s*(am|pm)|\d{1,2}:\d{2}|o'?clock|noon|midnight|since|before|after|"
+                        r"until|till|between|ago|night|monday|tuesday|wednesday|thursday|friday|saturday|sunday|"
+                        r"weekend|month|january|february|march|april|may|june|july|august|september|october|"
+                        r"november|december|\d{4}-\d{2}-\d{2})\b")
+
+
 def reconcile(lf: LlmFilter, kw: LlmFilter, question: str) -> LlmFilter:
     """Check a small LLM's filter against what the question literally says. Small models invent
-    cameras and drop categories; the keyword parse is a reliable floor for both."""
+    cameras and drop categories; the keyword parse is a reliable floor for both.
+
+    Measured on config/chat_eval.yaml (gemma4:e2b): the LLM read yes/no questions ("Any fights...?") as counts
+    and invented or changed time ranges ("last 30 minutes" -> an hour; "today" where no time was asked). So
+    intent comes from the explicit words, and the keyword parser's time range wins whenever it found one."""
     q = question.lower()
     cams = [c for c in lf.cameras if c.strip() and c.lower() in q]  # only cameras the user actually named
     for c in kw.cameras:
         if c not in cams:
             cams.append(c)
+    if kw.start or kw.end:
+        start, end = kw.start, kw.end
+    elif _TIME_HINT.search(q):
+        start, end = lf.start, lf.end
+    else:
+        start = end = None
     return lf.model_copy(update={
         "cameras": cams,
         "categories": lf.categories or kw.categories,
         "subtypes": lf.subtypes or kw.subtypes,
-        "start": lf.start or kw.start,
-        "end": lf.end or kw.end,
-        "intent": "count" if kw.intent == "count" else lf.intent,
+        "start": start,
+        "end": end,
+        "intent": kw.intent,
         "include_unconfirmed": lf.include_unconfirmed or kw.include_unconfirmed,
     })
 

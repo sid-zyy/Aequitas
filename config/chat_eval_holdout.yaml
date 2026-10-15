@@ -1,0 +1,30 @@
+# Held-out chatbot questions: written BEFORE the parser fixes made after the first run on chat_eval.yaml,
+# and not used to choose them. Report fixes on this set. Different phrasings on purpose.
+now: "2026-10-16T15:30"   # a Friday
+cameras:
+  - {camera_id: mg-road, name: MG Road Metro, aliases: [mg road]}
+  - {camera_id: brigade, name: Brigade Road, aliases: []}
+  - {camera_id: ksr, name: KSR Station, aliases: [majestic, railway station]}
+  - {camera_id: forum, name: Forum Mall, aliases: []}
+  - {camera_id: cam2, name: Corridor, aliases: [camera 2]}
+items:
+  - {q: "were there any brawls at forum mall", categories: [fighting], cameras: [forum]}
+  - {q: "number of fire incidents today", categories: [fire], start: "2026-10-16T00:00", end: "2026-10-16T15:30", intent: count}
+  - {q: "pull up arrests on brigade road from yesterday", categories: [arrest], cameras: [brigade], start: "2026-10-15T00:00", end: "2026-10-15T23:59"}
+  - {q: "anything happen at majestic in the past 4 hours", cameras: [ksr], start: "2026-10-16T11:30", end: "2026-10-16T15:30"}
+  - {q: "did a car crash happen near mg road this afternoon", categories: [accident], cameras: [mg-road], start: "2026-10-16T12:00", end: "2026-10-16T15:30"}
+  - {q: "show me people chasing someone", categories: [chase]}
+  - {q: "how many times was someone lying on the ground at the railway station", categories: [person_down], cameras: [ksr], intent: count}
+  - {q: "list weapons seen today on camera 2", categories: [weapon], cameras: [cam2], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "any robbery reported yesterday", categories: [theft], start: "2026-10-15T00:00", end: "2026-10-15T23:59"}
+  - {q: "show riots this week", categories: [riot], start: "2026-10-12T00:00", end: "2026-10-16T15:30"}
+  - {q: "all events including unverified ones at forum mall", cameras: [forum], include_unconfirmed: true}
+  - {q: "is anyone being harassed at mg road", categories: [harassment], cameras: [mg-road]}
+  - {q: "how many incidents in the last hour", start: "2026-10-16T14:30", end: "2026-10-16T15:30", intent: count}
+  - {q: "smoke or flames at brigade road this morning", categories: [fire], cameras: [brigade], start: "2026-10-16T06:00", end: "2026-10-16T12:00"}
+  - {q: "was property damaged at ksr station", categories: [vandalism], cameras: [ksr]}
+  - {q: "show overcrowding at majestic today", categories: [crowd_incident], cameras: [ksr], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "list the fights from the last 45 minutes", categories: [fighting], start: "2026-10-16T14:45", end: "2026-10-16T15:30"}
+  - {q: "anything suspicious left behind in the corridor", categories: [suspicious_activity], cameras: [cam2]}
+  - {q: "count the arrests and fights yesterday", categories: [arrest, fighting], start: "2026-10-15T00:00", end: "2026-10-15T23:59", intent: count}
+  - {q: "show a religious procession at mg road", cameras: [mg-road]}
