@@ -115,7 +115,7 @@ def test_categories_endpoint(tmp_path, monkeypatch):
     from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
-    s = Settings(data_dir=tmp_path)
+    s = Settings(data_dir=tmp_path, auth={"required": False})
     app = web.create_app(s, ChatService(EventStore(s.db_path), QuestionParser(None)), [])
     cats = TestClient(app).get("/api/categories").json()
     assert {"name": "person_down", "label": "person down",

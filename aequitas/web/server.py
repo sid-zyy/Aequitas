@@ -3,25 +3,29 @@ Serves a JSON API under /api and the single-page frontend from ./static. Binds t
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
 import shutil
+import threading
 import time
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from aequitas.auth import Auth, LockedOut
 from aequitas.chat.answer import ChatService
 from aequitas.config import CameraCfg, Settings, resolve_device
 from aequitas.store.db import EventStore
 from aequitas.store.query import QueryFilter
+from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
 from aequitas.types import Status
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
@@ -35,6 +39,29 @@ MAX_UPLOAD_BYTES = 4 * 1024**3
 
 class AskBody(BaseModel):
     question: str = Field(min_length=1, max_length=500)
+
+
+class LoginBody(BaseModel):
+    username: str = Field(min_length=1, max_length=40)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class ReportUpdate(BaseModel):
+    status: Literal["received", "under_review", "action_taken", "closed", "rejected"] | None = None
+    notes: str | None = Field(default=None, max_length=4000)
+
+
+SESSION_COOKIE = "aeq_session"
+# Reachable without signing in: the login itself and the citizen portal.
+PUBLIC_API = ("/api/auth/login", "/api/citizen/")
+
+
+def _session_token(request) -> str | None:
+    token = request.cookies.get(SESSION_COOKIE)
+    header = request.headers.get("authorization", "")
+    if not token and header.lower().startswith("bearer "):
+        token = header[7:].strip()
+    return token
 
 
 def _slug(text: str) -> str:
@@ -82,13 +109,51 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
 
     app = FastAPI(title="Aequitas", docs_url="/api/docs", redoc_url=None)
 
+    auth = Auth(store, settings.auth.session_hours, settings.auth.max_failures, settings.auth.lockout_s)
+    app.state.auth = auth
+
     @app.middleware("http")
-    async def revalidate_frontend(request, call_next):
-        # The frontend changes with the code; make browsers revalidate it (ETags keep this cheap).
+    async def guard_and_revalidate(request: Request, call_next):
+        path = request.url.path
+        request.state.user = None
+        if path.startswith("/api/") and not path.startswith(PUBLIC_API):
+            user = auth.session_user(_session_token(request))
+            if user is None and settings.auth.required:
+                return JSONResponse({"detail": "sign in required"}, status_code=401)
+            request.state.user = user
         response = await call_next(request)
-        if not request.url.path.startswith("/api/"):
+        if not path.startswith("/api/"):
+            # The frontend changes with the code; make browsers revalidate it (ETags keep this cheap).
             response.headers["Cache-Control"] = "no-cache"
         return response
+
+    # ---------- police sign-in ----------
+
+    @app.post("/api/auth/login")
+    def login(body: LoginBody, request: Request, response: Response):
+        ip = request.client.host if request.client else ""
+        try:
+            res = auth.login(body.username, body.password, ip)
+        except LockedOut:
+            raise HTTPException(429, "Too many failed sign-ins. Try again later.")
+        if res is None:
+            raise HTTPException(401, "Wrong username or password")
+        token, user = res
+        response.set_cookie(SESSION_COOKIE, token, httponly=True, samesite="strict",
+                            secure=settings.auth.cookie_secure, max_age=int(settings.auth.session_hours * 3600))
+        return user
+
+    @app.post("/api/auth/logout")
+    def logout(request: Request, response: Response):
+        auth.logout(_session_token(request))
+        response.delete_cookie(SESSION_COOKIE)
+        return {"ok": True}
+
+    @app.get("/api/auth/me")
+    def me(request: Request):
+        if request.state.user is None:
+            raise HTTPException(401, "sign in required")
+        return request.state.user
 
     # ---------- status ----------
 
@@ -305,6 +370,140 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             raise HTTPException(404, "video not found")
         media = {".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime"}
         return FileResponse(u["path"], media_type=media.get(Path(u["path"]).suffix.lower(), "application/octet-stream"))
+
+    # ---------- citizen portal (public) ----------
+
+    reports = ReportStore(store)
+    citizen_hits: dict[str, list[float]] = {}
+
+    def _rate_limited(ip: str) -> bool:
+        now = time.time()
+        recent = [t for t in citizen_hits.get(ip, []) if now - t < 3600]
+        citizen_hits[ip] = recent
+        if len(recent) >= settings.citizen.reports_per_hour_per_ip:
+            return True
+        recent.append(now)
+        return False
+
+    def _check_authenticity(report_id: str, path: str) -> None:
+        try:
+            from aequitas.authenticity import analyze_video
+
+            reports.set_authenticity(report_id, analyze_video(path, settings.authenticity))
+        except Exception as e:
+            log.exception("authenticity check failed for %s", report_id)
+            reports.set_authenticity(report_id, {"error": str(e)[:300]})
+
+    @app.post("/api/citizen/reports")
+    def citizen_report(
+        request: Request,
+        file: UploadFile = File(...),
+        description: str = Form(..., min_length=10, max_length=2000),
+        location: str = Form("", max_length=200),
+        incident_at: str = Form(""),
+        contact: str = Form("", max_length=200),
+        consent: bool = Form(False),
+    ):
+        """Anyone can report: a video and what happened. Returns a report ID and a tracking code."""
+        if not consent:
+            raise HTTPException(400, "Please confirm the video may be shared with the police")
+        ip = request.client.host if request.client else ""
+        if _rate_limited(ip):
+            raise HTTPException(429, "Too many reports from this connection. Please try again later.")
+        ext = Path(file.filename or "").suffix.lower()
+        if ext not in VIDEO_EXTS:
+            raise HTTPException(400, f"Unsupported file type '{ext}'. Use one of: {', '.join(sorted(VIDEO_EXTS))}")
+        when = None
+        if incident_at.strip():
+            try:
+                dt = datetime.fromisoformat(incident_at.strip())
+                when = int((dt.astimezone() if dt.tzinfo is None else dt).timestamp() * 1000)
+            except ValueError:
+                raise HTTPException(400, "incident_at must be an ISO date-time")
+
+        upload_id = uuid.uuid4().hex[:12]
+        dest = upload_dir / f"{upload_id}{ext}"
+        limit, written, sha = settings.citizen.max_upload_mb * 1024**2, 0, hashlib.sha256()
+        with dest.open("wb") as out:
+            while chunk := file.file.read(1024 * 1024):
+                written += len(chunk)
+                if written > limit:
+                    out.close()
+                    dest.unlink(missing_ok=True)
+                    raise HTTPException(413, f"The video is larger than {settings.citizen.max_upload_mb} MB")
+                sha.update(chunk)
+                out.write(chunk)
+        duration_ms, _fps = probe_video(str(dest))
+        if duration_ms <= 0:
+            dest.unlink(missing_ok=True)
+            raise HTTPException(400, "That file could not be read as a video")
+
+        cam_id = f"report-{upload_id}"
+        store.upsert_camera(CameraCfg(camera_id=cam_id, name="Citizen report", source="citizen"))
+        start = when or int(time.time() * 1000)
+        store.insert_upload({
+            "upload_id": upload_id, "camera_id": cam_id, "filename": "citizen-report" + ext,
+            "path": dest.as_posix(), "start_ts": start, "duration_ms": duration_ms,
+            "mode": "periodic", "vlm_model": settings.vlm.model, "status": "queued",
+            "frames_total": frames_expected(duration_ms, settings.sample_fps),
+            "created_at": int(time.time() * 1000),
+        })
+        report_id, code = reports.create(upload_id, cam_id, description.strip(), sha.hexdigest(),
+                                         location.strip() or None, when, contact.strip() or None)
+        auth.audit(None, "report_submitted", report_id, {"sha256": sha.hexdigest(), "bytes": written}, ip)
+        jobs.submit(upload_id)
+        threading.Thread(target=_check_authenticity, args=(report_id, dest.as_posix()), daemon=True).start()
+        return {"report_id": report_id, "tracking_code": code, "status": PUBLIC_STATUS["received"],
+                "message": "Keep the report ID and tracking code to check the status. The code is shown only once."}
+
+    @app.get("/api/citizen/reports/{report_id}")
+    def citizen_status(report_id: str, code: str = Query(..., min_length=4, max_length=40)):
+        r = reports.check_code(report_id, code)
+        if r is None:
+            raise HTTPException(404, "No report with that ID and tracking code")
+        return {"report_id": r["report_id"], "status": PUBLIC_STATUS[r["status"]],
+                "submitted_at": r["created_at"], "updated_at": r["updated_at"]}
+
+    # ---------- police review of citizen reports ----------
+
+    def _report_json(r: dict, detail: bool = False) -> dict:
+        up = store.upload(r["upload_id"]) or {}
+        out = {**r, "video_url": f"/api/uploads/{r['upload_id']}/video",
+               "analysis": {"status": up.get("status"), "events_found": up.get("events_found"),
+                            "total_s": _total_s(up) if up else None}}
+        if detail:
+            f = QueryFilter(camera_ids=[r["camera_id"]], statuses=list(Status), limit=100, sort="oldest")
+            out["events"] = [_event_json(e, store) for e in store.query(f)]
+            out["stages"] = store.stage_summary(r["upload_id"])
+            out["audit"] = auth.audit_trail(r["report_id"])
+        return out
+
+    @app.get("/api/reports")
+    def list_reports(status: str | None = None):
+        return [_report_json(r) for r in reports.list(status)]
+
+    @app.get("/api/reports/{report_id}")
+    def get_report(report_id: str, request: Request):
+        r = reports.get(report_id)
+        if r is None:
+            raise HTTPException(404, "report not found")
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "report_viewed", report_id,
+                   ip=request.client.host if request.client else "")
+        return _report_json(r, detail=True)
+
+    @app.patch("/api/reports/{report_id}")
+    def update_report(report_id: str, body: ReportUpdate, request: Request):
+        if reports.get(report_id) is None:
+            raise HTTPException(404, "report not found")
+        try:
+            reports.update(report_id, body.status, body.notes)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "report_updated", report_id,
+                   body.model_dump(exclude_none=True), request.client.host if request.client else "")
+        return _report_json(reports.get(report_id), detail=True)
 
     app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
     return app

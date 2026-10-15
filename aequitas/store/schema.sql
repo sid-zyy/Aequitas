@@ -101,3 +101,52 @@ CREATE TABLE IF NOT EXISTS dropped_candidates (
   trigger_score REAL NOT NULL,
   reason        TEXT NOT NULL
 );
+
+-- Police accounts (created with `aequitas create-user`), sign-in sessions and an audit trail.
+CREATE TABLE IF NOT EXISTS users (
+  user_id       INTEGER PRIMARY KEY,
+  username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  password_hash TEXT NOT NULL,              -- scrypt, salted
+  role          TEXT NOT NULL CHECK (role IN ('admin','officer')),
+  disabled      INTEGER NOT NULL DEFAULT 0,
+  created_at    INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash    TEXT PRIMARY KEY,           -- sha256 of the cookie token; the token itself is never stored
+  user_id       INTEGER NOT NULL REFERENCES users(user_id),
+  created_at    INTEGER NOT NULL,
+  expires_at    INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id            INTEGER PRIMARY KEY,
+  user_id       INTEGER,                    -- NULL for citizen / system actions
+  action        TEXT NOT NULL,
+  target        TEXT,
+  detail        TEXT,
+  ip            TEXT,
+  created_at    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_audit_target ON audit_log(target);
+
+-- Citizen reports (public portal) and their review by the police.
+CREATE TABLE IF NOT EXISTS reports (
+  report_id      TEXT PRIMARY KEY,
+  tracking_hash  TEXT NOT NULL,             -- sha256 of the citizen's tracking code
+  upload_id      TEXT NOT NULL REFERENCES uploads(upload_id),
+  camera_id      TEXT NOT NULL,
+  description    TEXT NOT NULL,
+  location       TEXT,
+  incident_at    INTEGER,                   -- when the citizen says it happened (epoch ms)
+  contact        TEXT,                      -- optional; visible to police only
+  sha256         TEXT NOT NULL,             -- of the uploaded file, computed on arrival (integrity)
+  duplicate_of   TEXT,                      -- an earlier report with the identical file
+  status         TEXT NOT NULL CHECK (status IN ('received','under_review','action_taken','closed','rejected')),
+  authenticity   TEXT,                      -- JSON from aequitas/authenticity.py
+  notes          TEXT,                      -- police notes, never shown to the citizen
+  created_at     INTEGER NOT NULL,
+  updated_at     INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_reports_sha ON reports(sha256);
+CREATE INDEX IF NOT EXISTS ix_reports_created ON reports(created_at);
