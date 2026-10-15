@@ -1,0 +1,150 @@
+model,precision,spec,error,startup_s,gpu_gb,summarize_first_word_s,summarize_full_s,summarize_full_p95_s,summarize_ok,summarize_tokens_per_s,summarize_full_busy_s,classify_first_word_s,classify_full_s,classify_full_p95_s,classify_ok,classify_tokens_per_s,classify_full_busy_s,chat_first_word_s,chat_full_s,chat_full_p95_s,chat_ok,chat_tokens_per_s,chat_full_busy_s,window_s,window_busy_s,spec_acceptance,dev_accuracy,dev_macro_f1,dev_valid,dev_incident_recall,real_n,real_accuracy,real_precision,real_recall,clip_first_word_s,clip_total_s,rougeL_vs_fp16,ckpt_gib,dtype
+gemma,fp16,none,"e_engines
+    wait_for_engine_startup(
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/v1/engine/utils.py"", line 1348, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+
+[float32, tp=2] cMPClient(
+           ^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/tracing/otel.py"", line 175, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/v1/engine/core_client.py"", line 1100, in __init__
+    super().__init__(
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/v1/engine/core_client.py"", line 674, in __init__
+    with launch_core_engines(
+  File ""/usr/lib/python3.12/contextlib.py"", line 144, in __exit__
+    next(self.gen)
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/v1/engine/utils.py"", line 1268, in launch_core_engines
+    wait_for_engine_startup(
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/v1/engine/utils.py"", line 1348, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 2 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+gemma,w8a8,none,"site-packages/transformers/models/gemma4/image_processing_gemma4.py"", line 17, in <module>
+    from torchvision.transforms.v2 import functional as tvF
+ModuleNotFoundError: No module named 'torchvision'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 117, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 96, in main
+    processor = AutoProcessor.from_pretrained(args.model)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/processing_auto.py"", line 320, in from_pretrained
+    processor_class = processor_class_from_name(processor_class)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/processing_auto.py"", line 106, in processor_class_from_name
+    return getattr(module, class_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2677, in __getattr__
+    raise ModuleNotFoundError(import_error_message) from e
+ModuleNotFoundError: Could not import module 'Gemma4Processor'. Are this object's requirements defined correctly? Set the logging verbosity to DEBUG for the original import error.
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+gemma,w4a16,none,"site-packages/transformers/models/gemma4/image_processing_gemma4.py"", line 17, in <module>
+    from torchvision.transforms.v2 import functional as tvF
+ModuleNotFoundError: No module named 'torchvision'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 117, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 96, in main
+    processor = AutoProcessor.from_pretrained(args.model)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/processing_auto.py"", line 320, in from_pretrained
+    processor_class = processor_class_from_name(processor_class)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/processing_auto.py"", line 106, in processor_class_from_name
+    return getattr(module, class_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2677, in __getattr__
+    raise ModuleNotFoundError(import_error_message) from e
+ModuleNotFoundError: Could not import module 'Gemma4Processor'. Are this object's requirements defined correctly? Set the logging verbosity to DEBUG for the original import error.
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qwen,fp16,none,,227.0,11.27,0.504,1.765,2.332,8/8,52.4,6.409,0.134,0.176,0.203,8/8,103.1,0.882,0.045,0.652,1.913,8/8,61.0,0.565,1.941,7.291,,0.9231,0.9278,1.0,1.0,10.0,0.7,1.0,0.4,0.507,1.975,,3.96,half
+qwen,w8a8,none,"packages/transformers/processing_utils.py"", line 1754, in from_pretrained
+    args = cls._get_arguments_from_pretrained(pretrained_model_name_or_path, processor_dict, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/processing_utils.py"", line 1894, in _get_arguments_from_pretrained
+    sub_processor = auto_processor_class.from_pretrained(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/video_processing_auto.py"", line 433, in from_pretrained
+    return video_processor_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2413, in __getattribute__
+    requires_backends(cls, cls._backends)
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2399, in requires_backends
+    raise ImportError("""".join(failed))
+ImportError: 
+Qwen3VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qwen,w4a16,none,"packages/transformers/processing_utils.py"", line 1754, in from_pretrained
+    args = cls._get_arguments_from_pretrained(pretrained_model_name_or_path, processor_dict, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/processing_utils.py"", line 1894, in _get_arguments_from_pretrained
+    sub_processor = auto_processor_class.from_pretrained(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/video_processing_auto.py"", line 433, in from_pretrained
+    return video_processor_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2413, in __getattribute__
+    requires_backends(cls, cls._backends)
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2399, in requires_backends
+    raise ImportError("""".join(failed))
+ImportError: 
+Qwen3VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+smolvlm,fp16,none,,192.0,13.12,1.338,4.042,4.356,8/8,41.2,17.476,0.134,0.152,0.154,8/8,,0.905,0.043,0.841,1.946,8/8,59.2,1.209,4.194,18.381,,0.2692,0.0872,1.0,0.3095,10.0,0.6,0.667,0.4,1.315,4.923,,8.37,half
+smolvlm,w8a8,none,"packages/transformers/processing_utils.py"", line 1754, in from_pretrained
+    args = cls._get_arguments_from_pretrained(pretrained_model_name_or_path, processor_dict, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/processing_utils.py"", line 1894, in _get_arguments_from_pretrained
+    sub_processor = auto_processor_class.from_pretrained(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/video_processing_auto.py"", line 433, in from_pretrained
+    return video_processor_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2413, in __getattribute__
+    requires_backends(cls, cls._backends)
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2399, in requires_backends
+    raise ImportError("""".join(failed))
+ImportError: 
+SmolVLMVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+smolvlm,w4a16,none,"packages/transformers/processing_utils.py"", line 1754, in from_pretrained
+    args = cls._get_arguments_from_pretrained(pretrained_model_name_or_path, processor_dict, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/processing_utils.py"", line 1894, in _get_arguments_from_pretrained
+    sub_processor = auto_processor_class.from_pretrained(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/models/auto/video_processing_auto.py"", line 433, in from_pretrained
+    return video_processor_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2413, in __getattribute__
+    requires_backends(cls, cls._backends)
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/site-packages/transformers/utils/import_utils.py"", line 2399, in requires_backends
+    raise ImportError("""".join(failed))
+ImportError: 
+SmolVLMVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

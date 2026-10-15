@@ -171,41 +171,63 @@ def gpu_used_gb() -> float:
 
 
 def serve(model_path: str, key: str, spec: tuple | None = None):
-    """Starts vLLM. T4s have no BF16; if a model refuses FP16 (Gemma may), retry in FP32 split over both T4s."""
-    attempts = [("half", 1)] + ([("float32", 2)] if key == "gemma" and "ckpt" not in str(model_path) else [])
+    """Starts vLLM. T4s have no BF16. Gemma 4 on a T4 (seen on Kaggle runs 2 and 3): CUDA-graph profiling
+    launches a Triton kernel needing 96 KB shared memory, the T4 has 64 KB -> start in eager mode (no CUDA
+    graphs, a bit slower per token), then with the FlexAttention backend, then FP32 over both T4s.
+    A start only counts if the warm-up requests succeed (a kernel can also fail on the first real request)."""
+    if key == "gemma":
+        attempts = [("half", 1, ["--enforce-eager"]),
+                    ("half", 1, ["--enforce-eager", "--attention-backend", "FLEX_ATTENTION"])]
+        if "ckpt" not in str(model_path):
+            attempts.append(("float32", 2, ["--enforce-eager"]))
+    else:
+        attempts = [("half", 1, [])]
     errors = []
-    for dtype, tp in attempts:
+    for dtype, tp, extra in attempts:
+        proc = None
         try:
-            proc, startup = _serve_once(model_path, key, spec, dtype, tp)
-            SERVED_DTYPE[0] = dtype if tp == 1 else f"{dtype} x{tp} GPUs"
-            warm_up()
+            proc, startup = _serve_once(model_path, key, spec, dtype, tp, extra)
+            if not warm_up():
+                raise RuntimeError("server started but the warm-up requests failed:\n"
+                                   + root_cause(LAST_LOG[0].read_text()))
+            SERVED_DTYPE[0] = (dtype if tp == 1 else f"{dtype} x{tp} GPUs") + (", eager" if extra else "")
             return proc, startup
         except RuntimeError as e:
-            errors.append(f"[{dtype}, tp={tp}] {str(e)[-1200:]}")
+            if proc is not None:
+                stop(proc)
+            errors.append(f"[{dtype}, tp={tp}, {' '.join(extra) or 'default'}] {str(e)[-1200:]}")
     raise RuntimeError("vLLM did not start:\n" + "\n".join(errors))
 
 
 SERVED_DTYPE = ["half"]
+LAST_LOG = [Path("/dev/null")]
 
 
-def warm_up() -> None:
+def warm_up() -> bool:
     """A few requests right after start-up (CUDA graphs, caches), so the first measurement is not inflated.
     Seen on Kaggle: the first run after start-up took 59.6 s, the identical second run 31.6 s."""
     try:
         from aequitas.eval.bench import build_request, run_one
 
+        ok = []
         for i in range(3):
-            run_one(HTTP, f"http://127.0.0.1:{PORT}/v1", build_request("summarize", "m", 10_000 + i, 7, 64), "summarize")
-            run_one(HTTP, f"http://127.0.0.1:{PORT}/v1", build_request("classify", "m", 10_000 + i, 7, 16), "classify")
+            for task, toks in (("summarize", 64), ("classify", 16)):
+                r = run_one(HTTP, f"http://127.0.0.1:{PORT}/v1", build_request(task, "m", 10_000 + i, 7, toks), task)
+                ok.append(r.ok)
+        if not any(ok):
+            print("warm-up: every request failed")
+            return False
+        return httpx.get(f"http://127.0.0.1:{PORT}/health", timeout=5).status_code == 200
     except Exception as e:
-        print("warm-up failed (measurement continues):", e)
+        print("warm-up failed:", e)
+        return False
 
 
-def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: int):
+def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: int, extra: list[str]):
     args = [VLLM, "serve", model_path, "--served-model-name", "m", "--port", str(PORT), "--dtype", dtype,
             "--tensor-parallel-size", str(tp),
             "--max-model-len", "4096", "--gpu-memory-utilization", "0.88",
-            "--limit-mm-per-prompt", json.dumps({"image": 1})]
+            "--limit-mm-per-prompt", json.dumps({"image": 1})] + extra
     if key == "gemma":
         args += ["--mm-processor-kwargs", json.dumps({"max_soft_tokens": 280})]
     if spec and spec[0] == "mtp":
@@ -215,7 +237,10 @@ def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: i
         args += ["--speculative-config", json.dumps({"method": "ngram", "num_speculative_tokens": spec[1],
                                                      "prompt_lookup_max": 4})]
     (OUT / "logs").mkdir(exist_ok=True)
-    log_path = OUT / "logs" / f"vllm-{key}-{Path(str(model_path)).name}-{dtype}-{spec[0] if spec else 'nospec'}.log"
+    tag = "-eager" if "--enforce-eager" in extra else ""
+    tag += "-flex" if "FLEX_ATTENTION" in extra else ""
+    log_path = OUT / "logs" / f"vllm-{key}-{Path(str(model_path)).name}-{dtype}{tag}-{spec[0] if spec else 'nospec'}.log"
+    LAST_LOG[0] = log_path
     log = open(log_path, "w")
     proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
     t0 = time.time()
@@ -235,7 +260,7 @@ def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: i
 def root_cause(log: str) -> str:
     """vLLM's last lines only say 'see root cause above'. Pull out the lines that name the cause."""
     keys = ("Error", "error:", "Exception", "not supported", "requires", "out of memory", "Unsupported",
-            "ValueError", "NotImplemented", "assert")
+            "ValueError", "NotImplemented", "assert", "out of resource")
     hits = [ln.strip() for ln in log.splitlines() if any(k in ln for k in keys) and "Traceback" not in ln]
     seen, uniq = set(), []
     for ln in hits:
@@ -472,7 +497,22 @@ SHOW = {
     "dev_incident_recall": "Incident recall (dev)", "real_accuracy": "Real clips accuracy",
     "clip_total_s": "Real clip: video→label (s)", "rougeL_vs_fp16": "Summary vs FP16 (ROUGE-L)", "error": "Error",
 }
+def short_error(e) -> str:
+    """One line for the table (full text stays in results.jsonl and the Failures section)."""
+    if not isinstance(e, str) or not e:
+        return e
+    lines = [ln.strip() for ln in e.splitlines() if ln.strip()]
+    key = [ln for ln in lines if any(k in ln for k in ("Error", "out of resource", "requires", "not supported"))]
+    return (key[-1] if key else lines[-1])[:160].replace("|", "/")
+
+
+FAILURES = []
+if "error" in df.columns:
+    for _, r in df[df["error"].notna()].iterrows():
+        FAILURES += [f"### {r['model']} {r['precision']} {r['spec']}", "", "```", str(r["error"])[-1500:], "```", ""]
 table = df[[c for c in SHOW if c in df.columns]].rename(columns=SHOW)
+if "Error" in table.columns:
+    table["Error"] = table["Error"].map(short_error)
 table = table.astype(object).where(table.notna(), "")  # blank, not nan, on the slide
 
 
@@ -519,7 +559,7 @@ md = ["# Ablation results (Kaggle T4, vLLM)", "",
       "streams back, *full* = until the whole response is back. *8 at once* = 8 requests in flight "
       "(8 cameras). Dev set = 48 hand-written summaries (compares configs; not real-world accuracy). "
       f"Real clips: n={len(REAL)}, fighting vs none. T4 times, not laptop times.", "",
-      table.to_markdown(index=False), "", *rec]
+      table.to_markdown(index=False), "", *rec, "", "## Failures (full error text)", "", *(FAILURES or ["none"])]
 (OUT / "ABLATION.md").write_text("\n".join(md), encoding="utf-8")
 print("\n".join(md))
 
