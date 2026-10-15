@@ -17,7 +17,8 @@ DEFAULT_CATEGORIES: dict[str, str] = {
     "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
     "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
     "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
-    "fire": "visible fire, flames or thick smoke, including a burning vehicle or building",
+    "fire": ("uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building (not a "
+             "stove, lamp, candle or cooking flame)"),
     "arrest": "police or officers restrain, handcuff, detain or escort a person who is being held",
     "chase": "one person or vehicle runs after or pursues another at speed",
     "person_down": "a person has fallen or is lying on the ground and stays down",

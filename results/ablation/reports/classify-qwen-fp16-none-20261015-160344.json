@@ -1,0 +1,98 @@
+{
+  "label": "qwen-fp16-none",
+  "model": "m",
+  "host": "http://127.0.0.1:8000",
+  "run": "2026-10-15T16:03:44",
+  "n": 48,
+  "accuracy": 0.9375,
+  "macro_f1": 0.9462,
+  "valid": 48,
+  "per_class_f1": {
+    "accident": 1.0,
+    "arrest": 1.0,
+    "chase": 0.8571,
+    "crowd_incident": 1.0,
+    "fighting": 1.0,
+    "fire": 0.8571,
+    "none": 0.875,
+    "person_down": 1.0,
+    "riot": 0.8,
+    "suspicious_activity": 1.0,
+    "tailgating": 1.0,
+    "theft": 1.0,
+    "vandalism": 0.8571,
+    "weapon": 1.0
+  },
+  "incident_precision": 0.9512,
+  "incident_recall": 1.0,
+  "confusion": {
+    "accident": {
+      "accident": 3
+    },
+    "arrest": {
+      "arrest": 3
+    },
+    "chase": {
+      "chase": 3
+    },
+    "crowd_incident": {
+      "crowd_incident": 3
+    },
+    "fighting": {
+      "fighting": 3
+    },
+    "fire": {
+      "fire": 3
+    },
+    "none": {
+      "none": 7,
+      "fire": 1,
+      "chase": 1
+    },
+    "person_down": {
+      "person_down": 3
+    },
+    "riot": {
+      "riot": 2,
+      "vandalism": 1
+    },
+    "suspicious_activity": {
+      "suspicious_activity": 3
+    },
+    "tailgating": {
+      "tailgating": 3
+    },
+    "theft": {
+      "theft": 3
+    },
+    "vandalism": {
+      "vandalism": 3
+    },
+    "weapon": {
+      "weapon": 3
+    }
+  },
+  "latency_ms": {
+    "p50": 662.2,
+    "p95": 866.3,
+    "mean": 653.1
+  },
+  "mean_confidence": 0.9776,
+  "errors": [
+    {
+      "summary": "Several people smash the windows of a parked bus while a crowd shouts.",
+      "gold": "riot",
+      "pred": "vandalism"
+    },
+    {
+      "summary": "A cook lights a gas stove at a food stall and a small flame burns under the pan.",
+      "gold": "none",
+      "pred": "fire"
+    },
+    {
+      "summary": "Children play cricket in the lane and one of them runs to catch the ball.",
+      "gold": "none",
+      "pred": "chase"
+    }
+  ]
+}

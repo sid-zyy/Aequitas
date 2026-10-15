@@ -145,7 +145,8 @@ class Pipeline:
                     raise RuntimeError(f"classifier '{ep.model}' not reachable at {ep.host} ({ep.backend})")
         self.order = InOrder()
         self.aggregator = WindowAggregator(settings.analysis.confirm_votes, int(settings.analysis.max_gap_s * 1000))
-        self.queue = JobQueue(settings.vlm.max_queue_per_camera, self._on_drop)
+        # never smaller than the windows allowed in flight, or a file source could still drop one
+        self.queue = JobQueue(max(settings.vlm.max_queue_per_camera, settings.vlm.concurrency), self._on_drop)
         self._open: dict[tuple[str, tuple], VlmJob] = {}
         self._open_lock = threading.Lock()
         self._stop = threading.Event()
@@ -289,6 +290,8 @@ class Pipeline:
         def flush() -> None:
             """At stream end, analyse the tail if it is at least a second long."""
             if state["last"] and state["start"] is not None and state["last"][0] - state["start"] >= 1000:
+                if not live:  # files never drop a window, including the last one
+                    self.queue.wait_room(cam.camera_id, max(1, self.s.vlm.concurrency), self._stop)
                 emit(*state["last"])
 
         step.flush = flush

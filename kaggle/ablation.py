@@ -69,7 +69,11 @@ print(f"{n_runs} serving runs, ~8 min each, plus ~20 min quantization per model 
 def sh(cmd: str, check: bool = True) -> str:
     print("$", cmd)
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    tail = (r.stdout + r.stderr)[-2000:]
+    full = r.stdout + r.stderr
+    (OUT / "logs").mkdir(exist_ok=True)
+    with (OUT / "logs" / "commands.log").open("a") as f:
+        f.write(f"\n$ {cmd}\n{full}\n")
+    tail = full[-2500:]  # the end holds the actual error
     if r.returncode and check:
         raise RuntimeError(f"failed ({r.returncode}): {cmd}\n{tail}")
     return tail
@@ -91,9 +95,10 @@ sys.path.insert(0, str(REPO_DIR))  # the bench/eval code runs in this kernel (li
 VLLM_PY, QUANT_PY = SCRATCH / "venv-vllm/bin/python", SCRATCH / "venv-quant/bin/python"
 sh("pip install -q uv")
 if not VLLM_PY.exists():
-    sh(f"uv venv -q {SCRATCH}/venv-vllm --python 3.12 && uv pip install -q --python {VLLM_PY} vllm")
+    sh(f"uv venv -q {SCRATCH}/venv-vllm --python 3.12 && uv pip install -q --python {VLLM_PY} vllm num2words")  # num2words: SmolVLM's processor needs it
 if not QUANT_PY.exists():
-    sh(f"uv venv -q {SCRATCH}/venv-quant --python 3.12 && uv pip install -q --python {QUANT_PY} llmcompressor datasets")
+    sh(f"uv venv -q {SCRATCH}/venv-quant --python 3.12 && uv pip install -q --python {QUANT_PY} llmcompressor datasets"
+       f" && uv pip install -q -U --python {QUANT_PY} transformers accelerate")  # llmcompressor pins a transformers too old for Qwen3-VL / Gemma 4
 print(sh(f"{VLLM_PY} -c 'import vllm, torch; print(\"vllm\", vllm.__version__, \"torch\", torch.__version__)'"))
 VLLM = str(VLLM_PY.parent / "vllm")
 
@@ -166,7 +171,39 @@ def gpu_used_gb() -> float:
 
 
 def serve(model_path: str, key: str, spec: tuple | None = None):
-    args = [VLLM, "serve", model_path, "--served-model-name", "m", "--port", str(PORT), "--dtype", "half",
+    """Starts vLLM. T4s have no BF16; if a model refuses FP16 (Gemma may), retry in FP32 split over both T4s."""
+    attempts = [("half", 1)] + ([("float32", 2)] if key == "gemma" and "ckpt" not in str(model_path) else [])
+    errors = []
+    for dtype, tp in attempts:
+        try:
+            proc, startup = _serve_once(model_path, key, spec, dtype, tp)
+            SERVED_DTYPE[0] = dtype if tp == 1 else f"{dtype} x{tp} GPUs"
+            warm_up()
+            return proc, startup
+        except RuntimeError as e:
+            errors.append(f"[{dtype}, tp={tp}] {str(e)[-1200:]}")
+    raise RuntimeError("vLLM did not start:\n" + "\n".join(errors))
+
+
+SERVED_DTYPE = ["half"]
+
+
+def warm_up() -> None:
+    """A few requests right after start-up (CUDA graphs, caches), so the first measurement is not inflated.
+    Seen on Kaggle: the first run after start-up took 59.6 s, the identical second run 31.6 s."""
+    try:
+        from aequitas.eval.bench import build_request, run_one
+
+        for i in range(3):
+            run_one(HTTP, f"http://127.0.0.1:{PORT}/v1", build_request("summarize", "m", 10_000 + i, 7, 64), "summarize")
+            run_one(HTTP, f"http://127.0.0.1:{PORT}/v1", build_request("classify", "m", 10_000 + i, 7, 16), "classify")
+    except Exception as e:
+        print("warm-up failed (measurement continues):", e)
+
+
+def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: int):
+    args = [VLLM, "serve", model_path, "--served-model-name", "m", "--port", str(PORT), "--dtype", dtype,
+            "--tensor-parallel-size", str(tp),
             "--max-model-len", "4096", "--gpu-memory-utilization", "0.88",
             "--limit-mm-per-prompt", json.dumps({"image": 1})]
     if key == "gemma":
@@ -177,7 +214,9 @@ def serve(model_path: str, key: str, spec: tuple | None = None):
     elif spec and spec[0] == "ngram":
         args += ["--speculative-config", json.dumps({"method": "ngram", "num_speculative_tokens": spec[1],
                                                      "prompt_lookup_max": 4})]
-    log = open(SCRATCH / "vllm.log", "w")
+    (OUT / "logs").mkdir(exist_ok=True)
+    log_path = OUT / "logs" / f"vllm-{key}-{Path(str(model_path)).name}-{dtype}-{spec[0] if spec else 'nospec'}.log"
+    log = open(log_path, "w")
     proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
     t0 = time.time()
     while time.time() - t0 < 1200:
@@ -190,7 +229,7 @@ def serve(model_path: str, key: str, spec: tuple | None = None):
             pass
         time.sleep(5)
     stop(proc)
-    raise RuntimeError("vLLM did not start:\n" + (SCRATCH / "vllm.log").read_text()[-3000:])
+    raise RuntimeError(log_path.read_text()[-3000:])
 
 
 def stop(proc) -> None:
@@ -376,11 +415,12 @@ def run_config(key: str, model_id: str, precision: str, spec: tuple | None = Non
         finally:
             stop(proc)
         row["ckpt_gib"] = model_gib(path)
+        row["dtype"] = SERVED_DTYPE[0]
         record(row)
         if precision != "fp16" and not spec:
             keep_checkpoint(key, precision, path)
     except Exception as e:  # a config that fails is a result too
-        record({"model": key, "precision": precision, "spec": tag, "error": str(e)[:500]})
+        record({"model": key, "precision": precision, "spec": tag, "error": str(e)[-1500:]})
 
 
 for key, model_id in MODELS.items():
@@ -748,7 +788,7 @@ else:
             finally:
                 stop(proc)
         except Exception as e:
-            LADDER.append({"step": "5 + MTP speculative decoding", "error": str(e)[:300]})
+            LADDER.append({"step": "5 + MTP speculative decoding", "error": str(e)[-800:]})
 
     td = pd.DataFrame(LADDER)
     td.to_csv(OUT / "time_saved.csv", index=False)
