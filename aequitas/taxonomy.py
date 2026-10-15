@@ -19,7 +19,8 @@ DEFAULT_CATEGORIES: dict[str, str] = {
     "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
     "fire": ("uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building (not a "
              "stove, lamp, candle or cooking flame)"),
-    "arrest": "police or officers restrain, handcuff, detain or escort a person who is being held",
+    "arrest": ("police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a "
+               "person who is being held"),
     "chase": "one person or vehicle runs after or pursues another at speed",
     "person_down": "a person has fallen or is lying on the ground and stays down",
     "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
@@ -30,7 +31,8 @@ DEFAULT_CATEGORIES: dict[str, str] = {
     "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended",
 }
 
-NONE_DEFINITION = ("none of the above; ordinary activity. A peaceful gathering, protest, procession, queue, "
+NONE_DEFINITION = ("none of the above; ordinary activity, including normal traffic (vehicles moving, waiting or "
+                   "parked). A peaceful gathering, protest, procession, queue, "
                    "festival or market crowd is none")
 
 _NAME = re.compile(r"^[a-z][a-z0-9_]{1,39}$")

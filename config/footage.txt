@@ -1,0 +1,25 @@
+# Demo footage: <path under data/footage> <Pexels video id> <title>. Pexels License (free use, no attribution required).
+koramangala/sony-world.mp4 19100648 Road traffic in Bengaluru
+koramangala/forum.mp4 28756673 Busy Bangalore street with auto-rickshaw
+koramangala/80ft-road.mp4 28322564 Bangalore
+indiranagar/100ft-road.mp4 35764228 Bustling urban street with auto-rickshaws
+indiranagar/cmh-metro.mp4 17633661 Aerial view of metro running, city traffic
+indiranagar/12th-main.mp4 28266514 Autos of Bangalore
+whitefield/itpl.mp4 30144957 Aerial view of bustling Bangalore traffic
+whitefield/phoenix.mp4 38032030 Bustling city street scene in daylight
+whitefield/hope-farm.mp4 28305739 Traffic
+mg-road/kumble-circle.mp4 34395447 Bustling Indian city street traffic scene
+mg-road/brigade-road.mp4 30381745 Busy street scene in Indian urban area
+mg-road/trinity.mp4 35059625 Bustling morning traffic on Indian city streets
+majestic/ksr-station.mp4 28440508 Road side
+majestic/kbs.mp4 28440509 Road side
+majestic/gandhi-nagar.mp4 28440510 Road side
+electronic-city/flyover.mp4 30263129 Urban traffic under flyover in busy city
+electronic-city/phase1.mp4 32341069 Aerial view of Bangalore city highway
+incidents/arrest-1.mp4 7714307 Police officer arresting a man
+incidents/arrest-2.mp4 7784727 Police arresting person
+incidents/arrest-3.mp4 7714311 Police officers arresting a man
+incidents/arrest-4.mp4 7714094 Police officers arresting suspects
+incidents/punching.mp4 15094459 A man in black shirt punching
+incidents/accident.mp4 4686100 Drone footage of car accident at an intersection
+incidents/fire-rescue.mp4 19539603 Fire fighter rescue
