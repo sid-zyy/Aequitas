@@ -2,14 +2,14 @@
 
 ## What the faculty asked for
 
-| Requirement | How Minerva meets it |
+| Requirement | How Aequitas meets it |
 |---|---|
 | Three tasks: **summarization → classification of the summary → chatbot** | Three explicit stages with their own models, prompts, timings and metrics (below). |
 | **vLLM** server | All LLM/VLM calls go through vLLM's OpenAI-compatible API. Ollama stays as the CPU dev fallback. vLLM runs in **WSL2 Ubuntu** (already installed) once the GPU arrives. |
 | **Speculative decoding** and **multi-token prediction (MTP)** | Gemma 4 has native MTP drafters, which vLLM supports (`--speculative-config '{"method":"mtp",...}'`). **n-gram** speculation is used for chatbot answers, which copy text from retrieved summaries. |
 | **4-bit and 8-bit quantization**, studied and implemented | Checkpoints in BF16 (baseline), **W8A8-INT8**, **FP8** (if the GPU supports it) and **W4A16** (GPTQ/AWQ), made with `llm-compressor` (vLLM project). Each is benchmarked for latency **and** accuracy on the faculty dataset. |
 | **React** frontend, **FastAPI** backend, no Jupyter | React (Vite + TypeScript) served by the existing FastAPI app. Training scripts are plain `.py`. |
-| Judged on **approach**, **end-to-end demo**, **latency (total execution time)** | Every stage is timed and shown live in the UI. `minerva bench` produces the latency report across quantization × speculation settings. |
+| Judged on **approach**, **end-to-end demo**, **latency (total execution time)** | Every stage is timed and shown live in the UI. `aequitas bench` produces the latency report across quantization × speculation settings. |
 
 The dataset arrives soon. Everything below is built so the dataset only needs an adapter and labels.
 
@@ -99,12 +99,12 @@ Everything runs as a matrix of {BF16, W8A8, W4A16, FP8} × {no spec, MTP, n-gram
 | W4A16 (GPTQ or AWQ) | weights to 4 bit, activations BF16 | ~256–512 samples | Smallest memory footprint; the most accuracy risk on small models |
 
 Accuracy is measured with the faculty dataset's labels: summary quality and classification accuracy/F1
-per scheme. Latency is measured with `minerva bench`.
+per scheme. Latency is measured with `aequitas bench`.
 
 ## Build order
 
 1. **Pipeline v2:** separate summarize and classify stages, concurrent VLM workers, per-stage timings. *(now; runs on Ollama)*
-2. **`minerva bench`:** latency harness for any OpenAI-compatible server (Ollama now, vLLM later). *(now)*
+2. **`aequitas bench`:** latency harness for any OpenAI-compatible server (Ollama now, vLLM later). *(now)*
 3. **vLLM scripts:** WSL install, `serve.sh` with quantization and speculation profiles. *(now; runs when the GPU arrives)*
 4. **Quantization scripts:** llm-compressor recipes for FP8, W8A8 and W4A16. *(now; run on the GPU or Kaggle)*
 5. **React frontend:** upload, live per-stage latency, summaries and labels, streamed chat. *(now)*

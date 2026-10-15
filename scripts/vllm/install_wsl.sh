@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs vLLM in WSL2 Ubuntu for Minerva (faculty requirement: serve models with vLLM).
+# Installs vLLM in WSL2 Ubuntu for Aequitas (faculty requirement: serve models with vLLM).
 # Run inside Ubuntu:  bash scripts/vllm/install_wsl.sh
 #
 # Needs: an NVIDIA Windows driver with WSL support (nvidia-smi must work inside Ubuntu).

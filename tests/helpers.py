@@ -1,5 +1,5 @@
-from minerva.triggers.base import Scene
-from minerva.types import TrackObs
+from aequitas.triggers.base import Scene
+from aequitas.types import TrackObs
 
 
 def person(tid, x1, y1, x2, y2, conf=0.9):

@@ -10,21 +10,21 @@ import time
 import httpx
 import pytest
 
-from minerva.config import CameraCfg, FusionCfg, LlmEndpoint, Settings
-from minerva.store.db import EventStore
-from minerva.store.query import QueryFilter
-from minerva.types import Candidate, Category, Status
-from minerva.understand import vlm_client
-from minerva.understand.fusion import fuse
-from minerva.understand.prompts import (
+from aequitas.config import CameraCfg, FusionCfg, LlmEndpoint, Settings
+from aequitas.store.db import EventStore
+from aequitas.store.query import QueryFilter
+from aequitas.types import Candidate, Category, Status
+from aequitas.understand import vlm_client
+from aequitas.understand.fusion import fuse
+from aequitas.understand.prompts import (
     CHOICES,
     LabelAnswer,
     SummaryAnswer,
     classify_text_prompt,
     summarize_prompt,
 )
-from minerva.understand.stages import InOrder, understand
-from minerva.understand.vlm_client import (
+from aequitas.understand.stages import InOrder, understand
+from aequitas.understand.vlm_client import (
     LlmClient,
     OpenAICompatClient,
     choice_payload,
@@ -226,7 +226,7 @@ def test_in_order_under_real_threads():
 
 @pytest.fixture
 def periodic_pipeline(tmp_path, monkeypatch):
-    from minerva.pipeline import Pipeline
+    from aequitas.pipeline import Pipeline
 
     class Fake(FakeVlm, FakeClassifier):
         def __init__(self, cfg):
@@ -247,7 +247,7 @@ def periodic_pipeline(tmp_path, monkeypatch):
 
 
 def test_periodic_windows_finishing_out_of_order_still_merge_into_one_event(periodic_pipeline):
-    from minerva.pipeline import VlmJob
+    from aequitas.pipeline import VlmJob
 
     p, store = periodic_pipeline
     jobs = [VlmJob("cam1", b"jpeg", time.perf_counter_ns(), window=(i * 4000, (i + 1) * 4000),
@@ -308,10 +308,10 @@ def test_old_database_gets_the_new_columns(tmp_path):
 def test_upload_json_reports_total_execution_time_and_stages(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
 
-    from minerva.chat.answer import ChatService
-    from minerva.chat.parser import QuestionParser
-    from minerva.web import server as web
-    from minerva.web.jobs import JobManager
+    from aequitas.chat.answer import ChatService
+    from aequitas.chat.parser import QuestionParser
+    from aequitas.web import server as web
+    from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
     s = Settings(data_dir=tmp_path)
@@ -345,8 +345,8 @@ class StreamingLlm:
 
 
 def _chat(store, llm, monkeypatch):
-    from minerva.chat.answer import ChatService
-    from minerva.chat.parser import QuestionParser
+    from aequitas.chat.answer import ChatService
+    from aequitas.chat.parser import QuestionParser
     from test_store_chat import NOW
 
     parser = QuestionParser(llm)
@@ -355,7 +355,7 @@ def _chat(store, llm, monkeypatch):
 
 
 def _tailgating_filter():
-    from minerva.chat.parser import LlmFilter
+    from aequitas.chat.parser import LlmFilter
     from test_store_chat import NOW
 
     return LlmFilter(categories=["tailgating"], cameras=["camera 2"], start=NOW.strftime("%Y-%m-%dT00:00"),
@@ -383,10 +383,10 @@ def test_stream_drops_a_summary_that_cites_unretrieved_events(store, monkeypatch
 def test_stream_endpoint_emits_server_sent_events(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
 
-    from minerva.chat.answer import ChatService
-    from minerva.chat.parser import QuestionParser
-    from minerva.web import server as web
-    from minerva.web.jobs import JobManager
+    from aequitas.chat.answer import ChatService
+    from aequitas.chat.parser import QuestionParser
+    from aequitas.web import server as web
+    from aequitas.web.jobs import JobManager
 
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
     s = Settings(data_dir=tmp_path)
@@ -400,7 +400,7 @@ def test_stream_endpoint_emits_server_sent_events(tmp_path, monkeypatch):
 
 
 def test_sse_parser_reads_openai_stream_chunks():
-    from minerva.understand.vlm_client import sse_deltas
+    from aequitas.understand.vlm_client import sse_deltas
 
     lines = ['data: {"choices":[{"delta":{"role":"assistant"}}]}', "",
              'data: {"choices":[{"delta":{"content":"Two "}}]}', ": keep-alive",

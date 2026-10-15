@@ -1,4 +1,4 @@
-# Minerva
+# Aequitas
 
 Open-source live video event summarization, classification and conversational querying.
 All inference is local: YOLO11n + ByteTrack for detection and tracking, rule-based triggers,
@@ -31,12 +31,12 @@ On an NVIDIA machine, install the CUDA build of PyTorch first (see pytorch.org),
 ## Web app
 
 ```bash
-.venv\Scripts\python -m minerva web      # http://127.0.0.1:8000
+.venv\Scripts\python -m aequitas web      # http://127.0.0.1:8000
 ```
 
 - **Analyze video:** upload footage (MP4/MOV/AVI/MKV/WebM, up to 4 GB), pick or create a camera, choose
   tracking-triggered or VLM-review mode and the vision model. Jobs run in the background with live progress.
-- **Ask Minerva:** chat in plain language. Answers list matching events with `[#id]` references and key frames.
+- **Ask Aequitas:** chat in plain language. Answers list matching events with `[#id]` references and key frames.
 - **Event log:** filter by camera, category, status or summary text. Open an event to see its key frames,
   details, and the uploaded video at the moment it happened.
 - **Overview:** incident counts by category and the latest confirmed incidents.
@@ -49,18 +49,18 @@ only run on cameras whose zones are defined in `config/cameras.yaml`.
 
 ```bash
 # M0: measure detector and VLM speed and memory on this machine
-.venv\Scripts\python -m minerva spike
+.venv\Scripts\python -m aequitas spike
 
 # Register cameras, then process streams (put videos at the paths in config/cameras.yaml)
-.venv\Scripts\python -m minerva init-db
-.venv\Scripts\python -m minerva run
-.venv\Scripts\python -m minerva run --no-vlm --camera cam1   # trigger-only, one camera
+.venv\Scripts\python -m aequitas init-db
+.venv\Scripts\python -m aequitas run
+.venv\Scripts\python -m aequitas run --no-vlm --camera cam1   # trigger-only, one camera
 
 # Ask questions
-.venv\Scripts\python -m minerva ask "Show all tailgating events from camera 2 today"
+.venv\Scripts\python -m aequitas ask "Show all tailgating events from camera 2 today"
 
 # Latency summary of recorded events
-.venv\Scripts\python -m minerva stats
+.venv\Scripts\python -m aequitas stats
 ```
 
 ### Simulating a live RTSP camera
@@ -84,12 +84,12 @@ The trigger rules are tested on synthetic tracks, so tests need no models or vid
 ## Layout
 
 ```
-minerva/ingest      frame sources (RTSP/webcam/file) and the per-camera ring buffer
-minerva/vision      YOLO detector, ByteTrack, pose on crops, motion energy
-minerva/triggers    one rule per category + the engine (cooldown, episodes)
-minerva/understand  keyframe grid, VLM prompt/client, fusion
-minerva/store       SQLite schema, EventStore, QueryFilter -> SQL
-minerva/chat        question -> QueryFilter (LLM, keyword fallback), templated answers
-minerva/web         FastAPI server, upload job runner, single-page frontend (static/)
-minerva/eval        M0 spike, latency report
+aequitas/ingest      frame sources (RTSP/webcam/file) and the per-camera ring buffer
+aequitas/vision      YOLO detector, ByteTrack, pose on crops, motion energy
+aequitas/triggers    one rule per category + the engine (cooldown, episodes)
+aequitas/understand  keyframe grid, VLM prompt/client, fusion
+aequitas/store       SQLite schema, EventStore, QueryFilter -> SQL
+aequitas/chat        question -> QueryFilter (LLM, keyword fallback), templated answers
+aequitas/web         FastAPI server, upload job runner, single-page frontend (static/)
+aequitas/eval        M0 spike, latency report
 ```

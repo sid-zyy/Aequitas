@@ -1,6 +1,6 @@
-# Minerva roadmap: three parts on one core
+# Aequitas roadmap: three parts on one core
 
-Minerva is split into three **analysis profiles** that share one engine. The user picks a profile when
+Aequitas is split into three **analysis profiles** that share one engine. The user picks a profile when
 uploading a video or adding a camera. Each profile sets the event categories, the models, the default
 analysis mode and the timeline lanes in the UI.
 
@@ -23,7 +23,7 @@ analysis mode and the timeline lanes in the UI.
 | Event store, grounded chat, web app (upload, chat, event log) | Done |
 | **Per-frame inference table + timeline UI** (an answer for any timestamp) | **Next**, needed by all three parts |
 | **Profiles** (category set + models + prompt + lanes per profile) | **Next** |
-| Clip-level evaluation (`minerva eval-report`) | Done; CAVIAR baseline running |
+| Clip-level evaluation (`aequitas eval-report`) | Done; CAVIAR baseline running |
 
 ---
 
@@ -146,7 +146,7 @@ Steps 3, 4 and 6 can run in parallel once step 2 lands.
      real Indian riots is unmeasured until such data exists.
 3. **GPU arriving soon.** When it arrives:
    - Install the CUDA build of PyTorch.
-   - Re-run `minerva spike` (including `gemma4:e4b` and YOLO11s/m) and record the results in DESIGN.md §4.3.
+   - Re-run `aequitas spike` (including `gemma4:e4b` and YOLO11s/m) and record the results in DESIGN.md §4.3.
    - Raise the defaults (larger detector, per-frame inference at 8 fps, VLM review in real time).
    - Until then, development and Kaggle training continue on CPU and Kaggle GPUs.
 

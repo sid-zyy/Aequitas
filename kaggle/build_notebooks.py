@@ -1,6 +1,6 @@
 """Builds Kaggle .ipynb notebooks from the `# %%`-cell .py sources in this folder.
 
-The .py files are the source of truth (reviewable diffs, runnable locally with MINERVA_SMOKE=1);
+The .py files are the source of truth (reviewable diffs, runnable locally with AEQUITAS_SMOKE=1);
 the .ipynb files are what you upload to Kaggle. Run: python kaggle/build_notebooks.py"""
 
 import json

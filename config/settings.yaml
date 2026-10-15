@@ -1,4 +1,4 @@
-# Minerva runtime settings. Every key is optional; defaults live in minerva/config.py.
+# Aequitas runtime settings. Every key is optional; defaults live in aequitas/config.py.
 
 device: auto            # auto picks cuda:0 / mps if present, else cpu
 sample_fps: 4

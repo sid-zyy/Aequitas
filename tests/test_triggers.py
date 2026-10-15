@@ -2,10 +2,10 @@ import math
 
 import pytest
 
-from minerva.config import CameraCfg, CrowdZone, EntryLine, TriggersCfg, Zones
-from minerva.triggers.base import Episodes, line_side, point_in_polygon
-from minerva.triggers.engine import TriggerEngine
-from minerva.types import Category
+from aequitas.config import CameraCfg, CrowdZone, EntryLine, TriggersCfg, Zones
+from aequitas.triggers.base import Episodes, line_side, point_in_polygon
+from aequitas.triggers.engine import TriggerEngine
+from aequitas.types import Category
 
 from helpers import bag, person, run, scene
 
@@ -94,7 +94,7 @@ def test_new_person_far_from_anyone_upright_is_not_a_fall():
 
 
 def test_person_down_uses_pose_when_confident():
-    from minerva.types import PoseResult
+    from aequitas.types import PoseResult
 
     e = engine()
     seq = []

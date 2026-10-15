@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Serves a Gemma 4 model with vLLM for Minerva, in one of the benchmark profiles.
+# Serves a Gemma 4 model with vLLM for Aequitas, in one of the benchmark profiles.
 #
 #   MODEL=google/gemma-4-E2B-it QUANT=fp8 SPEC=mtp bash scripts/vllm/serve.sh
 #
@@ -9,7 +9,7 @@
 # SPEC    none | mtp (Gemma 4 MTP drafter = the -assistant checkpoint) | ngram (prompt lookup, for chat)
 # NSPEC   speculative tokens per step (default: 1 for mtp, as in vLLM's docs; 4 for ngram). Sweep it.
 #
-# Then in Minerva's config:  vlm: {backend: openai, host: http://127.0.0.1:${PORT}, model: ${SERVED_NAME}}
+# Then in Aequitas's config:  vlm: {backend: openai, host: http://127.0.0.1:${PORT}, model: ${SERVED_NAME}}
 # Check flag names against `vllm serve --help` for the installed version before trusting a result.
 set -euo pipefail
 

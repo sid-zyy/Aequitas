@@ -16,7 +16,7 @@ Always kept in BF16, following the published Gemma 4 recipes:
 On Gemma 4 E2B the PLE alone is ~2.8 B of the 5.1 B parameters, so 4-bit checkpoints stay ~7 GiB.
 
 Calibration uses text only (the language backbone is what is quantized). By default it uses
-Minerva-style prompts plus a general chat set. Check the installed llm-compressor's Gemma 4 example
+Aequitas-style prompts plus a general chat set. Check the installed llm-compressor's Gemma 4 example
 if an API name below has moved; this was written against the 2026 API (oneshot, QuantizationModifier,
 GPTQModifier, SmoothQuantModifier)."""
 
@@ -37,7 +37,7 @@ IGNORE = [
     "re:.*router",
 ]
 
-MINERVA_CALIB = [
+AEQUITAS_CALIB = [
     "A security camera clip was described as follows. Description: Two people walk through the door one "
     "right behind the other. Choose the ONE category that best matches the description.",
     "Describe what happens in the scene: a man walks across the hall, stops near a bench and sits down.",
@@ -66,7 +66,7 @@ def recipe(scheme: str):
 def calibration(processor, n: int, max_len: int, dataset: str):
     from datasets import Dataset, load_dataset
 
-    texts = list(MINERVA_CALIB)
+    texts = list(AEQUITAS_CALIB)
     if dataset != "none" and n > len(texts):
         ds = load_dataset(dataset, split=f"train_sft[:{n - len(texts)}]")
         for row in ds:
@@ -83,7 +83,7 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--samples", type=int, default=256, help="calibration samples (w8a8/w4a16)")
     ap.add_argument("--max-len", type=int, default=1024)
-    ap.add_argument("--dataset", default="HuggingFaceH4/ultrachat_200k", help="'none' = Minerva prompts only")
+    ap.add_argument("--dataset", default="HuggingFaceH4/ultrachat_200k", help="'none' = Aequitas prompts only")
     args = ap.parse_args()
 
     from llmcompressor import oneshot
@@ -105,7 +105,7 @@ def main() -> int:
     meta = {"base": args.model, "scheme": args.scheme, "ignore": IGNORE, "samples": kwargs.get("num_calibration_samples"),
             "dataset": args.dataset if args.scheme != "fp8" else None, "size_gib": round(size_gb, 2),
             "minutes": round((time.time() - t0) / 60, 1)}
-    (out / "minerva_quant.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    (out / "aequitas_quant.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(json.dumps(meta, indent=2))
     return 0
 

@@ -1,4 +1,4 @@
-# Minerva for police and public-order CCTV (India) — proposal
+# Aequitas for police and public-order CCTV (India) — proposal
 
 Status: proposal, not yet built. Extends [DESIGN.md](DESIGN.md).
 

@@ -2,10 +2,10 @@
 
 import numpy as np
 
-from minerva.triggers.engine import TriggerEngine
-from minerva.config import CameraCfg, TriggersCfg
-from minerva.types import Category
-from minerva.vision.violence import ViolenceScorer
+from aequitas.triggers.engine import TriggerEngine
+from aequitas.config import CameraCfg, TriggersCfg
+from aequitas.types import Category
+from aequitas.vision.violence import ViolenceScorer
 
 from helpers import person, run, scene
 

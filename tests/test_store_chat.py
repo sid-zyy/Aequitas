@@ -3,16 +3,16 @@ from datetime import datetime, timedelta
 import numpy as np
 import pytest
 
-from minerva.chat.answer import ChatService
-from minerva.chat.parser import LlmFilter, QuestionParser, finalize, keyword_filter, resolve_cameras
-from minerva.config import CameraCfg, FusionCfg, Zones
-from minerva.ingest.ring_buffer import RingBuffer
-from minerva.store.db import EventRecord, EventStore, Timings
-from minerva.store.query import QueryFilter
-from minerva.types import Candidate, Category, Status
-from minerva.understand.fusion import fuse
-from minerva.understand.keyframes import make_grid
-from minerva.understand.prompts import VlmAnswer
+from aequitas.chat.answer import ChatService
+from aequitas.chat.parser import LlmFilter, QuestionParser, finalize, keyword_filter, resolve_cameras
+from aequitas.config import CameraCfg, FusionCfg, Zones
+from aequitas.ingest.ring_buffer import RingBuffer
+from aequitas.store.db import EventRecord, EventStore, Timings
+from aequitas.store.query import QueryFilter
+from aequitas.types import Candidate, Category, Status
+from aequitas.understand.fusion import fuse
+from aequitas.understand.keyframes import make_grid
+from aequitas.understand.prompts import VlmAnswer
 
 CAMS = [
     CameraCfg(camera_id="cam1", name="Lobby entrance", aliases=["camera 1", "entrance"], source="a.mp4"),
