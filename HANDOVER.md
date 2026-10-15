@@ -129,6 +129,12 @@ record numbers in the docs.
   **total execution time** is exact. Add a small schema migration (`ALTER TABLE … ADD COLUMN` if missing).
 - [ ] Tests: fake clients, stage separation, fusion with classifier labels, ordering under concurrency.
 
+### Phase 1.5 · Ablation before choosing the model (do this next)
+- [x] Plan: docs/ABLATION_PLAN.md (3 models × 16/8/4-bit, cheap, decision rule fixed in advance).
+- [x] Notebook: `kaggle/ablation.ipynb`. Tools: `aequitas bench`, `aequitas eval-classify`.
+- [ ] Run it on Kaggle (GPU T4 x2), put `ABLATION.md` + `ablation.png` in `data/ablation/` and on the slides.
+- [ ] Re-measure the chosen config on the RTX 4050 (+ FP8, + MTP). Only then fine-tune or add features.
+
 ### Phase 2 · vLLM, speculative decoding, MTP, latency bench (R5)
 - [ ] `scripts/vllm/install_wsl.sh`, plus `scripts/vllm/serve.sh` with env profiles:
   `MODEL=… QUANT=bf16|fp8|w8a8|w4a16 SPEC=none|mtp|ngram`, using

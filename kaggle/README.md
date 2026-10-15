@@ -1,4 +1,14 @@
-# Kaggle training notebooks
+# Kaggle notebooks
+
+## Run first: `ablation.ipynb`, model × precision study (no training)
+
+3 VLMs (Gemma 4 E2B, Qwen3-VL-2B, SmolVLM2-2.2B) × FP16 / W8A8-INT8 / W4A16 on vLLM, plus MTP and
+n-gram speculation on Gemma's best precision. It measures latency, stage-2 accuracy, real-clip accuracy and
+memory, and outputs `ablation.zip` with `ABLATION.md` (table) and `ablation.png` (chart) for the slides.
+**Steps, budget and decision rule: [docs/ABLATION_PLAN.md](../docs/ABLATION_PLAN.md) §7.** About 3–4 GPU hours on
+GPU T4 x2.
+
+## Training notebooks
 
 Two models that fix what the CAVIAR real-footage test exposed (see docs/ROADMAP.md):
 
