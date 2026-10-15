@@ -197,6 +197,10 @@ class CitizenCfg(BaseModel):
     reports_per_hour_per_ip: int = 5
 
 
+class LiveCfg(BaseModel):
+    localities_file: Path = Path("config/bangalore.yaml")  # localities and camera points (demo footage)
+
+
 class Settings(BaseModel):
     # Stage 2 label set: name -> one-line definition shown to the classifier (aequitas/taxonomy.py).
     categories: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_CATEGORIES))
@@ -217,6 +221,7 @@ class Settings(BaseModel):
     auth: AuthCfg = AuthCfg()
     citizen: CitizenCfg = CitizenCfg()
     authenticity: AuthenticityCfg = AuthenticityCfg()
+    live: LiveCfg = LiveCfg()
 
     @field_validator("categories")
     @classmethod
@@ -253,6 +258,7 @@ class CameraCfg(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     source: str  # rtsp://..., http://..., a file path, or a webcam index like "0"
     realtime: bool = True  # pace file sources at native speed (simulated live)
+    loop: bool = False  # replay a file source forever (demo footage standing in for a live camera)
     start_time: str | None = None  # ISO time a file source starts at; None = now
     zones: Zones = Zones()
 

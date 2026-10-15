@@ -117,11 +117,18 @@ class FrameSource:
         wall_start = time.perf_counter()
         index = 0
         emitted = 0
+        offset_ms = 0.0  # looping: time of the current pass's first frame
         while not self._stop.is_set():
             ok = cap.grab()
             if not ok:
-                break
-            pos_ms = index * 1000.0 / native_fps
+                if not (self.cam.loop and index > 0):
+                    break
+                # Demo feed: replay the clip; stream time keeps increasing like a live camera.
+                offset_ms += index * 1000.0 / native_fps
+                index = 0
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                continue
+            pos_ms = offset_ms + index * 1000.0 / native_fps
             index += 1
             if pos_ms + 1e-6 < next_sample_ms:
                 continue

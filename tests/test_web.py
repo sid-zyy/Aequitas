@@ -16,7 +16,8 @@ from aequitas.web.jobs import JobManager
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(JobManager, "submit", lambda self, upload_id: None)
-    settings = Settings(data_dir=tmp_path / "data", auth={"required": False})  # auth: tests/test_roles.py
+    settings = Settings(data_dir=tmp_path / "data", auth={"required": False},
+                        live={"localities_file": tmp_path / "no-localities.yaml"})  # auth: tests/test_roles.py
     store = EventStore(settings.db_path)
     cams = [CameraCfg(camera_id="cam2", name="Corridor", aliases=["camera 2"], source="x.mp4")]
     app = web.create_app(settings, ChatService(store, QuestionParser(None)), cams)

@@ -378,6 +378,9 @@ class Pipeline:
     def _apply_window_result(self, job: VlmJob, u: Understanding, queue_ms: float) -> None:
         start, end = job.window
         ans = u.answer
+        self.store.record_window(job.camera_id, start, end, u.summary, ans.category if ans else None,
+                                 ans.confidence if ans else None, u.summarize_ms, u.classify_ms,
+                                 (time.perf_counter_ns() - job.capture_ns) / 1e6)
         d = self.aggregator.add(job.camera_id, start, end, ans)
         log.debug("%s window %.1f s: %s (summarize %.1f s, classify %.2f s)", job.camera_id, (end - start) / 1000,
                   ans.category if ans else "error", (u.summarize_ms or 0) / 1000, (u.classify_ms or 0) / 1000)
