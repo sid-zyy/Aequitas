@@ -20,6 +20,16 @@
 #    - https://www.kaggle.com/datasets/mohamedmustafa/real-life-violence-situations-dataset
 #    - optional, for arrest / fire / accident / theft: a UCF-Crime *video* dataset with class folders
 #      (Arrest, Arson, Explosion, RoadAccidents, Robbery, Shooting, ..., Normal_Videos...).
+#    - optional, for **riots** (not on Kaggle; upload as your own private dataset):
+#      **XD-Violence** riot (`_label_B4`) and normal (`_label_A`) videos, https://roc-ng.github.io/XD-Violence/ ;
+#      and/or **Violent Flows** (crowd violence, request access from the authors), in a dataset named `violent-flows`.
+#    - optional, the guardrail negatives: peaceful protests / processions / festivals in a folder `peaceful`.
+#      Add these with riots, or the model may learn "crowd = riot".
+#
+# **How labels stay accurate.** Each clip's label comes from the dataset's human annotators. A 12B summary is
+# trained on only if (1) 12B's label is one accepted for that human label (`ACCEPT`), (2) 12B's second look at
+# the frames finds nothing invented, (3) it has no guardrail words. `review.html` shows 120 random kept samples
+# for a human spot check; 20 % of every extra class is held out as a second test set.
 # 3. **Save Version → Save & Run All**. About 3-4 h. Then download from the Output tab:
 #    - `finetune_gemma.zip`: results (FINETUNE.md, chart, per-clip rows), the LoRA adapter, the training set list
 #    - `aequitas-e2b-ollama.tar` (~3-4 GB): the fine-tuned model packaged for Ollama (see kaggle/README.md)
@@ -65,7 +75,24 @@ LABEL_MAP = {"violence": "fighting", "fight": "fighting", "fighting": "fighting"
 UCF_MAP = {"arrest": "arrest", "arson": "fire", "explosion": "fire", "roadaccidents": "accident",
            "road_accidents": "accident", "robbery": "theft", "stealing": "theft", "shoplifting": "theft",
            "burglary": "theft", "shooting": "weapon", "assault": "fighting", "abuse": "fighting",
-           "vandalism": "vandalism"}
+           "vandalism": "vandalism", "riot": "riot", "riots": "riot", "stone_pelting": "riot"}
+# XD-Violence keeps its labels in the file name ("..._label_B4-0-0.mp4"): A normal, B1 fighting, B2 shooting,
+# B4 riot, B5 abuse, B6 car accident, G explosion (Wu et al., ECCV 2020). Several labels: the first in this order.
+XD_MAP = [("B4", "riot"), ("B1", "fighting"), ("B5", "fighting"), ("B2", "weapon"), ("B6", "accident"), ("G", "fire")]
+# Folders whose "violence" means a violent CROWD (Violent Flows: 246 YouTube clips of crowd violence).
+CROWD_HINTS = ("violentflow", "violent_flow", "crowd_violence", "crowdviolence")
+# Your own peaceful gatherings (protests, processions, festivals, queues): always none, the guardrail case.
+PEACEFUL = {"peaceful", "protest", "protests", "procession", "processions", "gathering", "gatherings",
+            "festival", "festivals", "rally", "rallies", "queue", "crowd_normal", "normal_crowd"}
+# What the teacher's label must be for a summary to be kept, per dataset label (stricter than incident-vs-none:
+# a riot clip that 12B calls "accident" is dropped, its summary probably describes the wrong thing).
+ACCEPT = {"fighting": {"fighting", "weapon", "harassment", "riot"}, "weapon": {"weapon", "fighting"},
+          "riot": {"riot", "fighting", "vandalism", "crowd_incident"}, "arrest": {"arrest"}, "fire": {"fire"},
+          "accident": {"accident"}, "theft": {"theft"}, "vandalism": {"vandalism", "riot"}, "none": {"none"}}
+HOLDOUT = 0.2           # share of each non-SCVD class (riot, arrest, fire...) kept back as a second test set
+EXTRA_TEST_PER_CLASS = 20
+LONG_WINDOWS = 3        # untrimmed videos (UCF-Crime, XD-Violence): more 4 s windows per video
+REVIEW_N = 120          # random kept samples in review.html, for a human spot check
 # never train on summaries that describe people by these (CLAUDE.md guardrails)
 BANNED = re.compile(r"\b(relig\w*|caste|hindu\w*|muslim\w*|islam\w*|christian\w*|sikh\w*|jain\w*|buddhis\w*|"
                     r"part(y|ies) (flag|worker|member)s?|flags?|banners?|slogans?|saffron|hijab\w*|burqa\w*|"
@@ -131,10 +158,21 @@ def norm(s: str) -> str:
 
 
 def label_of(path: Path) -> tuple[str | None, str]:
-    """Category from the nearest folder name that we know, and which family of dataset it came from."""
+    """Category from the file name (XD-Violence) or the nearest folder name that we know, and the dataset family."""
+    m = re.search(r"_label_([A-Z0-9-]+)", path.name)
+    if m:
+        tags = set(m.group(1).split("-"))
+        if tags <= {"A", "0"}:
+            return "none", "xd"
+        return next((lab for tag, lab in XD_MAP if tag in tags), None), "xd"
+    crowd = any(h in norm(p) for p in path.parts for h in CROWD_HINTS)
     for part in reversed(path.parts[:-1]):
         n = norm(part)
+        if n in PEACEFUL:
+            return "none", "peaceful"
         if n in LABEL_MAP:
+            if crowd:
+                return ("riot" if LABEL_MAP[n] != "none" else "none"), "crowd"
             return LABEL_MAP[n], "violence"
         if n.replace("_", "") in UCF_MAP or n in UCF_MAP:
             return UCF_MAP.get(n, UCF_MAP.get(n.replace("_", ""))), "ucf"
@@ -186,9 +224,14 @@ for p in sorted(INPUT.rglob("*")):
     if lab:
         pool.setdefault(f"{fam}:{lab}", []).append(p)
 TRAIN: list[Item] = []
+TEST_EXTRA: list[Item] = []  # held out from the other datasets: riot, arrest, fire, peaceful crowds...
 for key, paths in sorted(pool.items()):
     rng.shuffle(paths)
-    cap = UCF_PER_CLASS if key.startswith("ucf:") else TRAIN_PER_CLASS
+    if not key.startswith("violence:"):  # SCVD / RWF / RLVS are tested on SCVD; the rest gets its own test
+        n_out = min(EXTRA_TEST_PER_CLASS, max(1, round(len(paths) * HOLDOUT))) if len(paths) >= 3 else 0
+        TEST_EXTRA += [Item(p, key.split(":")[1]) for p in paths[:n_out]]
+        paths = paths[n_out:]
+    cap = UCF_PER_CLASS if key.startswith(("ucf:", "xd:")) else TRAIN_PER_CLASS
     if key == "violence:fighting":  # spread fights over the datasets (SCVD, RWF-2000, RLVS)
         by_ds: dict[str, list[Path]] = {}
         for p in paths:
@@ -200,9 +243,14 @@ for key, paths in sorted(pool.items()):
                     picked.append(lst.pop())
         paths = picked
     TRAIN += [Item(p, key.split(":")[1]) for p in paths[:cap]]
-print({k: len(v) for k, v in pool.items()}, "-> training clips:", len(TRAIN))
-assert not test_paths & {str(it.path.resolve()) for it in TRAIN}, "a test clip leaked into training"
+FAMILY = {str(p): k.split(":")[0] for k, ps in pool.items() for p in ps}
+print({k: len(v) for k, v in pool.items()}, "-> training clips:", len(TRAIN), "| extra test clips:", len(TEST_EXTRA))
+held = test_paths | {str(it.path.resolve()) for it in TEST_EXTRA}
+assert not held & {str(it.path.resolve()) for it in TRAIN}, "a test clip leaked into training"
+if not any(it.label == "riot" for it in TRAIN):
+    print("NOTE: no riot clips attached (XD-Violence or Violent Flows), riots are not trained in this run")
 (OUT / "test_clips.txt").write_text("\n".join(f"{it.label}\t{it.path}" for it in TEST))
+(OUT / "test_extra_clips.txt").write_text("\n".join(f"{it.label}\t{it.path}" for it in TEST_EXTRA))
 (OUT / "train_clips.txt").write_text("\n".join(f"{it.label}\t{it.path}" for it in TRAIN))
 if not SMOKE:
     assert TEST, "SCVD not found: add it via Add Input (it is the test set)"
@@ -244,7 +292,8 @@ GRIDS = TMP / "grids"
 GRIDS.mkdir(exist_ok=True)
 samples = []  # {"grid": path, "gold": category, "clip": path}
 for i, it in enumerate(TRAIN):
-    makers = [lambda p: clip_grid(p, 448)] + [window_grid] * (GRIDS_PER_CLIP - 1)
+    n_win = LONG_WINDOWS if FAMILY.get(str(it.path)) in ("ucf", "xd") else GRIDS_PER_CLIP - 1
+    makers = [lambda p: clip_grid(p, 448)] + [window_grid] * n_win
     for j, make in enumerate(makers):
         out = GRIDS / f"{i:05d}_{j}.jpg"
         if not out.exists():
@@ -273,6 +322,19 @@ def ollama_client(model: str):
     return make_client(s.vlm)
 
 
+from pydantic import BaseModel  # noqa: E402
+
+
+class Check(BaseModel):
+    every_statement_visible: bool
+    wrong_part: str = ""
+
+
+CHECK_PROMPT = ("Here is a 2x2 grid of four frames from a camera and a description of it:\n\n\"{summary}\"\n\n"
+                "Look at the frames again. Is every statement in the description visible in the frames: the "
+                "number of people, what they do, objects, police, fire, vehicles? Answer false if anything is "
+                "invented or wrong, and name the wrong part in a few words. Respond with JSON only.")
+
 TEACH = OUT / "teacher.jsonl"
 if not SMOKE:
     sh(f"ollama pull {TEACHER}")
@@ -283,37 +345,73 @@ if not SMOKE:
         for k, smp in enumerate(samples):
             if smp["grid"] in done:
                 continue
-            s, _ = teacher.summarize(Path(smp["grid"]).read_bytes(), highlighted=False)
-            label = None
+            grid = Path(smp["grid"]).read_bytes()
+            s, _ = teacher.summarize(grid, highlighted=False)
+            label, chk = None, None
             if s is not None:
                 label, _, _ = teacher.classify_text(s.summary, s.visible_evidence, CATS)
+                # second look: 12B checks its own summary against the frames (drops invented details)
+                chk = teacher.structured([{"role": "user", "content": CHECK_PROMPT.format(summary=s.summary),
+                                           "images": [grid]}], Check, max_tokens=80)
             f.write(json.dumps({**smp, "summary": s.summary if s else None,
-                                "visible_evidence": s.visible_evidence if s else None, "teacher_label": label}) + "\n")
+                                "visible_evidence": s.visible_evidence if s else None, "teacher_label": label,
+                                "checked": chk.every_statement_visible if chk else None,
+                                "wrong_part": chk.wrong_part if chk else None}) + "\n")
             f.flush()
             if k % 50 == 0:
                 print(f"teacher {k}/{len(samples)}  {time.time() - t0:.0f} s")
     sh(f"ollama stop {TEACHER}", check=False)
 
 
-def keep(r: dict) -> bool:
-    """Train only on summaries whose label agrees with the dataset (incident vs none) and pass the guardrails."""
+def why_dropped(r: dict) -> str | None:
+    """Three checks before a summary becomes training data: the guardrails, 12B's label agrees with the
+    dataset's human label (ACCEPT), and 12B's second look found nothing invented."""
     if not r.get("summary") or r.get("teacher_label") is None:
-        return False
+        return "teacher failed"
     if BANNED.search(r["summary"] + " " + (r.get("visible_evidence") or "")):
-        return False
-    return (r["gold"] != "none") == (r["teacher_label"] != "none")
+        return "guardrail words"
+    if r["teacher_label"] not in ACCEPT.get(r["gold"], {r["gold"]}):
+        return "label disagrees"
+    if r.get("checked") is False:
+        return "check found an invented detail"
+    return None
 
 
 rows = [json.loads(x) for x in TEACH.read_text().splitlines()] if TEACH.exists() else []
-kept = [r for r in rows if keep(r)]
+kept = [r for r in rows if why_dropped(r) is None]
 by_gold: dict[str, list] = {}
 for r in kept:
     by_gold.setdefault(r["gold"], []).append(r)
-stats = {"teacher_grids": len(rows), "kept": len(kept),
-         "kept_per_class": {k: len(v) for k, v in sorted(by_gold.items())},
-         "dropped_guardrail": sum(bool(r.get("summary")) and bool(BANNED.search(r["summary"])) for r in rows)}
+reasons: dict[str, int] = {}
+for r in rows:
+    if (w := why_dropped(r)) is not None:
+        reasons[w] = reasons.get(w, 0) + 1
+per_class = {g: f"{sum(r['gold'] == g for r in kept)}/{sum(r['gold'] == g for r in rows)}"
+             for g in sorted({r["gold"] for r in rows})}
+stats = {"teacher_grids": len(rows), "kept": len(kept), "kept_of_total_per_class": per_class, "dropped": reasons}
 print(json.dumps(stats, indent=1))
 (OUT / "teacher_stats.json").write_text(json.dumps(stats, indent=1))
+
+# review.html: random kept samples (grid, summary, labels) for a human spot check before trusting the run
+if rows:
+    import base64
+
+    pick = random.Random(1).sample(kept, min(REVIEW_N, len(kept)))
+    cards = []
+    for i, r in enumerate(pick):
+        im = cv2.imread(r["grid"])
+        im = cv2.resize(im, (448, 448 * im.shape[0] // im.shape[1]))
+        b64 = base64.b64encode(cv2.imencode(".jpg", im, [cv2.IMWRITE_JPEG_QUALITY, 70])[1]).decode()
+        cards.append(f'<div class="c"><img src="data:image/jpeg;base64,{b64}"><p><b>#{i + 1}</b> dataset: '
+                     f'<b>{r["gold"]}</b> · 12B: <b>{r["teacher_label"]}</b></p><p>{r["summary"]}</p>'
+                     f'<p class="e">{r.get("visible_evidence") or ""}</p></div>')
+    (OUT / "review.html").write_text(
+        "<!doctype html><meta charset=utf-8><title>Training sample review</title><style>body{font:14px sans-serif;"
+        "margin:16px}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}.c{border:"
+        "1px solid #ccc;border-radius:6px;padding:8px}img{width:100%}.e{color:#666}</style><h1>Training sample "
+        f"review ({len(pick)} of {len(kept)} kept)</h1><p>Note the numbers of cards whose summary is wrong or "
+        "whose label is wrong. Under ~5 % wrong is fine to train on.</p><div class=g>" + "".join(cards) + "</div>",
+        encoding="utf-8")
 
 # %% [markdown]
 # ## Baseline: base E2B on the 60 test clips (same pipeline and backend as model_compare)
@@ -321,12 +419,20 @@ print(json.dumps(stats, indent=1))
 # %%
 from aequitas.eval.dataset import run_dataset_eval  # noqa: E402
 
-RESULTS = {}
+RESULTS, EXTRA = {}, {}  # model -> report on the SCVD test / on the extra test (riot, arrest, fire, peaceful)
+
+
+def evaluate(name: str, vlm, clf, label: str) -> None:
+    RESULTS[name] = run_dataset_eval(vlm, clf, TEST, CATS, label=label, out_dir=OUT / "reports")
+    if TEST_EXTRA:
+        EXTRA[name] = run_dataset_eval(vlm, clf, TEST_EXTRA, CATS, label=label + "_extra", out_dir=OUT / "reports")
+
+
 if not SMOKE:
     sh(f"ollama pull {BASE_OLLAMA}")
     base = ollama_client(BASE_OLLAMA)
     run_dataset_eval(base, base, TEST[:5], CATS, label="warmup", out_dir=OUT / "reports")  # load before timing
-    RESULTS["gemma4:e2b (base)"] = run_dataset_eval(base, base, TEST, CATS, label="base_e2b", out_dir=OUT / "reports")
+    evaluate("gemma4:e2b (base)", base, base, "base_e2b")
     sh(f"ollama stop {BASE_OLLAMA}", check=False)
     print({k: v["classification"]["incident_recall"] for k, v in RESULTS.items()})
 
@@ -409,8 +515,7 @@ if not SMOKE and OLLAMA_OK:  # Ollama runs on GPU 1, so the trained model can st
     if probe["classification"]["valid"] == 0:  # the import loaded but cannot answer: use Unsloth
         OLLAMA_OK = False
     else:
-        RESULTS["aequitas-e2b (fine-tuned)"] = run_dataset_eval(student, student, TEST, CATS, label="finetuned_e2b",
-                                                                out_dir=OUT / "reports")
+        evaluate("aequitas-e2b (fine-tuned)", student, student, "finetuned_e2b")
 if not SMOKE and not OLLAMA_OK:
     # Fallback: stage 1 from the fine-tuned weights in transformers (slower, so times are not comparable);
     # stage 2 with base gemma4:e2b in Ollama (it only reads text, and the fine-tune did not change stage 2)
@@ -436,8 +541,7 @@ if not SMOKE and not OLLAMA_OK:
             return ans, (time.perf_counter() - t) * 1000
 
     base = ollama_client(BASE_OLLAMA)
-    RESULTS["fine-tuned E2B (transformers; stage 2 base)"] = run_dataset_eval(
-        HfSummarizer(), base, TEST, CATS, label="finetuned_e2b_hf", out_dir=OUT / "reports")
+    evaluate("fine-tuned E2B (transformers; stage 2 base)", HfSummarizer(), base, "finetuned_e2b_hf")
 
 # %% [markdown]
 # ## Results table, chart, and the downloads
@@ -463,12 +567,28 @@ if not SMOKE:
     md = ["# Fine-tuned Gemma 4 E2B vs base (Kaggle T4, Ollama, our two-stage pipeline)", "",
           f"Test: the 60 held-out SCVD clips of model_compare ({TEST_PER_CLASS} per class), none used in training; "
           "faculty clips excluded. Student trained on "
-          f"{len(kept)} teacher summaries ({json.dumps(stats['kept_per_class'])}), {EPOCHS} epochs, QLoRA r=16.",
+          f"{len(kept)} teacher summaries ({json.dumps(stats['kept_of_total_per_class'])}), {EPOCHS} epochs, QLoRA r=16.",
           "Note: the SCVD training clips come from the same dataset as the test clips (different videos), so this "
           "measures in-domain gain; the 21 Bengaluru demo clips are the out-of-domain check.", "",
           df.to_markdown(index=False)]
+    if EXTRA:
+        # per class: share of held-out clips given exactly an accepted label; for none, share left as none
+        classes = sorted({it.label for it in TEST_EXTRA})
+        md += ["", f"## Second test set: {len(TEST_EXTRA)} held-out clips from the other datasets "
+               "(riot, arrest, fire, peaceful crowds...)", "",
+               "Share of clips given an accepted label (for none: left as none, i.e. no false alarm).", "",
+               "| model | " + " | ".join(f"{c} (n={sum(it.label == c for it in TEST_EXTRA)})" for c in classes) + " |",
+               "|---|" + "---|" * len(classes)]
+        for name, rep in EXTRA.items():
+            ok = [r for r in rep["rows"] if "error" not in r]
+            cells = []
+            for c in classes:
+                rs = [r for r in ok if r["gold"] == c]
+                cells.append(f'{sum(r["pred"] in ACCEPT.get(c, {c}) for r in rs)}/{len(rs)}')
+            md.append(f"| {name} | " + " | ".join(cells) + " |")
     if not OLLAMA_OK:
         md += ["", "Ollama import failed: the fine-tuned row ran in transformers, so its time is not comparable."]
+    md += ["", f"Training data checks: {json.dumps(stats['dropped'])} dropped. Spot check: review.html."]
     (OUT / "FINETUNE.md").write_text("\n".join(md), encoding="utf-8")
     df.to_csv(OUT / "finetune.csv", index=False)
     print("\n".join(md))
