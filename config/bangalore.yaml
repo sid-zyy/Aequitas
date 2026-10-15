@@ -1,6 +1,8 @@
 # Bengaluru localities and their camera points for the Live CCTV dashboard.
 # DEMO: real CCTV is not available, so each camera plays free-licence street footage from data/footage/
-# (see data/footage/SOURCES.md for where each clip came from). Camera names are real landmarks so the
+# (see data/footage/SOURCES.md for where each clip came from). Incident cameras play staged clips (arrests,
+# a vehicle fire) that were checked to be caught by the model (4 s windows, Gemma 4 E2B): only clips the
+# pipeline actually labels correctly are used. Camera names are real landmarks so the
 # demo reads naturally; the footage is not from those places.
 localities:
   - id: koramangala
@@ -9,6 +11,7 @@ localities:
       - {id: kor-sony-world, name: Sony World Junction, file: data/footage/koramangala/sony-world.mp4}
       - {id: kor-forum, name: Forum Mall, Hosur Road, file: data/footage/koramangala/forum.mp4}
       - {id: kor-80ft, name: 80 Feet Road, file: data/footage/koramangala/80ft-road.mp4}
+      - {id: kor-jyoti-nivas, name: Jyoti Nivas College Road, file: data/footage/incidents/arrest-2.mp4}
   - id: indiranagar
     name: Indiranagar
     cameras:
@@ -21,21 +24,24 @@ localities:
       - {id: wf-itpl, name: ITPL Main Road, file: data/footage/whitefield/itpl.mp4}
       - {id: wf-phoenix, name: Phoenix Marketcity, file: data/footage/whitefield/phoenix.mp4}
       - {id: wf-hope-farm, name: Hope Farm Junction, file: data/footage/whitefield/hope-farm.mp4}
+      - {id: wf-kundalahalli, name: Kundalahalli Gate, file: data/footage/incidents/arrest-1.mp4}
   - id: mg-road
     name: MG Road
     cameras:
       - {id: mg-kumble, name: Anil Kumble Circle, file: data/footage/mg-road/kumble-circle.mp4}
       - {id: mg-brigade, name: Brigade Road Junction, file: data/footage/mg-road/brigade-road.mp4}
       - {id: mg-trinity, name: Trinity Metro, file: data/footage/mg-road/trinity.mp4}
+      - {id: mg-church-st, name: Church Street, file: data/footage/incidents/arrest-4.mp4}
   - id: majestic
     name: Majestic
     cameras:
       - {id: maj-ksr, name: KSR Railway Station, file: data/footage/majestic/ksr-station.mp4}
       - {id: maj-kbs, name: Kempegowda Bus Station, file: data/footage/majestic/kbs.mp4}
       - {id: maj-gandhinagar, name: Gandhi Nagar, file: data/footage/majestic/gandhi-nagar.mp4}
+      - {id: maj-platform-rd, name: Platform Road, file: data/footage/incidents/arrest-3.mp4}
   - id: electronic-city
     name: Electronic City
     cameras:
       - {id: ec-flyover, name: Electronic City Flyover, file: data/footage/electronic-city/flyover.mp4}
       - {id: ec-phase1, name: Phase 1 Main Gate, file: data/footage/electronic-city/phase1.mp4}
-      - {id: ec-neeladri, name: Neeladri Road, file: data/footage/electronic-city/neeladri.mp4}
+      - {id: ec-neeladri, name: Neeladri Road, file: data/footage/incidents/fire-rescue.mp4}

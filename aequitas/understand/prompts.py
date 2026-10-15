@@ -81,6 +81,11 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
         "- Say how many people there are, their posture (standing, walking, running, sitting, lying on the "
         "ground) and any contact between them, and whether any bag or object is left alone.\n"
         "- If anyone hits, kicks, pushes, grabs, chokes, restrains or attacks another person, say so plainly.\n"
+        "- Name the main action with a specific verb (walking, running, punching, pushing, handcuffing, "
+        "falling, crashing, burning). Never write vague phrases such as 'some action', 'interacting' or "
+        "'engaged in an activity'. Do not start with 'Four frames show'; describe the scene directly.\n"
+        "- Mention police or other uniforms, handcuffs, weapons, fire, smoke, and crashed or damaged vehicles "
+        "whenever they are visible.\n"
         f"{length}"
         "Respond with JSON only."
     )
