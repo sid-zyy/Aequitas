@@ -49,6 +49,12 @@ BENCH_CONCURRENCY = [1, 8]
 REAL_CLIPS_PER_CLASS = 10
 PORT = 8000
 REPO = "https://github.com/sid-zyy/Aequitas.git"
+# Quantized checkpoints to keep for running locally (the rest are deleted to save disk). 4-bit ones are
+# what fits the 6 GB laptop GPU. Kaggle's /kaggle/working holds 20 GB: these total ~10 GB.
+KEEP = ["qwen-w4a16", "smolvlm-w4a16", "gemma-w4a16"]
+# Also upload kept checkpoints to private Hugging Face repos <HF_USER>/aequitas-<name> (resumable download
+# at home). Needs an HF_TOKEN secret with WRITE access. Empty = only save to /kaggle/working/checkpoints.
+HF_USER = ""
 
 n_runs = len(MODELS) * len(PRECISIONS) + (len(SPEC_EXTRAS) if "gemma" in MODELS else 0)
 print(f"{n_runs} serving runs, ~8 min each, plus ~20 min quantization per model "
@@ -128,13 +134,16 @@ print(f"{len(REAL)} real-footage grids" + ("" if REAL else " (dataset not added:
 # ## Quantize, serve, measure
 
 # %%
+import base64
+
 import httpx
 
 from aequitas.config import LlmEndpoint
 from aequitas.eval.bench import run_bench
 from aequitas.eval.classify_eval import load_items, run_eval
 from aequitas.taxonomy import DEFAULT_CATEGORIES
-from aequitas.understand.vlm_client import OpenAICompatClient
+from aequitas.understand.prompts import SummaryAnswer, summarize_prompt
+from aequitas.understand.vlm_client import OpenAICompatClient, sse_deltas
 
 DEV_ITEMS, _ = load_items(REPO_DIR / "config/classify_eval.yaml")
 INCIDENT = {"fighting", "riot", "weapon"}
@@ -204,55 +213,145 @@ def rouge_l(a: str, b: str) -> float:
     return round(2 * p * r / (p + r), 4) if p + r else 0.0
 
 
-REFERENCE = {}  # model key -> {clip name: fp16 summary}
+def stream_summary(jpeg: bytes) -> tuple[SummaryAnswer | None, float | None, float]:
+    """Stage 1 as the user experiences it: (summary, time to first word s, full response s)."""
+    b64 = base64.b64encode(jpeg).decode("ascii")
+    body = {"model": "m", "temperature": 0, "max_tokens": 160, "stream": True,
+            "messages": [{"role": "user", "content": [
+                {"type": "text", "text": summarize_prompt(highlighted=False)},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}]}],
+            "response_format": {"type": "json_schema", "json_schema": {
+                "name": "SummaryAnswer", "schema": SummaryAnswer.model_json_schema()}}}
+    t0, first, text = time.perf_counter(), None, ""
+    with HTTP.stream("POST", f"http://127.0.0.1:{PORT}/v1/chat/completions", json=body) as r:
+        r.raise_for_status()
+        for piece in sse_deltas(r.iter_lines()):
+            first = first or time.perf_counter()
+            text += piece
+    full = time.perf_counter() - t0
+    try:
+        ans = SummaryAnswer.model_validate_json(text)
+    except Exception:
+        ans = None
+    return ans, (round(first - t0, 3) if first else None), round(full, 3)
+
+
+def secs(ms):
+    return round(ms / 1000, 3) if ms is not None else None
 
 
 def measure(key: str, precision: str, spec: tuple | None, startup_s: int) -> dict:
     row = {"model": key, "precision": precision, "spec": f"{spec[0]}{spec[1]}" if spec else "none",
            "startup_s": startup_s, "gpu_gb": gpu_used_gb()}
     label = f"{key}-{precision}-{row['spec']}"
-    b = run_bench(f"http://127.0.0.1:{PORT}", "m", ["summarize", "classify"], BENCH_CONCURRENCY,
+
+    # Response times on synthetic inputs (identical requests for every config).
+    b = run_bench(f"http://127.0.0.1:{PORT}", "m", ["summarize", "classify", "chat"], BENCH_CONCURRENCY,
                   BENCH_REQUESTS, label=label, out_dir=OUT / "reports")
-    for task in ("summarize", "classify"):
-        for c in BENCH_CONCURRENCY:
-            r = b["results"][task][str(c)]
-            row[f"{task}_c{c}_p50_ms"] = r["total_ms"].get("p50")
-            row[f"{task}_c{c}_ok"] = f"{r['ok']}/{r['requests']}"
-        row[f"{task}_tpot_ms"] = b["results"][task]["1"]["tpot_ms"].get("p50")
-        row[f"{task}_ttft_ms"] = b["results"][task]["1"]["ttft_ms"].get("p50")
-    row["window_ms_c8"] = round((row.get("summarize_c8_p50_ms") or 0) + (row.get("classify_c8_p50_ms") or 0), 1)
-    spec_r = b["results"]["summarize"]["1"].get("speculation")
+    for task in ("summarize", "classify", "chat"):
+        one = b["results"][task]["1"]
+        row[f"{task}_first_word_s"] = secs(one["ttft_ms"].get("p50"))
+        row[f"{task}_full_s"] = secs(one["total_ms"].get("p50"))
+        row[f"{task}_full_p95_s"] = secs(one["total_ms"].get("p95"))
+        row[f"{task}_ok"] = f"{one['ok']}/{one['requests']}"
+        row[f"{task}_tokens_per_s"] = round(1000 / one["tpot_ms"]["p50"], 1) if one["tpot_ms"].get("p50") else None
+        busy = b["results"][task][str(max(BENCH_CONCURRENCY))]
+        row[f"{task}_full_busy_s"] = secs(busy["total_ms"].get("p50"))  # same, with N requests at once
+    # One analysis window = summarize + classify; "busy" = 8 cameras/windows in flight at once.
+    row["window_s"] = round((row["summarize_full_s"] or 0) + (row["classify_full_s"] or 0), 3)
+    row["window_busy_s"] = round((row["summarize_full_busy_s"] or 0) + (row["classify_full_busy_s"] or 0), 3)
+    spec_r = b["results"]["chat"]["1"].get("speculation") or b["results"]["summarize"]["1"].get("speculation")
     row["spec_acceptance"] = spec_r["acceptance_rate"] if spec_r else None
 
     client = OpenAICompatClient(LlmEndpoint(backend="openai", host=f"http://127.0.0.1:{PORT}", model="m",
                                             timeout_s=300))
     ev = run_eval(client, DEV_ITEMS, DEFAULT_CATEGORIES, concurrency=8, label=label, out_dir=OUT / "reports")
-    row.update(dev_accuracy=ev["accuracy"], dev_macro_f1=ev["macro_f1"], dev_valid=f"{ev['valid']}/{ev['n']}",
+    row.update(dev_accuracy=ev["accuracy"], dev_macro_f1=ev["macro_f1"], dev_valid=ev["valid"] / ev["n"],
                dev_incident_recall=ev["incident_recall"])
 
     if REAL:
-        tp = fp = fn = correct = 0
-        sims = []
+        outputs, sims = [], []
+        ref = load_outputs(f"{key}-fp16-none")
         for name, gold, jpeg in REAL:
-            s, _ = client.summarize(jpeg, highlighted=False)
-            text = s.summary if s else ""
-            lab = client.classify_text(text, s.visible_evidence, DEFAULT_CATEGORIES)[0] if s else None
-            pos, gpos = lab in INCIDENT, gold == "fighting"
-            tp, fp, fn = tp + (pos and gpos), fp + (pos and not gpos), fn + (gpos and not pos)
-            correct += pos == gpos
-            if precision == "fp16" and not spec:
-                REFERENCE.setdefault(key, {})[name] = text
-            elif name in REFERENCE.get(key, {}):
-                sims.append(rouge_l(text, REFERENCE[key][name]))
-        row.update(real_n=len(REAL), real_accuracy=round(correct / len(REAL), 3),
+            t0 = time.perf_counter()
+            s, first_s, sum_s = stream_summary(jpeg)
+            lab, conf, cls_ms = (client.classify_text(s.summary, s.visible_evidence, DEFAULT_CATEGORIES)
+                                 if s else (None, None, 0.0))
+            out = {"clip": name, "gold": gold, "summary": s.summary if s else None, "label": lab,
+                   "confidence": conf, "first_word_s": first_s, "summary_s": sum_s, "label_s": secs(cls_ms),
+                   "clip_total_s": round(time.perf_counter() - t0, 3)}
+            if name in ref and ref[name] and out["summary"]:
+                out["rougeL_vs_fp16"] = rouge_l(out["summary"], ref[name])
+                sims.append(out["rougeL_vs_fp16"])
+            outputs.append(out)
+        save_outputs(label, outputs)
+        pos = [o["label"] in INCIDENT for o in outputs]
+        gpos = [o["gold"] == "fighting" for o in outputs]
+        tp = sum(p and g for p, g in zip(pos, gpos))
+        fp = sum(p and not g for p, g in zip(pos, gpos))
+        fn = sum(g and not p for p, g in zip(pos, gpos))
+        times = sorted(o["clip_total_s"] for o in outputs)
+        row.update(real_n=len(outputs), real_accuracy=round(sum(p == g for p, g in zip(pos, gpos)) / len(outputs), 3),
                    real_precision=round(tp / (tp + fp), 3) if tp + fp else None,
                    real_recall=round(tp / (tp + fn), 3) if tp + fn else None,
+                   clip_first_word_s=sorted(o["first_word_s"] or 0 for o in outputs)[len(outputs) // 2],
+                   clip_total_s=times[len(times) // 2],
                    rougeL_vs_fp16=round(sum(sims) / len(sims), 3) if sims else None)
     return row
 
 
-ROWS = []
+def save_outputs(label: str, outputs: list[dict]) -> None:
+    d = OUT / "outputs"
+    d.mkdir(exist_ok=True)
+    (d / f"{label}.jsonl").write_text("\n".join(json.dumps(o) for o in outputs), encoding="utf-8")
+
+
+def load_outputs(label: str) -> dict:
+    f = OUT / "outputs" / f"{label}.jsonl"
+    lines = f.read_text(encoding="utf-8").splitlines() if f.exists() else []
+    return {o["clip"]: o["summary"] for o in map(json.loads, filter(None, lines))}
+
+
+def model_gib(path_or_id: str) -> float | None:
+    """Weights on disk: the quantized folder, or the original model in the HF cache."""
+    p = Path(path_or_id)
+    if not p.exists():
+        try:
+            from huggingface_hub import snapshot_download
+
+            p = Path(snapshot_download(path_or_id, allow_patterns=["*.safetensors"]))
+        except Exception:
+            return None
+    return round(sum(f.stat().st_size for f in p.rglob("*.safetensors")) / 2**30, 2)
+
+
+def keep_checkpoint(key: str, precision: str, path: str) -> None:
+    name = f"{key}-{precision}"
+    if name not in KEEP:
+        return
+    dest = WORK / "checkpoints" / name
+    shutil.copytree(path, dest, dirs_exist_ok=True)
+    print(f"kept {name} -> {dest}")
+    if HF_USER and os.environ.get("HF_TOKEN"):
+        try:
+            from huggingface_hub import HfApi
+
+            api, repo = HfApi(token=os.environ["HF_TOKEN"]), f"{HF_USER}/aequitas-{name}"
+            api.create_repo(repo, private=True, exist_ok=True)
+            api.upload_folder(repo_id=repo, folder_path=str(dest))
+            print(f"uploaded to https://huggingface.co/{repo} (private)")
+        except Exception as e:
+            print(f"HF upload of {name} failed (checkpoint is still in /kaggle/working): {e}")
+
+
+# Results are appended as each config finishes, so a timeout loses nothing. Re-running the notebook
+# (e.g. Save Version after a timeout) skips configs that already succeeded.
 RESULTS = OUT / "results.jsonl"
+ROWS = [json.loads(x) for x in RESULTS.read_text().splitlines()] if RESULTS.exists() else []
+DONE = {(r["model"], r["precision"], r["spec"]) for r in ROWS if "error" not in r}
+ROWS = [r for r in ROWS if "error" not in r]  # failed configs get another try
+HTTP = httpx.Client(timeout=600)
+print(f"resuming: {len(DONE)} configs already done" if DONE else "fresh run")
 
 
 def record(row: dict) -> None:
@@ -262,40 +361,38 @@ def record(row: dict) -> None:
     print(json.dumps(row, indent=1))
 
 
+def run_config(key: str, model_id: str, precision: str, spec: tuple | None = None) -> None:
+    tag = f"{spec[0]}{spec[1]}" if spec else "none"
+    if (key, precision, tag) in DONE:
+        print(f"skip {key}-{precision}-{tag} (done)")
+        return
+    try:
+        path = model_id if precision == "fp16" else str(quantize(model_id, precision))
+        proc, startup = serve(path, key, spec)
+        try:
+            row = measure(key, precision, spec, startup)
+        finally:
+            stop(proc)
+        row["ckpt_gib"] = model_gib(path)
+        record(row)
+        if precision != "fp16" and not spec:
+            keep_checkpoint(key, precision, path)
+    except Exception as e:  # a config that fails is a result too
+        record({"model": key, "precision": precision, "spec": tag, "error": str(e)[:500]})
+
+
 for key, model_id in MODELS.items():
     for precision in PRECISIONS:
-        try:
-            path = model_id if precision == "fp16" else str(quantize(model_id, precision))
-            size = None if precision == "fp16" else round(
-                sum(f.stat().st_size for f in Path(path).glob("*.safetensors")) / 2**30, 2)
-            proc, startup = serve(path, key)
-            try:
-                row = measure(key, precision, None, startup)
-                row["ckpt_gib"] = size
-                record(row)
-            finally:
-                stop(proc)
-        except Exception as e:  # a config that fails is a result too
-            record({"model": key, "precision": precision, "spec": "none", "error": str(e)[:500]})
+        run_config(key, model_id, precision)
     if key == "gemma" and SPEC_EXTRAS:
-        ok = [r for r in ROWS if r["model"] == "gemma" and "error" not in r]
+        ok = [r for r in ROWS if r["model"] == "gemma" and r["spec"] == "none" and "error" not in r]
         if ok:
-            best = min(ok, key=lambda r: r["window_ms_c8"])
-            path = model_id if best["precision"] == "fp16" else str(SCRATCH / "ckpt" / f"{model_id.split('/')[-1]}-{best['precision']}")
+            best = min(ok, key=lambda r: r["window_busy_s"])
             for spec in SPEC_EXTRAS:
-                try:
-                    proc, startup = serve(path, key, spec)
-                    try:
-                        record(measure(key, best["precision"], spec, startup))
-                    finally:
-                        stop(proc)
-                except Exception as e:
-                    record({"model": key, "precision": best["precision"], "spec": f"{spec[0]}{spec[1]}",
-                            "error": str(e)[:500]})
+                run_config(key, model_id, best["precision"], spec)
     shutil.rmtree(SCRATCH / "ckpt", ignore_errors=True)  # free disk before the next model
-
 # %% [markdown]
-# ## Table and chart for the slide
+# ## Results: table, chart and the recommended model (decision rule from docs/ABLATION_PLAN.md §4)
 
 # %%
 import matplotlib
@@ -304,32 +401,104 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+LAPTOP_GIB = 5.0  # weights must fit the 6 GB RTX 4050 next to the KV cache and the desktop
+
 df = pd.DataFrame(ROWS)
 df.to_csv(OUT / "results.csv", index=False)
-cols = [c for c in ["model", "precision", "spec", "ckpt_gib", "gpu_gb", "summarize_c1_p50_ms", "classify_c1_p50_ms",
-                    "window_ms_c8", "summarize_tpot_ms", "spec_acceptance", "dev_macro_f1", "dev_incident_recall",
-                    "real_accuracy", "real_recall", "rougeL_vs_fp16", "error"] if c in df.columns]
+
+# The slide table: what a user feels (seconds) next to accuracy and memory.
+SHOW = {
+    "model": "Model", "precision": "Precision", "spec": "Speculation", "ckpt_gib": "Weights (GiB)",
+    "gpu_gb": "GPU mem (GB)", "summarize_first_word_s": "Summary: first word (s)",
+    "summarize_full_s": "Summary: full (s)", "classify_full_s": "Label (s)", "window_s": "Window total (s)",
+    "window_busy_s": "Window total, 8 at once (s)", "summarize_tokens_per_s": "Tokens/s",
+    "chat_first_word_s": "Chat: first word (s)", "chat_full_s": "Chat: full answer (s)",
+    "spec_acceptance": "Spec. acceptance", "dev_macro_f1": "Label macro-F1 (dev)",
+    "dev_incident_recall": "Incident recall (dev)", "real_accuracy": "Real clips accuracy",
+    "clip_total_s": "Real clip: video→label (s)", "rougeL_vs_fp16": "Summary vs FP16 (ROUGE-L)", "error": "Error",
+}
+table = df[[c for c in SHOW if c in df.columns]].rename(columns=SHOW)
+table = table.astype(object).where(table.notna(), "")  # blank, not nan, on the slide
+
+
+def pick(df: pd.DataFrame):
+    """Decision rule, fixed before the run: valid outputs, accuracy close to the model's own 16-bit,
+    fits the laptop, then fastest window with 8 in flight; ties -> incident recall."""
+    if "error" in df.columns:
+        df = df[df["error"].isna()]
+    base = df[df["spec"] == "none"].copy()
+    if base.empty:
+        return None, "no successful configs"
+    fp16_f1 = base[base["precision"] == "fp16"].set_index("model")["dev_macro_f1"].to_dict()
+    reasons = []
+    keep = []
+    for _, r in base.iterrows():
+        why = []
+        if r.get("dev_valid", 1) < 0.95:
+            why.append("<95 % valid outputs")
+        ref = fp16_f1.get(r["model"])
+        if ref is not None and r["dev_macro_f1"] < ref - 0.03:
+            why.append(f"F1 {r['dev_macro_f1']:.2f} < 16-bit {ref:.2f} - 0.03")
+        if r.get("ckpt_gib") is not None and r["ckpt_gib"] > LAPTOP_GIB:
+            why.append(f"{r['ckpt_gib']} GiB does not fit the laptop")
+        if why:
+            reasons.append(f"- {r['model']} {r['precision']}: out ({'; '.join(why)})")
+        else:
+            keep.append(r)
+    if not keep:
+        return None, "\n".join(reasons + ["No config passes every rule: relax LAPTOP_GIB or use CPU offload."])
+    best = sorted(keep, key=lambda r: (r["window_busy_s"], -(r.get("dev_incident_recall") or 0)))[0]
+    return best, "\n".join(reasons)
+
+
+best, why = pick(df)
+rec = ["## Recommendation", ""]
+if best is not None:
+    rec.append(f"**{best['model']} {best['precision']}**: window {best['window_s']} s alone, "
+               f"{best['window_busy_s']} s with 8 at once; label macro-F1 {best['dev_macro_f1']}; "
+               f"weights {best.get('ckpt_gib')} GiB.")
+rec += ["", "Excluded:", why or "- none"]
+
 md = ["# Ablation results (Kaggle T4, vLLM)", "",
-      "Development set = 48 hand-written summaries (compares configs; not real-world accuracy). "
-      f"Real clips: n={len(REAL)}, fighting vs none. T4 latencies, not laptop latencies.", "",
-      df[cols].to_markdown(index=False)]
+      "Times are medians in seconds as a user experiences them: *first word* = until the first token "
+      "streams back, *full* = until the whole response is back. *8 at once* = 8 requests in flight "
+      "(8 cameras). Dev set = 48 hand-written summaries (compares configs; not real-world accuracy). "
+      f"Real clips: n={len(REAL)}, fighting vs none. T4 times, not laptop times.", "",
+      table.to_markdown(index=False), "", *rec]
 (OUT / "ABLATION.md").write_text("\n".join(md), encoding="utf-8")
 print("\n".join(md))
 
-ok = df[df.get("error").isna()] if "error" in df.columns else df
+ok = df[df["error"].isna()] if "error" in df.columns else df
+ok = ok[ok["spec"] == "none"] if len(ok) else ok
 if len(ok):
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     markers = {"fp16": "o", "w8a8": "s", "w4a16": "^"}
-    for (model, prec), g in ok[ok["spec"] == "none"].groupby(["model", "precision"]):
-        ax.scatter(g["window_ms_c8"] / 1000, g["dev_macro_f1"], s=40 + 60 * g["gpu_gb"].fillna(1),
-                   marker=markers.get(prec, "o"), label=f"{model} {prec}", alpha=0.8)
-    ax.set_xlabel("time per window at concurrency 8, summarize + classify (s)  ← faster")
-    ax.set_ylabel("stage-2 macro-F1 (dev set)  ↑ better")
-    ax.set_title("Aequitas: model × precision (marker size = GPU memory)")
-    ax.grid(alpha=0.3)
-    ax.legend(fontsize=8, ncol=2)
+    for (model, prec), g in ok.groupby(["model", "precision"]):
+        for ax, x in zip(axes, ["window_s", "window_busy_s"]):
+            ax.scatter(g[x], g["dev_macro_f1"], s=40 + 60 * g["gpu_gb"].fillna(1),
+                       marker=markers.get(prec, "o"), label=f"{model} {prec}", alpha=0.8)
+    for ax, title in zip(axes, ["one window at a time", "8 windows at once (8 cameras)"]):
+        ax.set_xlabel("response time per window: summary + label (s)  ← faster")
+        ax.set_ylabel("label macro-F1 (dev set)  ↑ better")
+        ax.set_title(title)
+        ax.grid(alpha=0.3)
+    axes[0].legend(fontsize=8, ncol=2)
+    fig.suptitle("Aequitas: model × precision (marker size = GPU memory)")
     fig.tight_layout()
     fig.savefig(OUT / "ablation.png", dpi=150)
 
+    spec = df[(df["model"] == "gemma")] if "gemma" in set(df["model"]) else None
+    if spec is not None and "chat_full_s" in spec and len(spec) > 1:
+        fig, ax = plt.subplots(figsize=(7, 4))
+        labels = [f"{r.precision} {r.spec}" for r in spec.itertuples()]
+        ax.bar(labels, spec["chat_full_s"], label="chat: full answer")
+        ax.bar(labels, spec["summarize_full_s"], alpha=0.6, label="summary: full")
+        ax.set_ylabel("seconds (median)")
+        ax.set_title("Gemma 4 E2B: speculative decoding (MTP, n-gram)")
+        ax.legend()
+        plt.xticks(rotation=30)
+        fig.tight_layout()
+        fig.savefig(OUT / "speculation.png", dpi=150)
+
 shutil.make_archive(str(WORK / "ablation"), "zip", OUT)
-print("Download ablation.zip from the Output panel.")
+print("Download ablation.zip (results) and, if needed, checkpoints/ from the Output panel.")
