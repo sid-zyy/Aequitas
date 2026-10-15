@@ -148,3 +148,13 @@ def test_dev_set_covers_every_default_category(tmp_path):
 
     r = run_eval(Oracle(""), items, None, concurrency=3, label="oracle", out_dir=tmp_path)
     assert r["accuracy"] == 1.0 and r["macro_f1"] == 1.0 and r["errors"] == []
+
+
+def test_fire_priority_rule_names_only_configured_categories():
+    from aequitas.understand.prompts import classify_text_prompt
+
+    p = classify_text_prompt("Flames rise from a car.")
+    assert "choose fire over accident, fighting, riot, vandalism, arrest" in p
+    custom = classify_text_prompt("Flames rise from a car.", categories={"fire": "flames", "theft": "steals"})
+    assert "choose fire, unless" in custom and "riot" not in custom
+    assert "choose fire" not in classify_text_prompt("x", categories={"theft": "steals"})

@@ -55,3 +55,10 @@ items:
   - {label: none, summary: "A cook lights a gas stove at a food stall and a small flame burns under the pan."}
   - {label: none, summary: "People sit quietly on the ground at a protest site listening to a speaker."}
   - {label: none, summary: "Children play cricket in the lane and one of them runs to catch the ball."}
+  # Added 2026-10-16 after the fire-rescue demo clip: responders at a scene are not an arrest or a fight.
+  # Written in the style of the failing summaries, so they check the rule, not real-world accuracy.
+  - {label: none, summary: "Police officers are present near several parked cars and talk to each other."}
+  - {label: fire, summary: "Firefighters spray water on a burning car while flames rise from the bonnet."}
+  - {label: fire, summary: "Officers stand near a vehicle with visible flames and smoke coming from the rear."}
+  - {label: arrest, summary: "Two officers hold a man by both arms and lead him to a police van."}
+  - {label: none, summary: "Rescue workers in helmets work on a damaged car at the roadside; nobody is held or hurt."}
