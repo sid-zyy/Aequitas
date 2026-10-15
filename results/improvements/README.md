@@ -72,6 +72,16 @@ has any window at 0.9. **On.** The rule was chosen after looking at these clips,
 measured accuracy. Still missed: arrest-1 and arrest-2 (one arrest window each), fac-v001 when its second window
 scores 0.86; the fire-rescue "arrest" false alarm comes from Gemma, not from this rule.
 
+## 5. The current setup end to end, twice (context + scene gate + clip votes, `config/eval_demo_final*.yaml`)
+
+| Run | Confirmed caught | Confirmed false alarms | First flag caught | Gemma windows | Gemma time | Wall time, 21 clips |
+|---|---|---|---|---|---|---|
+| E (run 1) | 7/10 | 1 (fire-rescue: arrest) | 10/10 | 77 | 81.2 s | 1 min 48 s |
+| E (run 2) | 7/10 | 1 (fire-rescue: arrest) | 10/10 | 77 | 76.6 s | 1 min 49 s |
+
+Both runs match the replay's prediction for this setup. Still missed: fac-v001 (second window scores 0.86),
+arrest-1, arrest-2.
+
 ## What limits accuracy now
 
 Arrests: Gemma labels only one window of arrest-1 and arrest-2 as arrest. The fire-rescue clip gets a confirmed
