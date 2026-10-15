@@ -292,3 +292,7 @@ table.queue tr.review-row td { background: var(--panel-2); padding: 4px 12px 16p
 .bc-log > div:hover { background: var(--panel-2); }
 .bc-log > div.sel { background: var(--panel-3); }
 @media (max-width: 640px) { .bc-moment { grid-template-columns: 1fr; } .bc-moment img { width: 100%; } }
+.bc-summary { border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel-2); padding: 12px 14px; }
+.bc-summary p { margin: 6px 0 8px; color: var(--text); }
+.bc-summary ol { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 4px; }
+.bc-summary li .btn { padding: 2px 6px; margin-right: 4px; }
