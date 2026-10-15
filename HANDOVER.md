@@ -109,7 +109,8 @@ Rules for every phase: tests pass before committing; commit locally; **ask the o
 record numbers in the docs.
 
 ### Phase 0 · GPU baseline (half a day)
-- [ ] Setup (§5). Run `aequitas spike --models gemma4:e2b gemma4:e4b` with CUDA PyTorch. Record the results in DESIGN.md §4.3.
+- [x] Setup (§5): Python, CUDA torch, Ollama, gemma4:e2b on the RTX 4050. Spike: 1.2 s per window (DESIGN.md §4.4).
+  `gemma4:e4b` not pulled yet (only at 4-bit would it fit).
 - [ ] Re-run CAVIAR with **YOLO11s and YOLO11m** at `imgsz` 640 and 960. Does person recall fix the rules?
   Record the results in EVAL_CAVIAR.md. (The weights are small and come from Ultralytics.)
 
