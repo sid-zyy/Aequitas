@@ -249,6 +249,24 @@ Lessons:
 
 ---
 
+### 4.4 GPU laptop results (RTX 4050 Laptop 6 GB, Ollama, pipeline v2, 2026-10-15)
+
+`aequitas spike --models gemma4:e2b --vlm-iters 5`, a unique image per call (cache trap avoided):
+
+| Measure | RTX 4050 | Dev laptop CPU (§4.3) |
+|---|---|---|
+| One window, both stages (warm p50) | **1.2 s** = summarize 0.8 s + classify 0.38 s | ~16 s (single call) |
+| Valid outputs | 6/6 | |
+| Chat question -> filter (p50) | 1.5 s | ~6 s |
+| YOLO11n per frame (p50) | 12.7 ms (~79 fps) | 43-82 ms |
+| Pose crop (p50) | 17.6 ms | |
+| VRAM used | 3.4 GB of 6 | n/a |
+| Cold first call (loads the model) | 107 s | |
+
+On the stock street image every answer was `none` with summaries like "two people walking past a bus".
+The cold start is a one-time load: warm the model before a demo. These are Ollama numbers; vLLM numbers
+come from the Kaggle ablation and from WSL once installed.
+
 ## 5. Storage schema (frozen contract)
 
 Times are **UTC epoch milliseconds** (INTEGER). The UI and chatbot convert to and from local time.
