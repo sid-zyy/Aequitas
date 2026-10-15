@@ -34,6 +34,7 @@ from aequitas.web.live import LiveManager, load_localities
 log = logging.getLogger(__name__)
 
 STATIC = Path(__file__).parent / "static"
+DIST = Path(__file__).parent / "frontend_dist"  # built React app
 VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}
 MAX_UPLOAD_BYTES = 4 * 1024**3
 
@@ -577,7 +578,20 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
                    body.model_dump(exclude_none=True), request.client.host if request.client else "")
         return _report_json(reports.get(report_id), detail=True)
 
-    app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
+    if (DIST / "index.html").is_file():
+        # The React app (frontend/, `npm run build`). Unknown non-API paths return the app, which routes them.
+        app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
+
+        @app.get("/{path:path}", include_in_schema=False)
+        def spa(path: str):
+            if path.startswith("api/"):
+                raise HTTPException(404, "not found")
+            f = (DIST / path).resolve()
+            if path and f.is_file() and DIST.resolve() in f.parents:
+                return FileResponse(f)
+            return FileResponse(DIST / "index.html")
+    else:  # React app not built: the older plain-JS pages
+        app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
     return app
 
 

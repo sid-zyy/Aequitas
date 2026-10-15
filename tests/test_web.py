@@ -43,10 +43,15 @@ def _video(path, seconds=2, fps=10):
     return path
 
 
-def test_index_and_static_served(client):
+def test_index_and_spa_routes_served(client):
     r = client.get("/")
     assert r.status_code == 200 and "Aequitas" in r.text
-    assert client.get("/app.js").status_code == 200
+    if web.DIST.joinpath("index.html").is_file():  # the React app: client-side routes return the app
+        assert client.get("/report").text == r.text and client.get("/reports").status_code == 200
+        assert client.get("/api/nope").status_code == 404  # unknown API paths are not the app
+        assert client.get("/../pyproject.toml").text == r.text  # no files outside the build
+    else:
+        assert client.get("/app.js").status_code == 200
 
 
 def test_events_list_detail_and_keyframe(client):

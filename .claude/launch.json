@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "aequitas-web",
-      "runtimeExecutable": ".venv\\Scripts\\python.exe",
-      "runtimeArgs": ["-m", "aequitas", "web", "--port", "8000"],
-      "port": 8000
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "aequitas", "web", "--port", "8001"],
+      "port": 8001
     }
   ]
 }

@@ -33,7 +33,7 @@ aequitas = "aequitas.cli:main"
 include = ["aequitas*"]
 
 [tool.setuptools.package-data]
-aequitas = ["store/schema.sql", "web/static/*"]
+aequitas = ["store/schema.sql", "web/static/*", "web/frontend_dist/*", "web/frontend_dist/assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
