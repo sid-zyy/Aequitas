@@ -4,7 +4,7 @@
 small, honest table and one chart: **latency vs accuracy vs memory** for each model × precision. This
 covers the quantization-study requirement and justifies the model we pick.
 
-**Budget.** $0, using Kaggle's free GPUs. About 3–4 GPU hours in one session. Kaggle gives ~30 GPU
+**Budget.** $0, using Kaggle's free GPUs. About 4–5 GPU hours in one session (3–4 for the matrix, ~1 for the latency levers). Kaggle gives ~30 GPU
 hours per week, so this uses about a tenth of the weekly quota.
 
 ## 1. The matrix
@@ -49,6 +49,32 @@ INT8 W8A8 on Turing, but **not FP8 and not BF16** (vLLM quantization hardware ta
 
 Every configuration runs the same requests in the same order. Ten configs at ~8 minutes each (load +
 bench + eval), plus ~1 h to quantize, fits one Kaggle session.
+
+## 2b. Latency (time taken): what helps, and how each lever is tested
+
+Where the time goes in one analysis window:
+1. **Prefill**: the VLM reads the image. Grows with the number of image tokens.
+2. **Decode**: it writes the summary, one token at a time. Grows with summary length.
+3. **Label**: a short text call with 1–3 output tokens.
+
+A video's total time ≈ windows × time per window ÷ windows in flight.
+
+| Lever | Faculty item? | What it speeds up | Expected | Tested in the notebook |
+|---|---|---|---|---|
+| vLLM continuous batching (`vlm.concurrency`) | **yes: vLLM** | total video time (many windows at once) | biggest win for a whole video | concurrency 1/2/4/8/16; whole video at 1 vs 8 |
+| 4-bit / 8-bit weights | **yes: quantization** | decode (less memory to read per token); fits more batch | faster at low concurrency; INT8 also speeds prefill | the 3×3 matrix |
+| MTP (Gemma `-assistant` drafter) | **yes: MTP + speculative decoding** | decode of the summary and chat answers | helps when 1–4 requests are in flight, less when the GPU is busy | Gemma + MTP 1/2 |
+| n-gram speculation | **yes: speculative decoding** | chat answers (they quote retrieved summaries) | chat full-answer time | Gemma + n-gram |
+| Shorter summary (≤35 words, `summary_max_tokens`) | ours | decode | roughly proportional to tokens saved | cap 64 vs 128 + real-clip accuracy |
+| Smaller image (`vlm.tile_px`) | ours | prefill (Qwen/SmolVLM scale tokens with pixels; Gemma uses a fixed budget, `max_soft_tokens`) | faster prefill; may cost accuracy | tile 224/336/448 + real-clip accuracy |
+| Skip static windows (`analysis.skip_static_below`) | ours | the number of VLM calls on quiet CCTV | large on mostly-empty footage, zero on busy footage | whole video, skip off vs on |
+| Constrained 1-token label (vLLM `choice`) | ours (uses vLLM) | stage 2 | label in ~0.1 s instead of a JSON answer | in every row (Label s) |
+| Prefix caching | vLLM | the repeated system prompt | small | on by default |
+| Streaming | ours | *perceived* time: first words appear early | first word ≪ full | first-word columns |
+
+Summary: **all three faculty items help**, but in different places. vLLM batching cuts total video time
+the most; quantization and MTP cut per-request time. The levers that are ours (short output, smaller
+images, skipping static windows) stack on top.
 
 ## 3. Procedure (Kaggle notebook `kaggle/ablation.ipynb`)
 

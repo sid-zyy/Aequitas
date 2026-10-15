@@ -21,7 +21,7 @@ from aequitas.ingest.ring_buffer import RingBuffer
 from aequitas.store.db import EventRecord, EventStore, Timings
 from aequitas.types import Candidate
 from aequitas.understand.fusion import fuse
-from aequitas.understand.keyframes import encode_jpeg, make_grid
+from aequitas.understand.keyframes import encode_jpeg, make_grid, window_motion
 from aequitas.understand.periodic import WindowAggregator
 from aequitas.understand.stages import InOrder, Understanding, understand
 
@@ -236,14 +236,24 @@ class Pipeline:
     def _periodic_step(self, cam: CameraCfg, ring: RingBuffer):
         window_ms = int(self.s.analysis.window_s * 1000)
 
-        state = {"start": None, "last": None}
+        state = {"start": None, "last": None, "last_vlm": None}
+        a = self.s.analysis
 
         def emit(end_ms: int, wall_ns: int) -> None:
             start = state["start"]
             if end_ms - start > 2 * window_ms:
                 log.debug("%s: window stretched to %.1f s (VLM slower than real time)",
                           cam.camera_id, (end_ms - start) / 1000)
-            grid = make_grid(ring.pick(start, end_ms), None, cam.zones, self.s.vlm.tile_px)
+            frames = ring.pick(start, end_ms)
+            if a.skip_static_below > 0 and state["last_vlm"] is not None \
+                    and end_ms - state["last_vlm"] < a.max_skip_s * 1000 \
+                    and window_motion(frames) < a.skip_static_below:
+                # Latency: nothing moved, so the previous understanding still holds; no VLM call.
+                self.store.record_stage(self.run_id, cam.camera_id, "skipped", None, None, None, True)
+                state["start"] = end_ms
+                return
+            state["last_vlm"] = end_ms
+            grid = make_grid(frames, None, cam.zones, self.s.vlm.tile_px)
             self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms),
                                   seq=self.order.ticket(cam.camera_id)))
             state["start"] = end_ms

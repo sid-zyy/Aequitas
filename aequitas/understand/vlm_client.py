@@ -54,17 +54,19 @@ class LlmClient:
         self.cfg = cfg
         self.model = cfg.model
 
-    def _chat(self, messages: list[dict], schema: dict, name: str) -> str:  # pragma: no cover - interface
+    def _chat(self, messages: list[dict], schema: dict, name: str,
+              max_tokens: int | None = None) -> str:  # pragma: no cover - interface
         raise NotImplementedError
 
     def ping(self) -> bool:  # pragma: no cover - interface
         raise NotImplementedError
 
-    def structured(self, messages: list[dict], model_cls: type[BaseModel], retries: int = 1) -> BaseModel | None:
+    def structured(self, messages: list[dict], model_cls: type[BaseModel], retries: int = 1,
+                   max_tokens: int | None = None) -> BaseModel | None:
         schema = model_cls.model_json_schema()
         for attempt in range(retries + 1):
             try:
-                raw = self._chat(messages, schema, model_cls.__name__)
+                raw = self._chat(messages, schema, model_cls.__name__, max_tokens or self.cfg.max_tokens)
                 return model_cls.model_validate_json(raw)
             except ValidationError as e:
                 log.warning("invalid structured output (attempt %d): %s", attempt + 1, e.errors()[:2])
@@ -86,7 +88,8 @@ class LlmClient:
         """Stage 1: the VLM describes the key-frame grid."""
         t0 = time.perf_counter()
         ans = self.structured(
-            [{"role": "user", "content": summarize_prompt(highlighted), "images": [grid_jpeg]}], SummaryAnswer
+            [{"role": "user", "content": summarize_prompt(highlighted), "images": [grid_jpeg]}], SummaryAnswer,
+            max_tokens=self.cfg.summary_max_tokens,
         )
         return ans, (time.perf_counter() - t0) * 1000
 
@@ -121,14 +124,14 @@ class OllamaClient(LlmClient):
 
         self.client = ollama.Client(host=cfg.host, timeout=cfg.timeout_s)
 
-    def _chat(self, messages: list[dict], schema: dict, name: str) -> str:
+    def _chat(self, messages: list[dict], schema: dict, name: str, max_tokens: int | None = None) -> str:
         msgs = [{k: v for k, v in m.items() if k != "images" or v} for m in messages]
         kwargs = {"think": self.cfg.think} if self.cfg.think is not None else {}
         resp = self.client.chat(
             model=self.model,
             messages=msgs,
             format=schema,
-            options={"temperature": 0, "num_ctx": self.cfg.num_ctx},
+            options={"temperature": 0, "num_ctx": self.cfg.num_ctx, "num_predict": max_tokens or self.cfg.max_tokens},
             keep_alive=self.cfg.keep_alive,
             **kwargs,
         )
@@ -169,15 +172,18 @@ def openai_messages(messages: list[dict]) -> list[dict]:
     return out
 
 
-def openai_payload(model: str, messages: list[dict], schema: dict, name: str) -> dict:
+def openai_payload(model: str, messages: list[dict], schema: dict, name: str, max_tokens: int | None = None) -> dict:
     """Chat-completions request with a JSON-schema response format. Not 'strict': local servers
-    differ in what strict mode accepts, and pydantic validates anyway."""
-    return {
+    differ in what strict mode accepts, and pydantic validates anyway. max_tokens caps decode time."""
+    body = {
         "model": model,
         "messages": openai_messages(messages),
         "temperature": 0,
         "response_format": {"type": "json_schema", "json_schema": {"name": name, "schema": schema}},
     }
+    if max_tokens:
+        body["max_tokens"] = max_tokens
+    return body
 
 
 def choice_payload(model: str, prompt: str, choices: list[str]) -> dict:
@@ -230,8 +236,9 @@ class OpenAICompatClient(LlmClient):
         self.base = base if base.endswith("/v1") else base + "/v1"
         self.http = httpx.Client(timeout=cfg.timeout_s, headers=headers)
 
-    def _chat(self, messages: list[dict], schema: dict, name: str) -> str:
-        r = self.http.post(f"{self.base}/chat/completions", json=openai_payload(self.model, messages, schema, name))
+    def _chat(self, messages: list[dict], schema: dict, name: str, max_tokens: int | None = None) -> str:
+        r = self.http.post(f"{self.base}/chat/completions", json=openai_payload(self.model, messages, schema, name,
+                                                                         max_tokens or self.cfg.max_tokens))
         r.raise_for_status()
         return r.json()["choices"][0]["message"]["content"]
 

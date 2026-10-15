@@ -78,9 +78,9 @@ def _chat_prompt(i: int) -> str:
             f"reference like [#12]. Write 1-3 sentences.\n\nEvents:\n{facts}\n\nQuestion: {q} (request {i})")
 
 
-def build_request(task: str, model: str, i: int, seed: int, max_tokens: int) -> dict:
+def build_request(task: str, model: str, i: int, seed: int, max_tokens: int, grid_px: int = 896) -> dict:
     if task == "summarize":
-        b64 = base64.b64encode(synthetic_grid(i, seed=seed)).decode("ascii")
+        b64 = base64.b64encode(synthetic_grid(i, size=grid_px, seed=seed)).decode("ascii")
         content = [{"type": "text", "text": summarize_prompt(highlighted=False)},
                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}]
         extra = {"response_format": {"type": "json_schema", "json_schema": {
@@ -193,14 +193,14 @@ def summarize_level(samples: list[Sample], wall_ms: float) -> dict:
 
 def run_bench(host: str, model: str, tasks: list[str], levels: list[int], requests: int,
               label: str = "", out_dir: Path = Path("data/reports"), allow_remote: bool = False,
-              max_tokens: dict | None = None) -> dict:
+              max_tokens: dict | None = None, grid_px: int = 896) -> dict:
     import httpx
 
     if not allow_remote and not is_local_host(host):
         raise ValueError(f"{host} is not local; Aequitas only benchmarks local servers")
     root = host.rstrip("/").removesuffix("/v1")
     base = root + "/v1"
-    max_tokens = {"summarize": 160, "classify": 16, "chat": 160, **(max_tokens or {})}
+    max_tokens = {"summarize": 128, "classify": 16, "chat": 160, **(max_tokens or {})}
     seed = random.randrange(1_000_000)  # fresh images every run (cache trap)
     http = httpx.Client(timeout=600)
     report = {"label": label, "host": host, "model": model, "started": datetime.now().isoformat(timespec="seconds"),
@@ -208,7 +208,7 @@ def run_bench(host: str, model: str, tasks: list[str], levels: list[int], reques
 
     # warm-up: model load, CUDA graphs, prefix cache for the shared prompt text
     for task in tasks:
-        run_one(http, base, build_request(task, model, -1, seed, max_tokens[task]), task)
+        run_one(http, base, build_request(task, model, -1, seed, max_tokens[task], grid_px), task)
 
     next_id = 0  # request index: every request gets its own image and text
     for task in tasks:
@@ -220,7 +220,7 @@ def run_bench(host: str, model: str, tasks: list[str], levels: list[int], reques
             t0 = time.perf_counter()
             with ThreadPoolExecutor(max_workers=c) as pool:
                 samples = list(pool.map(
-                    lambda i: run_one(http, base, build_request(task, model, i, seed, max_tokens[task]), task), ids))
+                    lambda i: run_one(http, base, build_request(task, model, i, seed, max_tokens[task], grid_px), task), ids))
             wall = (time.perf_counter() - t0) * 1000
             level = summarize_level(samples, wall)
             level["speculation"] = acceptance(before, _metrics(http, root))
