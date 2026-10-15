@@ -52,8 +52,10 @@ CREATE TABLE IF NOT EXISTS event_timings (
   detect_ms  REAL,
   trigger_ms REAL,
   queue_ms   REAL,
-  vlm_ms     REAL,
+  vlm_ms     REAL,  -- summarize_ms + classify_ms
   db_ms      REAL,
+  summarize_ms REAL,  -- stage 1: VLM summary of the key frames
+  classify_ms  REAL,  -- stage 2: text classification of the summary
   proc_ms    REAL,  -- trigger frame captured -> row committed
   e2e_ms     REAL   -- condition onset -> row committed (includes the rule's sustain time)
 );
@@ -74,9 +76,24 @@ CREATE TABLE IF NOT EXISTS uploads (
   events_found  INTEGER NOT NULL DEFAULT 0,
   error         TEXT,
   created_at    INTEGER NOT NULL,
+  started_at    INTEGER,            -- analysis began; finished_at - started_at = total execution time
   finished_at   INTEGER
 );
 CREATE INDEX IF NOT EXISTS ix_uploads_cam_time ON uploads(camera_id, start_ts);
+
+-- One row per understanding job (summarize + classify), including windows that produced no event,
+-- so per-video stage totals are complete. run_id is the upload ID for web uploads.
+CREATE TABLE IF NOT EXISTS stage_timings (
+  run_id        TEXT,
+  camera_id     TEXT NOT NULL,
+  kind          TEXT NOT NULL,      -- window | candidate
+  queue_ms      REAL,
+  summarize_ms  REAL,
+  classify_ms   REAL,
+  ok            INTEGER NOT NULL,   -- 1 if both stages returned valid output
+  created_at    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_stage_timings_run ON stage_timings(run_id);
 
 CREATE TABLE IF NOT EXISTS dropped_candidates (
   camera_id     TEXT NOT NULL,

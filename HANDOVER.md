@@ -132,7 +132,8 @@ record numbers in the docs.
 ### Phase 2 · vLLM, speculative decoding, MTP, latency bench (R5)
 - [ ] `scripts/vllm/install_wsl.sh`, plus `scripts/vllm/serve.sh` with env profiles:
   `MODEL=… QUANT=bf16|fp8|w8a8|w4a16 SPEC=none|mtp|ngram`, using
-  `--speculative-config '{"method":"mtp","num_speculative_tokens":N}'` (Gemma 4 MTP, no separate draft),
+  `--speculative-config '{"method":"mtp","model":"google/gemma-4-E2B-it-assistant","num_speculative_tokens":N}'`
+  (Gemma 4 MTP **does** use the separate `-assistant` checkpoint; see HACKATHON_PLAN.md "The GPU laptop"),
   or `{"method":"ngram","num_speculative_tokens":N,"prompt_lookup_max":K}`. Check the flag names against the
   installed vLLM version's docs.
 - [ ] `minerva bench`: for any OpenAI-compatible server, stream requests and measure TTFT, time per output
@@ -199,6 +200,9 @@ record numbers in the docs.
 
 ## 7. Open items and waiting on
 - **Faculty dataset:** format and categories are unknown.
-- GPU model and VRAM: decides whether FP8 is possible and how big the models can be.
-- D-Fire class order, and the exact HF IDs for Gemma 4 models and MTP drafters: verify, don't assume.
+- ~~GPU model and VRAM~~: **RTX 4050 Laptop, 6 GB, compute 8.9** (FP8 OK). Gemma 4 E2B BF16 is ~10 GB, so
+  it does not fit unquantized. Details: HACKATHON_PLAN.md "The GPU laptop".
+- ~~HF IDs~~: verified, see HACKATHON_PLAN.md. D-Fire class order: still to verify.
+- **WSL2 is not installed** on the GPU laptop. The owner installs it (admin + reboot): `wsl --install -d Ubuntu`,
+  then `bash scripts/vllm/install_wsl.sh` inside Ubuntu.
 - One local commit on the dev laptop may not be pushed yet. Check `git log origin/main..` on the dev laptop if something seems missing.

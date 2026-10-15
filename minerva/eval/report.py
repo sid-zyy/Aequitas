@@ -6,7 +6,7 @@ import statistics
 
 from minerva.store.db import EventStore
 
-STAGES = ["detect_ms", "trigger_ms", "queue_ms", "vlm_ms", "db_ms", "proc_ms", "e2e_ms"]
+STAGES = ["detect_ms", "trigger_ms", "queue_ms", "summarize_ms", "classify_ms", "vlm_ms", "db_ms", "proc_ms", "e2e_ms"]
 
 
 def percentile(values: list[float], q: float) -> float:
@@ -22,9 +22,9 @@ def latency_table(store: EventStore) -> str:
     rows = store.timings()
     if not rows:
         return "No events recorded yet."
-    lines = [f"{len(rows)} events", f"{'stage':<12}{'p50 ms':>10}{'p95 ms':>10}{'mean ms':>10}"]
+    lines = [f"{len(rows)} events", f"{'stage':<14}{'p50 ms':>10}{'p95 ms':>10}{'mean ms':>10}"]
     for s in STAGES:
         vals = [r[s] for r in rows if r[s] is not None]
         if vals:
-            lines.append(f"{s:<12}{percentile(vals, .5):>10.0f}{percentile(vals, .95):>10.0f}{statistics.mean(vals):>10.0f}")
+            lines.append(f"{s:<14}{percentile(vals, .5):>10.0f}{percentile(vals, .95):>10.0f}{statistics.mean(vals):>10.0f}")
     return "\n".join(lines)

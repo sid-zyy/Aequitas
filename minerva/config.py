@@ -42,28 +42,43 @@ class LlmEndpoint(BaseModel):
     num_ctx: int = 4096
     timeout_s: float = 300
     keep_alive: str = "30m"
+    # OpenAI-compatible backend: classify with vLLM structured outputs (`choice`) + logprobs. Turn off
+    # for servers without it (they then get a JSON-schema enum and no confidence).
+    choice_decoding: bool = True
 
 
 class VlmCfg(LlmEndpoint):
     tile_px: int = 448
     max_queue_per_camera: int = 8
+    # Worker threads sending requests at once. 1 suits Ollama; vLLM batches concurrent requests,
+    # so 4-16 cuts total time there.
+    concurrency: int = Field(default=1, ge=1, le=64)
 
 
-class ChatCfg(BaseModel):
-    # Any field left null falls back to the VLM endpoint, so by default one model serves both.
+class EndpointOverride(BaseModel):
+    """Another model for one stage. Any field left null falls back to the VLM endpoint, so by
+    default one model serves every stage."""
+
     backend: Backend | None = None
     host: str | None = None
     model: str | None = None
     api_key_env: str | None = None
     think: bool | None = None
-    summarize: bool = True  # add an LLM-written summary that may only cite retrieved event IDs
-    timezone: str | None = None  # IANA name; None = system local time
 
     def endpoint(self, vlm: VlmCfg) -> LlmEndpoint:
         base = vlm.model_dump(include=set(LlmEndpoint.model_fields))
         own = {k: v for k, v in self.model_dump(include={"backend", "host", "model", "api_key_env", "think"}).items()
                if v is not None}
         return LlmEndpoint(**{**base, **own})
+
+    @property
+    def overridden(self) -> bool:
+        return any(v is not None for v in (self.backend, self.host, self.model, self.api_key_env, self.think))
+
+
+class ChatCfg(EndpointOverride):
+    summarize: bool = True  # add an LLM-written summary that may only cite retrieved event IDs
+    timezone: str | None = None  # IANA name; None = system local time
 
 
 class AnalysisCfg(BaseModel):
@@ -169,6 +184,7 @@ class Settings(BaseModel):
     detector: DetectorCfg = DetectorCfg()
     tracker: TrackerCfg = TrackerCfg()
     vlm: VlmCfg = VlmCfg()
+    classifier: EndpointOverride = EndpointOverride()  # stage 2, text only
     chat: ChatCfg = ChatCfg()
     fusion: FusionCfg = FusionCfg()
     triggers: TriggersCfg = TriggersCfg()

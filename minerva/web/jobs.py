@@ -123,8 +123,9 @@ class JobManager:
             with self._lock:
                 self._live[upload_id]["frames_done"] = n
 
-        self.store.update_upload(upload_id, status="processing", error=note)
-        pipeline = Pipeline(s, [self._camera_for(row)], self.store, use_vlm=use_vlm, on_frame=on_frame)
+        self.store.update_upload(upload_id, status="processing", error=note, started_at=started_ms)
+        pipeline = Pipeline(s, [self._camera_for(row)], self.store, use_vlm=use_vlm, on_frame=on_frame,
+                            run_id=upload_id)
         with self._lock:
             self._pipelines[upload_id] = pipeline
             if upload_id in self._cancelled:

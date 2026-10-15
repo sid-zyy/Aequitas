@@ -3,6 +3,7 @@ Serves a JSON API under /api and the single-page frontend from ./static. Binds t
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import shutil
@@ -13,7 +14,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -172,6 +173,26 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "elapsed_ms": round((time.perf_counter() - t0) * 1000),
         }
 
+    @app.post("/api/ask/stream")
+    def ask_stream(body: AskBody):
+        """Server-sent events: `retrieved` (the event list, from the database), `token` (summary text
+        as it is generated), `summary` (final, grounded summary or null: drop the streamed text),
+        `done` (timings)."""
+
+        def events():
+            for ev in service.ask_stream(body.question.strip()):
+                if ev["type"] == "retrieved":
+                    p = ev["parsed"]
+                    f = p.filter
+                    ev = {"type": "retrieved", "total": ev["total"], "head": ev["head"], "tail": ev["tail"],
+                          "intent": f.intent, "warnings": p.warnings, "parsed_with": p.method,
+                          "filter": f.model_dump(mode="json"), "retrieve_ms": ev["retrieve_ms"],
+                          "events": [_event_json(r, store) for r in ev["rows"]]}
+                yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n"
+
+        return StreamingResponse(events(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     # ---------- uploads ----------
 
     def _upload_json(u: dict) -> dict:
@@ -189,7 +210,16 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "vlm_backlog": live.get("vlm_backlog", 0), "events_found": u["events_found"],
             "duration_s": (u["duration_ms"] or 0) / 1000, "start_ts": u["start_ts"],
             "error": u["error"], "created_at": u["created_at"], "finished_at": u["finished_at"],
+            "started_at": u.get("started_at"), "total_s": _total_s(u), "stages": store.stage_summary(u["upload_id"]),
         }
+
+    def _total_s(u: dict) -> float | None:
+        """Total execution time: analysis start -> done. Still running: elapsed so far."""
+        start = u.get("started_at")
+        if not start:
+            return None
+        end = u["finished_at"] or (int(time.time() * 1000) if u["status"] in ("processing", "verifying") else None)
+        return round((end - start) / 1000, 2) if end else None
 
     @app.get("/api/uploads")
     def uploads():
