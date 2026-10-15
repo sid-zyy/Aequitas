@@ -98,7 +98,7 @@ if not VLLM_PY.exists():
     sh(f"uv venv -q {SCRATCH}/venv-vllm --python 3.12 && uv pip install -q --python {VLLM_PY} vllm num2words")  # num2words: SmolVLM's processor needs it
 if not QUANT_PY.exists():
     sh(f"uv venv -q {SCRATCH}/venv-quant --python 3.12 && uv pip install -q --python {QUANT_PY} llmcompressor datasets"
-       f" && uv pip install -q -U --python {QUANT_PY} transformers accelerate")  # llmcompressor pins a transformers too old for Qwen3-VL / Gemma 4
+       f" && uv pip install -q -U --python {QUANT_PY} transformers accelerate torchvision")  # llmcompressor pins a transformers too old for Qwen3-VL / Gemma 4
 print(sh(f"{VLLM_PY} -c 'import vllm, torch; print(\"vllm\", vllm.__version__, \"torch\", torch.__version__)'"))
 VLLM = str(VLLM_PY.parent / "vllm")
 
@@ -229,7 +229,20 @@ def _serve_once(model_path: str, key: str, spec: tuple | None, dtype: str, tp: i
             pass
         time.sleep(5)
     stop(proc)
-    raise RuntimeError(log_path.read_text()[-3000:])
+    raise RuntimeError(root_cause(log_path.read_text()))
+
+
+def root_cause(log: str) -> str:
+    """vLLM's last lines only say 'see root cause above'. Pull out the lines that name the cause."""
+    keys = ("Error", "error:", "Exception", "not supported", "requires", "out of memory", "Unsupported",
+            "ValueError", "NotImplemented", "assert")
+    hits = [ln.strip() for ln in log.splitlines() if any(k in ln for k in keys) and "Traceback" not in ln]
+    seen, uniq = set(), []
+    for ln in hits:
+        if ln not in seen:
+            seen.add(ln)
+            uniq.append(ln)
+    return ("Cause lines:\n" + "\n".join(uniq[:15]) + "\n--- log end ---\n" + log[-800:])[-3000:]
 
 
 def stop(proc) -> None:
