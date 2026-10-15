@@ -113,6 +113,7 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
         "'engaged in an activity'. Do not start with 'Four frames show'; describe the scene directly.\n"
         "- Mention police or other uniforms, handcuffs, knives, guns or raised sticks, flames, smoke, and "
         "crashed or damaged vehicles whenever they are visible.\n"
+        "- If anyone throws stones, bricks, bottles or other objects, or smashes property, say so plainly.\n"
         f"{GUIDED_CHECKS if guided else ''}"
         f"{length}"
         "Respond with JSON only."
