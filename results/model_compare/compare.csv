@@ -1,0 +1,9 @@
+setup,accuracy,macro_f1,incident_detected_acc,incident_recall,incident_precision,time_per_video_p50_s,time_per_video_mean_s,rechecked_share
+gemma4:12b-it-qat,0.3333,0.3172,0.7,0.7,0.8235,5.11,5.14,
+cascade gemma4:e2b -> gemma4:12b-it-qat,0.35,0.2291,0.417,0.15,0.8571,1.78,2.56,0.12
+gemma4:e2b,0.3333,0.2052,0.367,0.15,0.8571,1.77,1.96,
+gemma4:e4b-it-qat,0.3167,0.1759,0.35,0.175,0.875,2.69,3.09,
+cascade gemma4:e2b -> gemma4:e4b-it-qat,0.3333,0.1732,0.35,0.075,1.0,1.78,2.31,0.12
+qwen3-vl:4b,0.0,0.0,0.333,0.0,,6.55,6.55,
+qwen3-vl:8b,0.0,0.0,0.333,0.0,,12.54,12.48,
+cascade gemma4:e2b -> qwen3-vl:8b,0.3167,0.1735,0.333,0.0,,1.78,3.43,0.12

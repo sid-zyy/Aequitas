@@ -1,0 +1,11 @@
+# Demo-clip run C: run A + previous-window context in the label step.
+data_dir: data/eval/demo_ctx
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: gemma4:e2b
+  tile_px: 448

@@ -21,7 +21,7 @@ cites retrieved events and nothing else.
 
 ```bash
 python -m venv .venv
-.venv\Scripts\python -m pip install -e .[dev]
+.venv\Scripts\python -m pip install -e .[dev,detector]   # detector: AI-likelihood check + scene gate
 ollama pull gemma4:e2b                      # the vision model the app uses (4.6 GB)
 python scripts/get_footage.py               # demo street + incident clips into data/footage
 ```

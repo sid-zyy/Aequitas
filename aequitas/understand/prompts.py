@@ -23,6 +23,7 @@ class SummaryAnswer(BaseModel):
 
     summary: str = Field(max_length=500)
     visible_evidence: str = Field(default="", max_length=300)
+    checks: str = Field(default="", max_length=300)  # guided mode: the check questions answered yes
 
 
 @lru_cache(maxsize=16)
@@ -61,7 +62,22 @@ def _category_list(categories: dict[str, str] | None = None) -> str:
     return definition_list(categories or DEFAULT_CATEGORIES)
 
 
-def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str = "cctv") -> str:
+# Guided checks (ASK-Hint, WACV 2026: fine-grained, grouped action questions instead of "describe the
+# scene"). Grouped by family; worded without category names so the summary is not steered to a label.
+GUIDED_CHECKS = (
+    "Check questions, grouped (answer from the frames only):\n"
+    "  Violence: Is anyone hitting, kicking, pushing, choking or attacking another person? "
+    "Is anyone holding a knife, a gun or a raised stick?\n"
+    "  Police: Are people in uniform holding someone's arms, handcuffing them or leading them away?\n"
+    "  People in danger: Is anyone lying or falling on the ground? Is a group running, scattering or "
+    "throwing things?\n"
+    "  Hazards: Are there flames or thick smoke? Is a vehicle crashed, overturned or hitting a person?\n"
+    "  Property: Is anyone snatching belongings or breaking things?\n"
+)
+
+
+def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str = "cctv",
+                     guided: bool = False) -> str:
     """concise=False is the original, longer wording, kept only to measure the time the short one saves.
     view="close": a camera close to the people (a laptop webcam in a live demo): describe gestures in detail."""
     if highlighted:
@@ -75,6 +91,9 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
     else:
         length = ("- summary: one or two plain sentences describing what happens across the four frames.\n"
                   "- visible_evidence: a short phrase naming the most important thing you saw.\n")
+    if guided:
+        length += ("- checks: a few words for every check question answered yes (for example 'punching; "
+                   "flames'); leave it empty if all are no.\n")
     close = ""
     if view == "close":
         close = ("- The camera is close to the people. For each person, describe what their hands and arms do "
@@ -94,6 +113,7 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
         "'engaged in an activity'. Do not start with 'Four frames show'; describe the scene directly.\n"
         "- Mention police or other uniforms, handcuffs, knives, guns or raised sticks, flames, smoke, and "
         "crashed or damaged vehicles whenever they are visible.\n"
+        f"{GUIDED_CHECKS if guided else ''}"
         f"{length}"
         "Respond with JSON only."
     )
@@ -110,11 +130,17 @@ def _fire_rule(categories: dict[str, str] | None) -> str:
             + (f" over {', '.join(rivals)}" if rivals else "") + ", unless someone is clearly attacked. ")
 
 
-def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str, str] | None = None) -> str:
+def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str, str] | None = None,
+                         previous: str | None = None) -> str:
     ev = f"\nKey evidence: {evidence.strip()}" if evidence.strip() else ""
+    prev = ""
+    if previous and previous.strip():
+        prev = (f"\nThe 4 seconds before, on the same camera: {previous.strip()}\n"
+                "Use that only to understand a sequence (for example someone being led away after being held); "
+                "label what happens now.")
     return (
         "A security camera clip was described as follows.\n"
-        f"Description: {summary.strip()}{ev}\n\n"
+        f"Description: {summary.strip()}{ev}{prev}\n\n"
         "Choose the ONE category that best matches the description:\n"
         f"{_category_list(categories)}\n"
         "Use only the description. If it does not clearly describe one of the categories, answer none.\n"

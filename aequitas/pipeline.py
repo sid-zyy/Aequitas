@@ -22,6 +22,7 @@ from aequitas.ingest.ring_buffer import RingBuffer
 from aequitas.store.db import EventRecord, EventStore, Timings
 from aequitas.types import Candidate
 from aequitas.understand.fusion import fuse, fuse_window
+from aequitas.understand.gate import should_skip
 from aequitas.understand.keyframes import encode_jpeg, make_grid, window_motion
 from aequitas.understand.periodic import WindowAggregator
 from aequitas.understand.stages import InOrder, Understanding, escalate, needs_escalation, understand
@@ -151,6 +152,16 @@ class Pipeline:
                 if not self.classifier.ping():
                     raise RuntimeError(f"classifier '{ep.model}' not reachable at {ep.host} ({ep.backend})")
         self.order = InOrder()
+        self.last_summary: dict[str, str] = {}  # per camera, for analysis.label_context
+        self.gate = None
+        if self.mode == "periodic" and settings.analysis.gate_model:
+            try:
+                from aequitas.understand.gate import SceneGate
+
+                self.gate = SceneGate(settings.analysis.gate_model, self.device)
+            except Exception as e:  # missing model or transformers: run without the gate
+                log.warning("scene gate %s not loaded (%s); every window goes to the VLM",
+                            settings.analysis.gate_model, e)
         self.big = None  # cascade re-checker
         if use_vlm and settings.escalation.model:
             from aequitas.understand.vlm_client import make_client
@@ -267,6 +278,7 @@ class Pipeline:
         window_ms = int((cam.window_s or self.s.analysis.window_s) * 1000)
 
         state = {"start": None, "last": None, "last_vlm": None, "vmax": None}
+        band_low = self.s.escalation.violence_band_low
         a = self.s.analysis
         scorer = None
         if self.violence_model is not None:
@@ -287,6 +299,16 @@ class Pipeline:
                 self.store.record_stage(self.run_id, cam.camera_id, "skipped", None, None, None, True)
                 state["start"] = end_ms
                 return
+            if self.gate is not None and state["last_vlm"] is not None:
+                with self._model_lock:
+                    p = self.gate.score([f.image for f in frames[::max(1, len(frames) // 4)]][:4])
+                if should_skip(p, state["vmax"], end_ms - state["last_vlm"], below=a.gate_below,
+                               violence_band_low=band_low, max_skip_ms=a.max_skip_s * 1000):
+                    # Coarse stage says ordinary scene: no VLM call (Flashback / VadCLIP idea).
+                    self.store.record_stage(self.run_id, cam.camera_id, "gated", None, None, None, True)
+                    state["vmax"] = None
+                    state["start"] = end_ms
+                    return
             state["last_vlm"] = end_ms
             grid = make_grid(frames, None, cam.zones, self.s.vlm.tile_px)
             self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms),
@@ -396,8 +418,10 @@ class Pipeline:
 
     def _process_window(self, job: VlmJob, queue_ms: float) -> None:
         """Understanding runs concurrently; results are applied in window order per camera."""
+        # With several windows in flight the newest finished summary may be one window older; fine as context.
+        previous = self.last_summary.get(job.camera_id) if self.s.analysis.label_context else None
         u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False,
-                       categories=self.s.categories, view=job.view)
+                       categories=self.s.categories, view=job.view, previous=previous)
         if self.big is not None and needs_escalation(u, job.violence, self.s.escalation.violence_band_low):
             u = escalate(u, self.big, job.grid_jpeg, False, self.s.categories, job.view)
         self._record_stage(job, "window", queue_ms, u)
@@ -412,6 +436,8 @@ class Pipeline:
 
     def _apply_window_result(self, job: VlmJob, u: Understanding, queue_ms: float) -> None:
         start, end = job.window
+        if u.summary:
+            self.last_summary[job.camera_id] = u.summary
         threshold = (self.s.models.violence_threshold or self.violence_model.threshold) if self.violence_model else 1.0
         ans, source = fuse_window(u.answer, job.violence, threshold, self.s.models.violence_alone_threshold)
         if u.escalated:

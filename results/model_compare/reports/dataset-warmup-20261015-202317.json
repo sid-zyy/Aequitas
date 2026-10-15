@@ -1,0 +1,57 @@
+{
+  "label": "warmup",
+  "run": "2026-10-15T20:23:17",
+  "n_videos": 1,
+  "total_execution_s": 21.41,
+  "per_video_s": {
+    "p50": 21.41,
+    "p95": 21.41,
+    "mean": 21.41
+  },
+  "classification": {
+    "n": 1,
+    "accuracy": 0.0,
+    "macro_f1": 0.0,
+    "valid": 0,
+    "per_class_f1": {
+      "fighting": 0.0
+    },
+    "incident_precision": null,
+    "incident_recall": 0.0,
+    "confusion": {
+      "fighting": {
+        "<invalid>": 1
+      }
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence858.avi",
+      "gold": "fighting",
+      "pred": null,
+      "summary": null,
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 21.318,
+      "classify_s": 0.0,
+      "video_total_s": 21.41
+    }
+  ]
+}

@@ -52,6 +52,7 @@ class LlmEndpoint(BaseModel):
     max_tokens: int = 384  # any structured call (chat filter, grounded answer)
     summary_max_tokens: int = 128  # stage 1 JSON: <=35-word summary + <=8-word evidence
     concise_summary: bool = True  # False = the original longer prompt (only to measure the time saved)
+    guided_checks: bool = False  # stage 1 also answers grouped check questions (ASK-Hint style)
 
 
 class VlmCfg(LlmEndpoint):
@@ -106,6 +107,13 @@ class AnalysisCfg(BaseModel):
     # empty corridor. 0 = off. Even when skipping, the VLM looks at least every max_skip_s.
     skip_static_below: float = 0.0
     max_skip_s: float = 30.0
+    # Stage 2 also sees the previous window's summary from the same camera (sequences such as an arrest).
+    # Measured (scripts/bench_variants.py, 72 windows): arrest 7->8/12, fire 6->8/10, 0 false alarms, +0.03 s.
+    label_context: bool = True
+    # Coarse stage: a SigLIP scene gate skips the VLM on windows that clearly look normal (aequitas/understand/gate.py).
+    # None = off. Example: google/siglip-base-patch16-224 (Apache-2.0, ~0.8 GB).
+    gate_model: str | None = None
+    gate_below: float = 0.3
 
 
 class FusionCfg(BaseModel):

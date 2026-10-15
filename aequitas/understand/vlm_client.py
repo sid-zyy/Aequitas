@@ -89,10 +89,11 @@ class LlmClient:
         """Stage 1: the VLM describes the key-frame grid."""
         t0 = time.perf_counter()
         ans = self.structured(
-            [{"role": "user", "content": summarize_prompt(highlighted, self.cfg.concise_summary, view),
+            [{"role": "user", "content": summarize_prompt(highlighted, self.cfg.concise_summary, view,
+                                                           self.cfg.guided_checks),
               "images": [grid_jpeg]}],
             SummaryAnswer,
-            max_tokens=self.cfg.summary_max_tokens,
+            max_tokens=self.cfg.summary_max_tokens + (48 if self.cfg.guided_checks else 0),
         )
         return ans, (time.perf_counter() - t0) * 1000
 
@@ -104,15 +105,15 @@ class LlmClient:
             raise ValueError("no valid label")
         return ans.category, None
 
-    def classify_text(self, summary: str, evidence: str = "",
-                      categories: dict[str, str] | None = None) -> tuple[str | None, float | None, float]:
+    def classify_text(self, summary: str, evidence: str = "", categories: dict[str, str] | None = None,
+                      previous: str | None = None) -> tuple[str | None, float | None, float]:
         """Stage 2: label the summary text against `categories` (default: the police list).
         Returns (label, confidence, ms); label None on failure."""
         t0 = time.perf_counter()
         choices = label_choices(categories) if categories else CHOICES
         label, conf = None, None
         try:
-            label, conf = self._choose(classify_text_prompt(summary, evidence, categories), choices)
+            label, conf = self._choose(classify_text_prompt(summary, evidence, categories, previous), choices)
         except Exception as e:
             log.warning("%s classify call failed: %s", self.cfg.backend, e)
         if label not in choices:

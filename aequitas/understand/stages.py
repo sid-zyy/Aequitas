@@ -25,15 +25,23 @@ class Understanding:
 
 
 def understand(vlm, classifier, grid_jpeg: bytes, highlighted: bool,
-               categories: dict[str, str] | None = None, view: str = "cctv") -> Understanding:
+               categories: dict[str, str] | None = None, view: str = "cctv",
+               previous: str | None = None) -> Understanding:
     s, summarize_ms = vlm.summarize(grid_jpeg, highlighted=highlighted, view=view)
     if s is None:
         return Understanding(None, None, summarize_ms, None)
-    label, conf, classify_ms = classifier.classify_text(s.summary, s.visible_evidence, categories)
+    evidence = s.visible_evidence
+    checks = getattr(s, "checks", "") or ""
+    if checks.strip():
+        evidence = f"{evidence}. Yes to: {checks.strip()}" if evidence.strip() else f"Yes to: {checks.strip()}"
+    if previous:
+        label, conf, classify_ms = classifier.classify_text(s.summary, evidence, categories, previous=previous)
+    else:
+        label, conf, classify_ms = classifier.classify_text(s.summary, evidence, categories)
     summary = s.summary.strip()
     if label is None:
         return Understanding(None, summary, summarize_ms, classify_ms)
-    ans = VlmAnswer(category=label, summary=summary, visible_evidence=s.visible_evidence, confidence=conf)
+    ans = VlmAnswer(category=label, summary=summary, visible_evidence=evidence[:300], confidence=conf)
     return Understanding(ans, summary, summarize_ms, classify_ms)
 
 

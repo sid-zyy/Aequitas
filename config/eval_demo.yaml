@@ -4,8 +4,11 @@ analysis:
   mode: periodic
   window_s: 4
   confirm_votes: 2
+  label_context: false
 models:
   violence_dir: models/violence_clip
 vlm:
   model: gemma4:e2b
   tile_px: 448
+
+# run A (before this change) had no label context:

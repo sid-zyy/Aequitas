@@ -58,7 +58,7 @@ class FakeVlm:
 
 
 class FakeClf:
-    def classify_text(self, summary, evidence="", categories=None):
+    def classify_text(self, summary, evidence="", categories=None, previous=None):
         assert categories == {"harassment": "x"}
         return "harassment", 0.8, 30.0
 

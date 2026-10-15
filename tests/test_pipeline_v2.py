@@ -53,7 +53,7 @@ class FakeClassifier:
     def __init__(self, label="person_down", conf=0.9):
         self.label, self.conf, self.seen = label, conf, []
 
-    def classify_text(self, summary, evidence="", categories=None):
+    def classify_text(self, summary, evidence="", categories=None, previous=None):
         self.seen.append((summary, evidence))
         return self.label, self.conf, 40.0
 
@@ -630,3 +630,39 @@ def test_missing_violence_model_folder_does_not_stop_the_pipeline(tmp_path, monk
     s = Settings(data_dir=tmp_path, analysis={"mode": "periodic"}, models={"violence_dir": str(tmp_path / "nope")})
     p = Pipeline(s, [], EventStore(s.db_path))
     assert p.violence_model is None
+
+
+def test_label_step_can_see_the_previous_window_and_guided_checks_reach_it():
+    from aequitas.understand.prompts import SummaryAnswer, classify_text_prompt, summarize_prompt
+    from aequitas.understand.stages import understand
+
+    p = classify_text_prompt("Officers lead a man to a van.", previous="Two officers hold a man's arms.")
+    assert "The 4 seconds before" in p and "hold a man's arms" in p
+    assert "4 seconds before" not in classify_text_prompt("Officers lead a man to a van.")
+    assert "Check questions" in summarize_prompt(False, guided=True) and "Check questions" not in summarize_prompt(False)
+
+    class V:
+        def summarize(self, grid, highlighted, view):
+            return SummaryAnswer(summary="Two men near a car.", visible_evidence="car", checks="punching"), 10.0
+
+    class C:
+        seen = None
+
+        def classify_text(self, summary, evidence, categories, previous=None):
+            C.seen = (evidence, previous)
+            return "fighting", None, 5.0
+
+    u = understand(V(), C(), b"x", False, previous="earlier")
+    assert C.seen == ("car. Yes to: punching", "earlier") and u.answer.category == "fighting"
+
+
+def test_scene_gate_skips_only_when_every_signal_says_ordinary():
+    from aequitas.understand.gate import should_skip
+
+    kw = dict(below=0.3, violence_band_low=0.35, max_skip_ms=30_000)
+    assert should_skip(0.05, None, 4000, **kw)  # clearly normal, VLM looked 4 s ago
+    assert not should_skip(0.05, None, None, **kw)  # a camera's first window always goes to the VLM
+    assert not should_skip(0.9, None, 4000, **kw)  # looks like an incident
+    assert not should_skip(0.05, 0.5, 4000, **kw)  # the violence clip model sees something
+    assert not should_skip(0.05, None, 30_000, **kw)  # the VLM looks at least every 30 s
+    assert not should_skip(None, None, 4000, **kw)  # gate failed to score
