@@ -242,6 +242,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "filter": f.model_dump(mode="json") if f else None,
             "events": [_event_json(r, store) for r in ans.rows],
             "elapsed_ms": round((time.perf_counter() - t0) * 1000),
+            "timings": ans.timings,
         }
 
     @app.post("/api/ask/stream")
@@ -258,6 +259,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
                     ev = {"type": "retrieved", "total": ev["total"], "head": ev["head"], "tail": ev["tail"],
                           "intent": f.intent, "warnings": p.warnings, "parsed_with": p.method,
                           "filter": f.model_dump(mode="json"), "retrieve_ms": ev["retrieve_ms"],
+                          "parse_ms": ev["parse_ms"], "query_ms": ev["query_ms"],
                           "events": [_event_json(r, store) for r in ev["rows"]]}
                 yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n"
 
