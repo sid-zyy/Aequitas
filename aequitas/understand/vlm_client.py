@@ -88,7 +88,9 @@ class LlmClient:
         """Stage 1: the VLM describes the key-frame grid."""
         t0 = time.perf_counter()
         ans = self.structured(
-            [{"role": "user", "content": summarize_prompt(highlighted), "images": [grid_jpeg]}], SummaryAnswer,
+            [{"role": "user", "content": summarize_prompt(highlighted, self.cfg.concise_summary),
+              "images": [grid_jpeg]}],
+            SummaryAnswer,
             max_tokens=self.cfg.summary_max_tokens,
         )
         return ans, (time.perf_counter() - t0) * 1000
