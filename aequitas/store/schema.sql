@@ -163,6 +163,8 @@ CREATE TABLE IF NOT EXISTS windows (
   summarize_ms  REAL,
   classify_ms   REAL,
   lag_ms        REAL,                       -- last frame captured -> result ready ("behind live")
-  created_at    INTEGER NOT NULL
+  created_at    INTEGER NOT NULL,
+  violence      REAL,                       -- violence clip model score (second signal), if loaded
+  source        TEXT                        -- vlm | clip_model | both: which signal set the label
 );
 CREATE INDEX IF NOT EXISTS ix_windows_cam ON windows(camera_id, id);

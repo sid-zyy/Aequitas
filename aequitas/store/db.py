@@ -54,6 +54,8 @@ MIGRATIONS = [
     ("event_timings", "summarize_ms", "REAL"),
     ("event_timings", "classify_ms", "REAL"),
     ("uploads", "started_at", "INTEGER"),
+    ("windows", "violence", "REAL"),
+    ("windows", "source", "TEXT"),
 ]
 
 
@@ -168,13 +170,14 @@ class EventStore:
 
     def record_window(self, camera_id: str, start_ts: int, end_ts: int, summary: str | None, label: str | None,
                       confidence: float | None, summarize_ms: float | None, classify_ms: float | None,
-                      lag_ms: float | None, keep: int = 200) -> None:
+                      lag_ms: float | None, keep: int = 200, violence: float | None = None,
+                      source: str | None = None) -> None:
         with self._lock, self._conn:
             self._conn.execute(
                 "INSERT INTO windows(camera_id, start_ts, end_ts, summary, label, confidence, summarize_ms, "
-                "classify_ms, lag_ms, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                "classify_ms, lag_ms, created_at, violence, source) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                 (camera_id, start_ts, end_ts, summary, label, confidence, summarize_ms, classify_ms, lag_ms,
-                 int(time.time() * 1000)),
+                 int(time.time() * 1000), violence, source),
             )
             self._conn.execute(  # keep only the latest `keep` per camera
                 "DELETE FROM windows WHERE camera_id=? AND id <= "

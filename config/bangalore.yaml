@@ -45,6 +45,16 @@ localities:
       - {id: ec-flyover, name: Electronic City Flyover, file: data/footage/electronic-city/flyover.mp4}
       - {id: ec-phase1, name: Phase 1 Main Gate, file: data/footage/electronic-city/phase1.mp4}
       - {id: ec-neeladri, name: Neeladri Road, file: data/footage/incidents/fire-rescue.mp4}
+  # Sample clips provided by the faculty (real CCTV; names suggest the SCVD dataset: v = violence,
+  # w = weaponized). Converted to H.264 for the browser. They are the held-out test set: never trained on.
+  - id: faculty
+    name: "Faculty test footage"
+    cameras:
+      - {id: fac-v001, name: "v001 (restaurant brawl)", file: data/footage/faculty/v001.mp4}
+      - {id: fac-v006, name: "v006", file: data/footage/faculty/v006.mp4}
+      - {id: fac-v011, name: "v011", file: data/footage/faculty/v011.mp4}
+      - {id: fac-v026, name: "v026 (corridor)", file: data/footage/faculty/v026.mp4}
+      - {id: fac-w001, name: "w001 (weapon)", file: data/footage/faculty/w001.mp4}
   # Live demo: the laptop's own webcam. Close-range view (gestures, objects held) and 2 s windows so a
   # judge's action shows up quickly. Not a real Bengaluru camera.
   - id: live-demo

@@ -20,7 +20,7 @@ from aequitas.ingest.frame_source import FrameSource
 from aequitas.ingest.ring_buffer import RingBuffer
 from aequitas.store.db import EventRecord, EventStore, Timings
 from aequitas.types import Candidate
-from aequitas.understand.fusion import fuse
+from aequitas.understand.fusion import fuse, fuse_window
 from aequitas.understand.keyframes import encode_jpeg, make_grid, window_motion
 from aequitas.understand.periodic import WindowAggregator
 from aequitas.understand.stages import InOrder, Understanding, understand
@@ -43,6 +43,7 @@ class VlmJob:
     last_flush_ms: int = 0
     seq: int | None = None  # periodic mode: order of this window within its camera
     view: str = "cctv"
+    violence: float | None = None  # periodic: highest clip-model score in the window
 
     @property
     def score(self) -> float:
@@ -116,7 +117,7 @@ class Pipeline:
             self.pose = PoseEstimator(settings.detector.pose_weights, settings.detector.backend, self.device)
         self.violence_model = self.hazard_detector = None
         m = settings.models
-        if self.mode == "triggered" and m.violence_dir:
+        if m.violence_dir:  # triggered: fight trigger; periodic: second signal per window
             from aequitas.vision.violence import ViolenceModel
 
             self.violence_model = ViolenceModel(m.violence_dir)
@@ -252,8 +253,13 @@ class Pipeline:
         (live=False) gets fixed-length windows and waits for the VLM instead, so none of it is skipped."""
         window_ms = int((cam.window_s or self.s.analysis.window_s) * 1000)
 
-        state = {"start": None, "last": None, "last_vlm": None}
+        state = {"start": None, "last": None, "last_vlm": None, "vmax": None}
         a = self.s.analysis
+        scorer = None
+        if self.violence_model is not None:
+            from aequitas.vision.violence import ViolenceScorer
+
+            scorer = ViolenceScorer(self.violence_model, int(self.s.models.violence_stride_s * 1000))
 
         def emit(end_ms: int, wall_ns: int) -> None:
             start = state["start"]
@@ -271,11 +277,17 @@ class Pipeline:
             state["last_vlm"] = end_ms
             grid = make_grid(frames, None, cam.zones, self.s.vlm.tile_px)
             self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms),
-                                  seq=self.order.ticket(cam.camera_id), view=cam.view))
+                                  seq=self.order.ticket(cam.camera_id), view=cam.view, violence=state["vmax"]))
+            state["vmax"] = None
             state["start"] = end_ms
 
         def step(frame) -> None:
             ring.push(frame.ts_ms, frame.image, {})
+            if scorer is not None:
+                with self._model_lock:
+                    v = scorer.update(frame.ts_ms, frame.image)
+                if v is not None:
+                    state["vmax"] = v if state["vmax"] is None else max(state["vmax"], v)
             state["last"] = (frame.ts_ms, frame.wall_ns)
             if state["start"] is None:
                 state["start"] = frame.ts_ms
@@ -383,10 +395,12 @@ class Pipeline:
 
     def _apply_window_result(self, job: VlmJob, u: Understanding, queue_ms: float) -> None:
         start, end = job.window
-        ans = u.answer
-        self.store.record_window(job.camera_id, start, end, u.summary, ans.category if ans else None,
-                                 ans.confidence if ans else None, u.summarize_ms, u.classify_ms,
-                                 (time.perf_counter_ns() - job.capture_ns) / 1e6)
+        threshold = (self.s.models.violence_threshold or self.violence_model.threshold) if self.violence_model else 1.0
+        ans, source = fuse_window(u.answer, job.violence, threshold)
+        self.store.record_window(job.camera_id, start, end, ans.summary if ans else u.summary,
+                                 ans.category if ans else None, ans.confidence if ans else None, u.summarize_ms,
+                                 u.classify_ms, (time.perf_counter_ns() - job.capture_ns) / 1e6,
+                                 violence=job.violence, source=source)
         d = self.aggregator.add(job.camera_id, start, end, ans)
         log.debug("%s window %.1f s: %s (summarize %.1f s, classify %.2f s)", job.camera_id, (end - start) / 1000,
                   ans.category if ans else "error", (u.summarize_ms or 0) / 1000, (u.classify_ms or 0) / 1000)
