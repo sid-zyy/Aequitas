@@ -3,6 +3,17 @@
 This file is the single starting point. It covers everything decided so far, what exists, what has been
 measured, and the complete plan. Details live in the linked docs. **§6 is the working checklist.**
 
+> **⚠️ The hackathon faculty's requirements (R5 below) come first, always.**
+> - three stages: summarization → classification of the summary → chatbot
+> - vLLM
+> - speculative decoding + multi-token prediction
+> - 4-bit and 8-bit quantization study
+> - React + FastAPI, no Jupyter
+> - the faculty dataset
+>
+> **Judging:** approach, end-to-end demo, and **latency (total execution time), weighted most heavily**.
+> Product work (Parts 1–3) only happens once these are covered. CLAUDE.md repeats this at the top.
+
 ---
 
 ## 1. What Minerva is
@@ -20,7 +31,7 @@ built for a **hackathon** (the Honeywell problem statement, judged by faculty) a
 | R2 | Team meeting slide | **Gemma 4 is the candidate VLM.** YOLO tracking is **optional**. Multi-camera. The chatbot is model-independent ("any local open-source LLM"). **Grounded response = summary + event references.** |
 | R3 | Owner: product split | **Part 1 General** (supporting: everyday video, e.g. fire). **Part 2 Police bodycam review** (major: mark key timestamps for officers). **Part 3 CCTV public order** (major: riots, stone pelting). Indian context. **Inference for every frame or timestamp.** |
 | R4 | Owner: decisions | Bodycam audio languages: **English, Hindi, Kannada**. **No footage partner**: use public datasets, staged recordings and synthetic data. **A GPU laptop** is the target machine. Kaggle may be used for training. |
-| R5 | **Hackathon faculty** (highest priority) | **Three tasks: (1) summarization, (2) classification of the summarized info, (3) chatbot.** Serve models with **vLLM**. Use **speculative decoding** and **multi-token prediction** for faster inference. **Study and implement 4-bit and 8-bit quantization.** **React** frontend and **FastAPI** backend, **no Jupyter notebooks**. **The faculty will provide a dataset soon.** Judged on **approach**, **end-to-end demonstration**, and **latency (total execution time)**. |
+| **R5 ⚠️** | **Hackathon faculty: TOP PRIORITY, never drop** | **Three tasks: (1) summarization, (2) classification of the summarized info, (3) chatbot.** Serve models with **vLLM**. Use **speculative decoding** and **multi-token prediction** for faster inference. **Study and implement 4-bit and 8-bit quantization.** **React** frontend and **FastAPI** backend, **no Jupyter notebooks**. **The faculty will provide a dataset soon.** Judged on **approach**, **end-to-end demonstration**, and **latency (total execution time)**. |
 | R6 | Owner + design | Guardrails: no face recognition or identification, no profiling by religion, caste, party or attire, peaceful gatherings are not incidents, a human confirms incidents. See CLAUDE.md and docs/POLICE_EDITION.md §8. |
 
 **Priority order:** R5 (hackathon deliverables) first, then R3/R4 product depth.

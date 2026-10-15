@@ -1,5 +1,33 @@
 # Minerva: instructions for Claude
 
+## ⚠️ HACKATHON FACULTY REQUIREMENTS: TOP PRIORITY, ALWAYS
+
+The hackathon faculty set these. They outrank every other plan, idea or product goal in this repo. Before
+choosing what to work on, check that it serves them. Never drop or quietly work around one; if a
+requirement seems impossible, say so to the owner.
+
+1. **Three tasks, as separate stages:**
+   - **(1) Summarization:** the VLM summarises the video.
+   - **(2) Classification of the summarized info:** classify the *summary text*.
+   - **(3) Chatbot** over the results.
+2. **Serve models with a vLLM server.** Ollama is only a dev fallback.
+3. **Faster inference with speculative decoding and multi-token prediction (MTP).** Gemma 4 has MTP
+   drafters that vLLM supports. Measure the speed-up; don't just turn it on.
+4. **Study and implement 4-bit and 8-bit quantization**, with a written comparison of latency and accuracy
+   per scheme.
+5. **React frontend, FastAPI backend. No Jupyter notebooks** in the deliverable.
+6. **The faculty will provide a dataset.** It defines the real evaluation. Build adapters for it rather than
+   hard-coding.
+7. **How the faculty judge it:**
+   - the **approach** (explain the design choices)
+   - how well we **demonstrate it end to end**
+   - **LATENCY, meaning total execution time (weighted most heavily).** Every stage must be timed, and the
+     total time must be visible in the demo.
+
+Status of each item and the build order: HANDOVER.md §6 (Phases 1–5 and 8) and docs/HACKATHON_PLAN.md.
+
+---
+
 Start every new session by reading **HANDOVER.md**. It holds the project state, the decisions, and the
 phased plan. Its §6 checklist says what to do next.
 
