@@ -121,7 +121,7 @@ export default function CitizenReport() {
           </div>
           {checkResult && <p style={{ marginBottom: 0 }}>{checkResult}</p>}
         </form>
-        <p className="note" style={{ marginTop: 18 }}>Demo system, not an official government service. Police officers: <a href="/">sign in</a>.</p>
+        <p className="note" style={{ marginTop: 18 }}>Demo system, not an official government service.</p>
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, label, Report, timeOf } from "../api";
+import { useSearchParams } from "react-router-dom";
+import { api, label, openCitizenPortal, Report, timeOf } from "../api";
 
 const STATUSES = ["received", "under_review", "action_taken", "closed", "rejected"];
 
@@ -18,7 +19,8 @@ const day = (ms: number) => new Date(ms).toLocaleString("en-IN", { dateStyle: "m
 
 export default function Reports() {
   const [list, setList] = useState<Report[]>([]);
-  const [sel, setSel] = useState<string | null>(null);
+  const [params] = useSearchParams();
+  const [sel, setSel] = useState<string | null>(params.get("id"));
   const [detail, setDetail] = useState<Report | null>(null);
   const [notes, setNotes] = useState("");
 
@@ -40,10 +42,10 @@ export default function Reports() {
     <main className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Citizen reports</h1>
+          <h1 className="page-title">All citizen reports</h1>
           <p className="page-sub">Videos sent by the public. Each is fingerprinted on arrival, analysed by AI, and checked for AI generation.</p>
         </div>
-        <a className="btn" style={{ marginLeft: "auto", textDecoration: "none" }} href="/report" target="_blank" rel="noreferrer">Open public portal ↗</a>
+        <button className="btn" style={{ marginLeft: "auto" }} onClick={openCitizenPortal}>Open citizen portal ↗</button>
       </div>
       <div className="split">
         <section className="card">

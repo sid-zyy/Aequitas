@@ -236,3 +236,23 @@ def test_weak_demo_password_only_with_explicit_opt_in(tmp_path):
     assert a.login("admin", "admin") is not None
     detail = a.store._conn.execute("SELECT detail FROM audit_log WHERE action='user_created'").fetchone()[0]
     assert '"weak_password": true' in detail  # flagged in the audit trail
+
+
+def test_active_requests_queue_is_open_reports_oldest_first(app_client, tmp_path):
+    c = app_client
+    first = _report(c, tmp_path, name="a.mp4").json()["report_id"]
+    second = _report(c, tmp_path, name="b.mp4", extra=b"\x00different bytes\x00").json()["report_id"]
+    third = _report(c, tmp_path, name="c.mp4", extra=b"\x00other bytes\x00").json()["report_id"]
+    assert c.get("/api/reports/active").status_code == 401  # police only
+    _login(c)
+    c.patch(f"/api/reports/{second}", json={"status": "under_review"})
+    c.patch(f"/api/reports/{third}", json={"status": "closed"})
+    q = c.get("/api/reports/active").json()
+    assert [r["report_id"] for r in q["reports"]] == [first, second]  # closed ones leave the queue
+    assert q["counts"] == {"received": 1, "under_review": 1, "action_taken": 0}
+    assert q["reports"][0]["categories"] == [] and "tracking_hash" not in q["reports"][0]
+    from aequitas.store.db import EventRecord  # the AI found something in the first video
+    cam = c.store._conn.execute("SELECT camera_id FROM reports WHERE report_id=?", (first,)).fetchone()[0]
+    c.store.insert_event(EventRecord("e1", cam, 0, 4000, "fighting", None, "unverified", 0.8, 0.0,
+                                     "fighting", "two people trade punches", None, [], "k.jpg", {}))
+    assert c.get("/api/reports/active").json()["reports"][0]["categories"] == ["fighting"]
