@@ -114,6 +114,8 @@ class AnalysisCfg(BaseModel):
     # towards confirmation, whatever label the VLM gave. Replay of the six saved demo runs: +1 to +3 confirmed
     # incidents per run, no new false alarm (results/improvements/README.md, scripts/replay_confirm.py; chosen on those clips).
     clip_votes: bool = True
+    # Windows kept per camera in the database (oldest dropped). Bodycam recordings keep all of theirs.
+    keep_windows: int = 200
     # Coarse stage: a SigLIP scene gate skips the VLM on windows that clearly look normal (aequitas/understand/gate.py).
     # None = off. Example: google/siglip-base-patch16-224 (Apache-2.0, ~0.8 GB).
     gate_model: str | None = None

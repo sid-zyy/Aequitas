@@ -72,6 +72,22 @@ export type ActiveQueue = {
 };
 
 /** The citizen portal is a separate public site: open it in its own window, not inside the police app. */
+export type StageSummary = {
+  jobs: number; ok: number; skipped_static: number; skipped_gate: number;
+  summarize_ms: { total: number | null; mean: number | null }; classify_ms: { total: number | null; mean: number | null };
+};
+export type Recording = {
+  id: string; filename: string; officer: string | null; status: string; progress: number; duration_s: number;
+  start_ts: number; created_at: number; total_s: number | null; events_found: number; error: string | null;
+  vlm_model: string; vlm_backlog: number; stages: StageSummary; view: string | null;
+};
+export type BodyWindow = { t: number; end: number; label: string | null; summary: string | null; source: string | null; violence: number | null };
+export type BodyEvent = {
+  id: number; t: number; end: number; category: string; status: string; confidence: number; summary: string | null;
+  review: "confirmed" | "dismissed" | null; reviewed_by: string | null; keyframe_url: string;
+};
+export type RecordingDetail = Recording & { windows: BodyWindow[]; events: BodyEvent[]; video_url: string };
+
 export function openCitizenPortal() {
   const w = window.open("/report", "aequitas-citizen-portal", "popup,width=560,height=900");
   if (w) w.focus();
@@ -92,6 +108,11 @@ export const api = {
   submitReport: (form: FormData) =>
     request<{ report_id: string; tracking_code: string; status: string; message: string }>(
       "/api/citizen/reports", { method: "POST", body: form }),
+  recordings: () => request<Recording[]>("/api/bodycam"),
+  recording: (id: string) => request<RecordingDetail>(`/api/bodycam/${id}`),
+  uploadRecording: (form: FormData) => request<Recording>("/api/bodycam", { method: "POST", body: form }),
+  reviewMoment: (id: string, eventId: number, decision: "confirmed" | "dismissed" | null) =>
+    request<BodyEvent>(`/api/bodycam/${id}/events/${eventId}/review`, json({ decision })),
   reportStatus: (id: string, code: string) =>
     request<{ report_id: string; status: string; submitted_at: number; updated_at: number }>(
       `/api/citizen/reports/${encodeURIComponent(id)}?code=${encodeURIComponent(code)}`),
