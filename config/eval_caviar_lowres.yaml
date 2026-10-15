@@ -1,0 +1,9 @@
+# Exploratory: thresholds loosened for low-resolution (384x288) wide-angle CCTV.
+# Tuned on the same clips it is scored on, so results show headroom, not accuracy.
+data_dir: data/eval/caviar_lowres
+detector:
+  conf: 0.10
+  min_person_conf: 0.15
+  min_person_height_px: 20
+tracker:
+  activation_threshold: 0.15

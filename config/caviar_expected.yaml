@@ -1,0 +1,17 @@
+# Expected incidents per CAVIAR clip (camera_id = clip name).
+# required: must be detected (missing = false negative).
+# optional: borderline; neither counted as a miss nor as a false alarm.
+# Anything else detected is a false alarm.
+# Labels are category or category/subtype.
+
+Fight_OneManDown:     {required: [fighting, person_down]}
+Fight_RunAway1:       {required: [fighting]}
+Fight_Chase:          {optional: [fighting]}
+Rest_FallOnFloor:     {required: [person_down]}
+Rest_SlumpOnFloor:    {required: [person_down]}
+Rest_InChair:         {}
+LeftBag:              {required: [suspicious_activity/abandoned_object]}
+LeftBag_PickedUp:     {optional: [suspicious_activity/abandoned_object]}
+Browse_WhileWaiting1: {optional: [suspicious_activity/loitering]}
+Walk1:                {}
+Meet_Crowd:           {}

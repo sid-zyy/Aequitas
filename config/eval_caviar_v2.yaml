@@ -1,0 +1,9 @@
+# CAVIAR run A: tracking-triggered, after the tracker-threshold and person-down fixes.
+# Same loosened low-res thresholds as eval_caviar_lowres.yaml (tuned on these clips: exploratory).
+data_dir: data/eval/caviar_v2
+detector:
+  conf: 0.10
+  min_person_conf: 0.15
+  min_person_height_px: 20
+tracker:
+  activation_threshold: 0.15

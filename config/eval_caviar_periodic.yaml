@@ -1,0 +1,6 @@
+# CAVIAR run B: VLM review of every 4 s window, no YOLO or rules (the bodycam-style mode).
+data_dir: data/eval/caviar_periodic
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2

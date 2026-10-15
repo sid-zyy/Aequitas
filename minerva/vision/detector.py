@@ -57,8 +57,11 @@ class CameraTracker:
         self.det_cfg = det_cfg
 
         def make() -> sv.ByteTrack:
+            # supervision starts new tracks only above track_activation_threshold + 0.1; subtract it so
+            # the configured value is the real start threshold (found on CAVIAR: people at 0.2-0.35
+            # confidence were never tracked).
             return sv.ByteTrack(
-                track_activation_threshold=cfg.activation_threshold,
+                track_activation_threshold=max(0.05, cfg.activation_threshold - 0.1),
                 lost_track_buffer=cfg.lost_track_buffer,
                 minimum_matching_threshold=cfg.matching_threshold,
                 frame_rate=max(1, round(fps)),

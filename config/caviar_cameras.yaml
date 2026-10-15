@@ -1,0 +1,16 @@
+# CAVIAR evaluation clips (INRIA lobby, CC BY-SA, EC Funded CAVIAR project/IST 2001 37540).
+# Download: scripts/get_caviar.sh. One camera per clip so results map back to clips.
+# The lobby camera is fixed; the whole frame is a watch zone (clips are < 60 s, so loitering cannot fire).
+
+cameras:
+  - {camera_id: Fight_OneManDown, name: "CAVIAR Fight_OneManDown", source: data/videos/caviar/Fight_OneManDown.mpg, realtime: false, start_time: "2026-10-15T09:00:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Fight_RunAway1, name: "CAVIAR Fight_RunAway1", source: data/videos/caviar/Fight_RunAway1.mpg, realtime: false, start_time: "2026-10-15T09:01:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Fight_Chase, name: "CAVIAR Fight_Chase", source: data/videos/caviar/Fight_Chase.mpg, realtime: false, start_time: "2026-10-15T09:02:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Rest_FallOnFloor, name: "CAVIAR Rest_FallOnFloor", source: data/videos/caviar/Rest_FallOnFloor.mpg, realtime: false, start_time: "2026-10-15T09:03:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Rest_SlumpOnFloor, name: "CAVIAR Rest_SlumpOnFloor", source: data/videos/caviar/Rest_SlumpOnFloor.mpg, realtime: false, start_time: "2026-10-15T09:04:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Rest_InChair, name: "CAVIAR Rest_InChair", source: data/videos/caviar/Rest_InChair.mpg, realtime: false, start_time: "2026-10-15T09:05:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: LeftBag, name: "CAVIAR LeftBag", source: data/videos/caviar/LeftBag.mpg, realtime: false, start_time: "2026-10-15T09:06:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: LeftBag_PickedUp, name: "CAVIAR LeftBag_PickedUp", source: data/videos/caviar/LeftBag_PickedUp.mpg, realtime: false, start_time: "2026-10-15T09:07:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Browse_WhileWaiting1, name: "CAVIAR Browse_WhileWaiting1", source: data/videos/caviar/Browse_WhileWaiting1.mpg, realtime: false, start_time: "2026-10-15T09:08:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Walk1, name: "CAVIAR Walk1", source: data/videos/caviar/Walk1.mpg, realtime: false, start_time: "2026-10-15T09:09:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}
+  - {camera_id: Meet_Crowd, name: "CAVIAR Meet_Crowd", source: data/videos/caviar/Meet_Crowd.mpg, realtime: false, start_time: "2026-10-15T09:10:00", zones: {watch_zones: {lobby: [[0, 0], [1, 0], [1, 1], [0, 1]]}}}

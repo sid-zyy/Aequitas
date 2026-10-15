@@ -1,4 +1,6 @@
-"""Fighting: two or more people close together with high, erratic motion."""
+"""Fighting: two or more people close together with high, erratic motion; or, when a violence clip
+model is loaded, a sustained high clip score with people in view. The clip path needs no tracking,
+which is what failed on low-res CCTV (CAVIAR)."""
 
 from __future__ import annotations
 
@@ -35,12 +37,21 @@ class FightingRule(Rule):
             holding.add(key)
             self.evidence[key] = max(self.evidence.get(key, 0.0), clamp01(ratio / 6))
 
+        clip_key = ("fighting", "clip")
+        if (cfg.use_clip_model and scene.violence is not None and scene.violence >= scene.violence_threshold
+                and len(scene.persons) >= cfg.min_persons_for_clip):
+            holding.add(clip_key)
+            self.evidence[clip_key] = max(self.evidence.get(clip_key, 0.0), scene.violence)
+            self.clip_tracks = tuple(sorted(p.track_id for p in scene.persons))
+
         fired, ongoing = self.ep.step(ts, holding)
         out = RuleOutput(ongoing=ongoing)
         for key in fired:
+            tracks = getattr(self, "clip_tracks", ()) if key == clip_key else tuple(sorted(key[1]))
             out.candidates.append(Candidate(
                 scene.camera_id, self.category, None, self.ep.onset(key), ts,
-                round(self.evidence.get(key, 0.5), 3), tuple(sorted(key[1])), key=key,
+                round(self.evidence.get(key, 0.5), 3), tracks, key=key,
+                detail={"source": "clip_model" if key == clip_key else "tracks"},
             ))
         for key in [k for k in self.evidence if not self.ep.active(k)]:
             del self.evidence[key]

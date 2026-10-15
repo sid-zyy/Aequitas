@@ -65,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("stats", help="per-stage latency summary of recorded events")
 
+    rep = sub.add_parser("eval-report", help="score recorded events per clip against expected labels")
+    rep.add_argument("--expected", required=True, help="YAML of expected labels per camera/clip")
+
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")
@@ -117,6 +120,13 @@ def main(argv: list[str] | None = None) -> int:
         from minerva.store.db import EventStore
 
         print(latency_table(EventStore(settings.db_path)))
+        return 0
+
+    if args.cmd == "eval-report":
+        from minerva.eval.clip_report import clip_report
+        from minerva.store.db import EventStore
+
+        print(clip_report(EventStore(settings.db_path), args.expected))
         return 0
     return 1
 
