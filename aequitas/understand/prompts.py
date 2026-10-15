@@ -99,6 +99,17 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
     )
 
 
+def _fire_rule(categories: dict[str, str] | None) -> str:
+    """Fire beats the labels a burning scene gets confused with (seen on the fire-rescue clip: responders
+    near flames were labelled arrest, fighting, accident). Names only categories that are configured."""
+    names = list(categories or DEFAULT_CATEGORIES)
+    if "fire" not in names:
+        return ""
+    rivals = [c for c in ("accident", "fighting", "riot", "vandalism", "arrest") if c in names]
+    return ("If flames, a burning vehicle or thick smoke are described, choose fire"
+            + (f" over {', '.join(rivals)}" if rivals else "") + ", unless someone is clearly attacked. ")
+
+
 def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str, str] | None = None) -> str:
     ev = f"\nKey evidence: {evidence.strip()}" if evidence.strip() else ""
     return (
@@ -109,7 +120,8 @@ def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str,
         "Use only the description. If it does not clearly describe one of the categories, answer none.\n"
         "If several fit, prefer the more serious one: a person attacked, held down or hurt by someone is "
         "fighting (or harassment), even if they fall; person_down is for someone who falls or lies down with "
-        "nobody attacking them. Sports, games, exercise and play are none.\n"
+        f"nobody attacking them. {_fire_rule(categories)}"
+        "Sports, games, exercise and play are none.\n"
         "Answer with the category name only."
     )
 
