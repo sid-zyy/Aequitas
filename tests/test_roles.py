@@ -209,7 +209,9 @@ def test_analyze_video_end_to_end_with_a_fake_frame_detector(tmp_path, monkeypat
                         lambda model: (lambda img: [{"label": "artificial", "score": 0.92},
                                                     {"label": "human", "score": 0.08}]))
     r = auth_mod.analyze_video(_video(tmp_path / "ai.mp4"), auth_mod.AuthenticityCfg(frame_model="fake/model"))
-    assert r["ai_likelihood_pct"] == 92 and r["verdict"] == "likely_ai" and len(r["frames"]["per_frame"]) == 8
+    # the frame detector alone is capped at "uncertain" (it flags real compressed video too)
+    assert r["ai_likelihood_pct"] == 92 and r["verdict"] == "uncertain" and len(r["frames"]["per_frame"]) == 8
+    assert "needs a human look" in r["reasons"][-1]
     tagged = _video(tmp_path / "tagged.mp4", extra=b"\x00\x00\x00 udta: made with HeyGen avatar\x00")
     r = auth_mod.analyze_video(tagged, auth_mod.AuthenticityCfg(frame_model=None))
     assert r["ai_likelihood_pct"] == 90 and "HeyGen" in r["reasons"][0]

@@ -4,13 +4,14 @@ import { api, label, openCitizenPortal, Report, timeOf } from "../api";
 
 const STATUSES = ["received", "under_review", "action_taken", "closed", "rejected"];
 
-function AiMeter({ pct }: { pct: number | null }) {
+function AiMeter({ pct, verdict }: { pct: number | null; verdict: string }) {
   if (pct == null) return <span className="note">not enough signal</span>;
-  const color = pct >= 85 ? "var(--danger)" : pct >= 50 ? "var(--warn)" : "var(--ok)";
+  const color = verdict === "likely_ai" ? "var(--danger)" : verdict === "uncertain" ? "var(--warn)" : "var(--ok)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div className="meter" style={{ width: 120 }}><i style={{ width: `${pct}%`, background: color }} /></div>
       <b className="mono" style={{ color }}>{pct}%</b>
+      <span className="badge status">{verdict.replace(/_/g, " ")}</span>
     </div>
   );
 }
@@ -94,7 +95,7 @@ export default function Reports() {
                     <span className="note">Check failed: {detail.authenticity.error}</span>
                   ) : (
                     <>
-                      <AiMeter pct={detail.authenticity.ai_likelihood_pct} />
+                      <AiMeter pct={detail.authenticity.ai_likelihood_pct} verdict={detail.authenticity.verdict} />
                       <ul style={{ margin: "8px 0", paddingLeft: 18, color: "#cfdbe3" }}>
                         {detail.authenticity.reasons.map((r) => <li key={r}>{r}</li>)}
                       </ul>

@@ -48,6 +48,10 @@ class AuthenticityCfg(BaseModel):
     # 0.33-0.97) on a re-encoded video of a real photo, so only high scores are called likely AI.
     likely_ai_at: float = 0.85
     uncertain_at: float = 0.5
+    # The frame detector alone never says "likely AI": on 22 real stock / CCTV clips (data/footage, 2026-10-16)
+    # it gave 5 of them 100 % (accident, fire, punching, flyover, an arrest). Image detectors are trained on
+    # stills; compressed video frames look "synthetic" to them. Metadata / C2PA evidence can still say likely AI.
+    frame_alone_max_verdict: str = "uncertain"
 
 
 def _read_edges(path: Path, n: int = 4 * 1024**2) -> bytes:
@@ -171,8 +175,14 @@ def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
         except Exception as e:  # transformers missing, download failed, unreadable video...
             frame_detail = {"model": cfg.frame_model, "error": str(e)[:200]}
     likelihood, reasons = combine(meta, c2, frame_p, cfg)
+    frame_only = frame_p is not None and not (meta["ai_source_type"] or meta["generators"]
+                                              or (c2 and c2.get("ai_declared")))
     if likelihood is None:
         verdict = "not_enough_signal"
+    elif likelihood >= cfg.likely_ai_at and frame_only and cfg.frame_alone_max_verdict == "uncertain":
+        verdict = "uncertain"
+        reasons.append("Only the frame detector points to AI, and it also flags real compressed video: "
+                       "needs a human look")
     elif likelihood >= cfg.likely_ai_at:
         verdict = "likely_ai"
     elif likelihood >= cfg.uncertain_at:
