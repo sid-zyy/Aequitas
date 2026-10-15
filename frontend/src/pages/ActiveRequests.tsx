@@ -89,7 +89,8 @@ export default function ActiveRequests() {
                       </td>
                       <td className="mono">
                         {!r.authenticity ? <span className="note">checking…</span> : pct == null ? <span className="note">no signal</span> : (
-                          <b style={{ color: pct >= 85 ? "var(--danger)" : pct >= 50 ? "var(--warn)" : "var(--ok)" }}>{pct}%</b>
+                          <b style={{ color: r.authenticity.verdict === "likely_ai" ? "var(--danger)" : r.authenticity.verdict === "uncertain" ? "var(--warn)" : "var(--ok)" }}
+                            title={r.authenticity.verdict.replace(/_/g, " ")}>{pct}%{r.authenticity.verdict === "uncertain" && " ?"}</b>
                         )}
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>
