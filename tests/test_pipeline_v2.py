@@ -546,3 +546,55 @@ def test_window_with_high_violence_score_becomes_a_fighting_event(periodic_pipel
     assert w[0]["violence"] == 0.9
     ev = store._conn.execute("SELECT category, status FROM events").fetchall()
     assert [tuple(e) for e in ev] == [("fighting", "confirmed")]
+
+
+# ---------- cascade: a bigger model re-checks flagged windows ----------
+
+def test_escalation_rule_only_rechecks_when_it_matters():
+    from aequitas.understand.stages import Understanding, needs_escalation
+    from aequitas.understand.prompts import VlmAnswer
+
+    calm = Understanding(VlmAnswer(category="none", summary="Traffic."), "Traffic.", 800, 40)
+    flagged = Understanding(VlmAnswer(category="arrest", summary="x"), "x", 800, 40)
+    failed = Understanding(None, None, 800, None)
+    assert not needs_escalation(calm, None, 0.35)
+    assert not needs_escalation(calm, 0.2, 0.35)
+    assert needs_escalation(calm, 0.5, 0.35)  # clip model unsure or worse
+    assert needs_escalation(flagged, None, 0.35) and needs_escalation(failed, None, 0.35)
+
+
+def test_escalation_replaces_the_verdict_and_adds_the_time():
+    from aequitas.understand.stages import Understanding, escalate
+    from aequitas.understand.prompts import VlmAnswer
+
+    class Big(FakeVlm, FakeClassifier):
+        def __init__(self, label, fail=False):
+            FakeVlm.__init__(self, summary="A man is handcuffed by two officers.", fail=fail)
+            FakeClassifier.__init__(self, label, 0.95)
+            self.model = "big-model"
+
+    small = Understanding(VlmAnswer(category="fighting", summary="People interacting."), "People interacting.", 800, 40)
+    u = escalate(small, Big("arrest"), b"jpeg", False, None)
+    assert u.answer.category == "arrest" and u.escalated == "big-model"
+    assert u.summarize_ms == 2300 and u.classify_ms == 80  # both models really ran
+    kept = escalate(small, Big("arrest", fail=True), b"jpeg", False, None)
+    assert kept.answer.category == "fighting" and kept.escalated is None
+
+
+def test_pipeline_rechecks_flagged_windows_with_the_big_model(periodic_pipeline):
+    from aequitas.pipeline import VlmJob
+
+    p, store = periodic_pipeline  # the fake small model labels everything 'fighting'
+
+    class Big(FakeVlm, FakeClassifier):
+        def __init__(self):
+            FakeVlm.__init__(self, summary="Two friends hug.")
+            FakeClassifier.__init__(self, "none", 0.9)
+            self.model = "big-model"
+
+    p.big = Big()
+    job = VlmJob("cam1", b"jpeg", time.perf_counter_ns(), window=(0, 4000), seq=p.order.ticket("cam1"))
+    p._process_window(job, 1.0)
+    w = store.recent_windows("cam1", 1)[0]
+    assert w["label"] == "none" and "rechecked:big-model" in w["source"]
+    assert store._conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0  # false alarm avoided

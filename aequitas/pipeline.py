@@ -23,7 +23,7 @@ from aequitas.types import Candidate
 from aequitas.understand.fusion import fuse, fuse_window
 from aequitas.understand.keyframes import encode_jpeg, make_grid, window_motion
 from aequitas.understand.periodic import WindowAggregator
-from aequitas.understand.stages import InOrder, Understanding, understand
+from aequitas.understand.stages import InOrder, Understanding, escalate, needs_escalation, understand
 
 log = logging.getLogger(__name__)
 
@@ -146,6 +146,14 @@ class Pipeline:
                 if not self.classifier.ping():
                     raise RuntimeError(f"classifier '{ep.model}' not reachable at {ep.host} ({ep.backend})")
         self.order = InOrder()
+        self.big = None  # cascade re-checker
+        if use_vlm and settings.escalation.model:
+            from aequitas.understand.vlm_client import make_client
+
+            self.big = make_client(settings.escalation.endpoint(settings.vlm))
+            if not self.big.ping():
+                log.warning("escalation model %s not reachable; cascade off", self.big.model)
+                self.big = None
         self.aggregator = WindowAggregator(settings.analysis.confirm_votes, int(settings.analysis.max_gap_s * 1000))
         # never smaller than the windows allowed in flight, or a file source could still drop one
         self.queue = JobQueue(max(settings.vlm.max_queue_per_camera, settings.vlm.concurrency), self._on_drop)
@@ -358,6 +366,8 @@ class Pipeline:
         if self.vlm is not None:
             u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=True,
                            categories=self.s.categories)
+            if self.big is not None and needs_escalation(u, None, 1.1):
+                u = escalate(u, self.big, job.grid_jpeg, True, self.s.categories)
             self._record_stage(job, "candidate", queue_ms, u)
         fused = fuse(c, u.answer, self.s.fusion)
         if fused.summary is None and u.summary:  # summarized but not classified: keep the description
@@ -383,6 +393,8 @@ class Pipeline:
         """Understanding runs concurrently; results are applied in window order per camera."""
         u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False,
                        categories=self.s.categories, view=job.view)
+        if self.big is not None and needs_escalation(u, job.violence, self.s.escalation.violence_band_low):
+            u = escalate(u, self.big, job.grid_jpeg, False, self.s.categories, job.view)
         self._record_stage(job, "window", queue_ms, u)
         self.order.finish(job.camera_id, job.seq, (job, u, queue_ms), self._apply_window)
 
@@ -397,6 +409,8 @@ class Pipeline:
         start, end = job.window
         threshold = (self.s.models.violence_threshold or self.violence_model.threshold) if self.violence_model else 1.0
         ans, source = fuse_window(u.answer, job.violence, threshold)
+        if u.escalated:
+            source = f"{source}+rechecked:{u.escalated}"
         self.store.record_window(job.camera_id, start, end, ans.summary if ans else u.summary,
                                  ans.category if ans else None, ans.confidence if ans else None, u.summarize_ms,
                                  u.classify_ms, (time.perf_counter_ns() - job.capture_ns) / 1e6,
