@@ -7,3 +7,4 @@ data/
 models/
 *.pt
 *_openvino_model/
+frontend/node_modules/
