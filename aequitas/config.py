@@ -138,6 +138,9 @@ class ModelsCfg(BaseModel):
     violence_dir: Path | None = None  # folder with violence_clip.onnx + metadata.json
     violence_stride_s: float = 0.5
     violence_threshold: float | None = None  # None = the calibrated threshold from metadata.json
+    # The clip model alone (VLM saw nothing) raises "fighting" only at this score. Chosen on our demo street
+    # clips (2 of 123 normal windows >= 0.9, every faculty clip has windows >= 0.95): a demo setting, not accuracy.
+    violence_alone_threshold: float | None = 0.9
     hazard_dir: Path | None = None  # folder with hazard_detector.pt/.onnx + metadata.json
     hazard_conf: float = 0.35
 

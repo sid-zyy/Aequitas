@@ -11,7 +11,7 @@ analysis:
   confirm_votes: 2      # periodic mode: consecutive agreeing windows needed for 'confirmed'
 
 models:                 # trained on Kaggle (see kaggle/README.md); leave null until downloaded
-  violence_dir: null    # e.g. models/violence_clip
+  violence_dir: models/violence_clip   # trained on Kaggle (SCVD + RLVS + RWF-2000), results/violence_clip/
   hazard_dir: null      # e.g. models/hazard_detector
 
 detector:
