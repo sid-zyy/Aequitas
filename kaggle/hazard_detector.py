@@ -48,7 +48,7 @@ from ultralytics import YOLO
 # when it has one; otherwise give `index_map` (source class index → name). Names are mapped onto
 # Aequitas's classes through `ALIASES`; anything unmapped is dropped.
 #
-# **Check D-Fire's class order in its README before training.** The map below assumes 0 = smoke, 1 = fire.
+# D-Fire's class order is 0 = smoke, 1 = fire (checked against the dataset page).
 
 # %%
 CLASSES = ["fire", "smoke", "knife", "gun", "stick"]
@@ -59,14 +59,43 @@ ALIASES = {
     "gun": "gun", "pistol": "gun", "handgun": "gun", "firearm": "gun", "rifle": "gun", "revolver": "gun",
     "stick": "stick", "lathi": "stick", "rod": "stick", "iron_rod": "stick", "baton": "stick", "bat": "stick",
     "club": "stick",
+    "fire_and_smoke": None, "weapon": None,  # too generic for one of our classes: dropped
 }
-SOURCES = [
-    {"path": "/kaggle/input/d-fire", "index_map": {0: "smoke", 1: "fire"}},
-    {"path": "/kaggle/input/knife-vs-pistol"},
-    # {"path": "/kaggle/input/aequitas-lathi"},   # your own labelled sticks/lathis/rods
-]
+# Datasets are found automatically under /kaggle/input (Kaggle's layout changed to
+# /kaggle/input/datasets/<owner>/<name>, so fixed paths break). A dataset root is any folder with a
+# data.yaml / *.yaml that lists class `names`. Datasets without one need an entry in KNOWN_INDEX_MAPS
+# (matched on the folder path); anything else is skipped with a warning.
+KNOWN_INDEX_MAPS = {
+    "smoke-fire-detection-yolo": {0: "smoke", 1: "fire"},  # D-Fire repackaged (sayedgamal99), 0 = smoke
+    "d-fire": {0: "smoke", 1: "fire"},
+}
+
+
+def discover_sources(base: Path = Path("/kaggle/input")) -> list[dict]:
+    roots = []
+    for y in sorted(base.rglob("*.yaml")):
+        try:
+            names = (yaml.safe_load(y.read_text(errors="ignore")) or {}).get("names")
+        except Exception:
+            continue
+        if names and not any(r in y.parents for r in roots):
+            roots.append(y.parent)
+    out = [{"path": str(r)} for r in roots]
+    for top in sorted({p for p in base.rglob("*") if p.is_dir() and p.name in ("images", "labels")}):
+        root = top.parent.parent if top.parent.name.lower() in ("train", "valid", "val", "test") else top.parent
+        if any(Path(o["path"]) in [root, *root.parents] for o in out):
+            continue
+        key = next((k for k in KNOWN_INDEX_MAPS if k in str(root).lower()), None)
+        if key:
+            out.append({"path": str(root), "index_map": KNOWN_INDEX_MAPS[key]})
+        else:
+            print(f"WARNING: {root} has no data.yaml and no known class map: skipped")
+    return out
+
+
+SOURCES = discover_sources() if Path("/kaggle/input").exists() else []
 CFG = dict(
-    model="yolo11s.pt", imgsz=640, epochs=80, batch=-1, patience=20,
+    model="yolo11s.pt", imgsz=640, epochs=40, batch=-1, patience=12,
     val_frac=0.1, degrade_frac=0.3, max_negative_frac=0.25, seed=0,
     data_dir=str(WORK / "hazard_ds"), out_dir=str(WORK / "hazard_detector"),
 )
