@@ -80,6 +80,7 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
         "- Describe only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
         "- Say how many people there are, their posture (standing, walking, running, sitting, lying on the "
         "ground) and any contact between them, and whether any bag or object is left alone.\n"
+        "- If anyone hits, kicks, pushes, grabs, chokes, restrains or attacks another person, say so plainly.\n"
         f"{length}"
         "Respond with JSON only."
     )
@@ -93,6 +94,9 @@ def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str,
         "Choose the ONE category that best matches the description:\n"
         f"{_category_list(categories)}\n"
         "Use only the description. If it does not clearly describe one of the categories, answer none.\n"
+        "If several fit, prefer the more serious one: a person attacked, held down or hurt by someone is "
+        "fighting (or harassment), even if they fall; person_down is for someone who falls or lies down with "
+        "nobody attacking them. Sports, games, exercise and play are none.\n"
         "Answer with the category name only."
     )
 

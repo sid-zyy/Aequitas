@@ -1,0 +1,40 @@
+{
+  "label": "levers-cap128",
+  "host": "http://127.0.0.1:8000",
+  "model": "m",
+  "started": "2026-10-15T16:10:36",
+  "requests_per_level": 8,
+  "max_tokens": {
+    "summarize": 128,
+    "classify": 16,
+    "chat": 160
+  },
+  "results": {
+    "summarize": {
+      "1": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 16105.2,
+        "requests_per_s": 0.497,
+        "output_tokens_per_s": 35.3,
+        "total_ms": {
+          "p50": 2010.4,
+          "p95": 2403.8,
+          "mean": 1989.3
+        },
+        "ttft_ms": {
+          "p50": 559.6,
+          "p95": 564.5,
+          "mean": 554.3
+        },
+        "tpot_ms": {
+          "p50": 20.2,
+          "p95": 20.3,
+          "mean": 20.2
+        },
+        "errors": [],
+        "speculation": null
+      }
+    }
+  }
+}

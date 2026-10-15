@@ -1,0 +1,51 @@
+model,precision,spec,error,startup_s,gpu_gb,summarize_first_word_s,summarize_full_s,summarize_full_p95_s,summarize_ok,summarize_tokens_per_s,summarize_full_busy_s,classify_first_word_s,classify_full_s,classify_full_p95_s,classify_ok,classify_tokens_per_s,classify_full_busy_s,chat_first_word_s,chat_full_s,chat_full_p95_s,chat_ok,chat_tokens_per_s,chat_full_busy_s,window_s,window_busy_s,spec_acceptance,dev_accuracy,dev_macro_f1,dev_valid,dev_incident_recall,real_n,real_accuracy,real_precision,real_recall,clip_first_word_s,clip_total_s,rougeL_vs_fp16,ckpt_gib
+gemma,fp16,none,"vLLM did not start:
+x"", line 1515, in uvloop.loop.Loop.run_until_complete
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/uvloop/__init__.py"", line 48, in wrapper
+    return await main
+           ^^^^^^^^^^
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/entrypoints/launchers/api_server/entry.py"", line 172, in run_server
+    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/entryp",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+gemma,w8a8,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w8a8 --model google/gemma-4-E2B-it --out /tmp/aequitas/ckpt/gemma-4-E2B-it-w8a8 --samples 128 --max-len 512
+ind_and_load
+  File ""<frozen importlib._bootstrap>"", line 1331, in _find_and_load_unlocked
+  File ""<frozen importlib._bootstrap>"", line 935, in _load_unlocked
+  File ""<frozen importlib._bootstrap_external>"", line 995, in exec_module
+  File ""<frozen importlib._bootstrap>"", line 488, ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+gemma,w4a16,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w4a16 --model google/gemma-4-E2B-it --out /tmp/aequitas/ckpt/gemma-4-E2B-it-w4a16 --samples 128 --max-len 512
+ind_and_load
+  File ""<frozen importlib._bootstrap>"", line 1331, in _find_and_load_unlocked
+  File ""<frozen importlib._bootstrap>"", line 935, in _load_unlocked
+  File ""<frozen importlib._bootstrap_external>"", line 995, in exec_module
+  File ""<frozen importlib._bootstrap>"", line 488",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qwen,fp16,none,,222.0,11.13,0.565,2.103,2.408,8/8,49.0,7.2,0.126,0.163,0.2,8/8,120.5,0.727,0.056,0.941,2.653,8/8,45.9,0.584,2.266,7.927,,0.9375,0.9462,1.0,1.0,10.0,0.5,,0.0,0.532,2.216,,3.96
+qwen,w8a8,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w8a8 --model Qwen/Qwen3-VL-2B-Instruct --out /tmp/aequitas/ckpt/Qwen3-VL-2B-Instruct-w8a8 --samples 128 --max-len 512
+                    ^^^^^^
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 96, in main
+    processor = AutoProcessor.from_pretrained(args.model)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/sit",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+qwen,w4a16,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w4a16 --model Qwen/Qwen3-VL-2B-Instruct --out /tmp/aequitas/ckpt/Qwen3-VL-2B-Instruct-w4a16 --samples 128 --max-len 512
+                    ^^^^^^
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 96, in main
+    processor = AutoProcessor.from_pretrained(args.model)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-quant/lib/python3.12/s",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+smolvlm,fp16,none,"vLLM did not start:
+tem = get_mm_max_toks_per_item(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/multimodal/encoder_budget.py"", line 35, in get_mm_max_toks_per_item
+    mm_inputs = processor.get_dummy_mm_inputs(mm_counts, cache=cache)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/tmp/aequitas/venv-vllm/lib/python3.12/site-packages/vllm/multimodal/processing/processor.py"", line 1108, in ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+smolvlm,w8a8,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w8a8 --model HuggingFaceTB/SmolVLM2-2.2B-Instruct --out /tmp/aequitas/ckpt/SmolVLM2-2.2B-Instruct-w8a8 --samples 128 --max-len 512
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Traceback (most recent call last):
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 117, in <module>
+   ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+smolvlm,w4a16,none,"failed (1): /tmp/aequitas/venv-quant/bin/python /tmp/aequitas/Aequitas/scripts/quantize/quantize.py --scheme w4a16 --model HuggingFaceTB/SmolVLM2-2.2B-Instruct --out /tmp/aequitas/ckpt/SmolVLM2-2.2B-Instruct-w4a16 --samples 128 --max-len 512
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Traceback (most recent call last):
+  File ""/tmp/aequitas/Aequitas/scripts/quantize/quantize.py"", line 117, in <module>
+ ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

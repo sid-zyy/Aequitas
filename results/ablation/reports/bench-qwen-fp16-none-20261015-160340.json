@@ -1,0 +1,164 @@
+{
+  "label": "qwen-fp16-none",
+  "host": "http://127.0.0.1:8000",
+  "model": "m",
+  "started": "2026-10-15T16:02:47",
+  "requests_per_level": 8,
+  "max_tokens": {
+    "summarize": 128,
+    "classify": 16,
+    "chat": 160
+  },
+  "results": {
+    "summarize": {
+      "1": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 16463.5,
+        "requests_per_s": 0.486,
+        "output_tokens_per_s": 34.7,
+        "total_ms": {
+          "p50": 2103.2,
+          "p95": 2407.7,
+          "mean": 2034.1
+        },
+        "ttft_ms": {
+          "p50": 564.7,
+          "p95": 581.1,
+          "mean": 565.2
+        },
+        "tpot_ms": {
+          "p50": 20.4,
+          "p95": 21.3,
+          "mean": 20.5
+        },
+        "errors": [],
+        "speculation": null
+      },
+      "8": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 7980.9,
+        "requests_per_s": 1.002,
+        "output_tokens_per_s": 76.1,
+        "total_ms": {
+          "p50": 7199.9,
+          "p95": 7858.4,
+          "mean": 7176.2
+        },
+        "ttft_ms": {
+          "p50": 3690.0,
+          "p95": 4235.3,
+          "mean": 3295.0
+        },
+        "tpot_ms": {
+          "p50": 50.6,
+          "p95": 76.9,
+          "mean": 52.8
+        },
+        "errors": [],
+        "speculation": null
+      }
+    },
+    "classify": {
+      "1": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 1323.6,
+        "requests_per_s": 6.044,
+        "output_tokens_per_s": 20.4,
+        "total_ms": {
+          "p50": 162.5,
+          "p95": 199.8,
+          "mean": 165.3
+        },
+        "ttft_ms": {
+          "p50": 125.8,
+          "p95": 130.8,
+          "mean": 123.1
+        },
+        "tpot_ms": {
+          "p50": 8.3,
+          "p95": 13.3,
+          "mean": 7.8
+        },
+        "errors": [],
+        "speculation": null
+      },
+      "8": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 767.0,
+        "requests_per_s": 10.43,
+        "output_tokens_per_s": 37.8,
+        "total_ms": {
+          "p50": 727.0,
+          "p95": 761.3,
+          "mean": 725.8
+        },
+        "ttft_ms": {
+          "p50": 645.8,
+          "p95": 671.7,
+          "mean": 536.2
+        },
+        "tpot_ms": {
+          "p50": 22.8,
+          "p95": 209.0,
+          "mean": 62.7
+        },
+        "errors": [],
+        "speculation": null
+      }
+    },
+    "chat": {
+      "1": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 11212.2,
+        "requests_per_s": 0.714,
+        "output_tokens_per_s": 43.1,
+        "total_ms": {
+          "p50": 940.8,
+          "p95": 2653.1,
+          "mean": 1401.4
+        },
+        "ttft_ms": {
+          "p50": 56.4,
+          "p95": 62.8,
+          "mean": 53.3
+        },
+        "tpot_ms": {
+          "p50": 21.8,
+          "p95": 25.1,
+          "mean": 22.2
+        },
+        "errors": [],
+        "speculation": null
+      },
+      "8": {
+        "requests": 8,
+        "ok": 8,
+        "wall_ms": 2340.3,
+        "requests_per_s": 3.418,
+        "output_tokens_per_s": 146.6,
+        "total_ms": {
+          "p50": 584.0,
+          "p95": 2336.6,
+          "mean": 1018.8
+        },
+        "ttft_ms": {
+          "p50": 84.2,
+          "p95": 86.7,
+          "mean": 80.7
+        },
+        "tpot_ms": {
+          "p50": 24.2,
+          "p95": 24.6,
+          "mean": 23.4
+        },
+        "errors": [],
+        "speculation": null
+      }
+    }
+  }
+}

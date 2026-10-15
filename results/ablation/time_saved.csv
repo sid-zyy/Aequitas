@@ -1,0 +1,6 @@
+step,total_execution_s,windows_analysed,windows_skipped,events,saved_vs_baseline_s,saved_vs_baseline_pct,speedup_x,saved_vs_previous_s
+"0 baseline (16-bit, 1 at a time, long summary)",59.6,20,0,"{'arrest': 1, 'person_down': 2, 'suspicious_activity': 2}",,,,
+1 + quantization (recommended is 16-bit: no change),31.6,20,0,"{'arrest': 2, 'person_down': 2, 'suspicious_activity': 2}",28.0,47.0,1.89,28.0
+2 + 8 windows in flight (vLLM batching),28.1,20,0,"{'arrest': 1, 'person_down': 2, 'suspicious_activity': 2}",31.5,52.9,2.12,3.5
+3 + short capped summary,14.3,19,0,"{'person_down': 2, 'suspicious_activity': 2}",45.3,76.0,4.17,13.8
+4 + skip static windows,5.3,9,11,"{'person_down': 1, 'suspicious_activity': 1}",54.3,91.1,11.25,9.0

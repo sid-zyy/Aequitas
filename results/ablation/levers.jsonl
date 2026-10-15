@@ -1,0 +1,7 @@
+{"lever": "concurrency", "setting": 1, "window_s": 2.245, "windows_per_s": 0.468}
+{"lever": "concurrency", "setting": 4, "window_s": 4.59, "windows_per_s": 0.925}
+{"lever": "concurrency", "setting": 8, "window_s": 7.373, "windows_per_s": 1.046}
+{"lever": "tile_px", "setting": 224, "summary_s": 1.623, "summary_busy_s": 3.053, "real_accuracy": 0.6, "real_clip_s": 1.636}
+{"lever": "tile_px", "setting": 448, "summary_s": 1.965, "summary_busy_s": 6.988, "real_accuracy": 0.5, "real_clip_s": 2.225}
+{"lever": "summary_max_tokens", "setting": 64, "summary_s": 1.802, "real_accuracy": 0.5, "real_clip_s": 2.624}
+{"lever": "summary_max_tokens", "setting": 128, "summary_s": 2.01, "real_accuracy": 0.5, "real_clip_s": 1.663}
