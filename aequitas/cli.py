@@ -47,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
     cu = sub.add_parser("create-user", help="create a police account (prompts for the password)")
     cu.add_argument("--username", required=True)
     cu.add_argument("--role", choices=["admin", "officer"], default="officer")
+    cu.add_argument("--allow-weak", action="store_true",
+                    help="demo only: allow a short password (the server must stay on 127.0.0.1)")
 
     run = sub.add_parser("run", help="process camera streams and record events")
     run.add_argument("--camera", action="append", help="only these camera IDs (repeatable)")
@@ -123,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
             print("Passwords do not match.", file=sys.stderr)
             return 2
         try:
-            Auth(EventStore(settings.db_path)).create_user(args.username, password, args.role)
+            Auth(EventStore(settings.db_path)).create_user(args.username, password, args.role, args.allow_weak)
         except Exception as e:  # bad input, or the username exists
             print(f"Could not create the account: {e}", file=sys.stderr)
             return 2

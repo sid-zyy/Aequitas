@@ -66,17 +66,18 @@ class Auth:
 
     # ---------- accounts ----------
 
-    def create_user(self, username: str, password: str, role: str = "officer") -> int:
+    def create_user(self, username: str, password: str, role: str = "officer", allow_weak: bool = False) -> int:
+        """allow_weak: demo accounts only (e.g. admin/admin on a laptop that serves 127.0.0.1)."""
         username = username.strip()
         if not username or len(username) > 40:
             raise ValueError("username must be 1-40 characters")
         if role not in ROLES:
             raise ValueError(f"role must be one of {ROLES}")
-        if len(password) < MIN_PASSWORD:
+        if len(password) < MIN_PASSWORD and not allow_weak:
             raise ValueError(f"password must be at least {MIN_PASSWORD} characters")
         cur = self._q("INSERT INTO users(username, password_hash, role, created_at) VALUES (?,?,?,?)",
                       (username, hash_password(password), role, int(time.time() * 1000)), commit=True)
-        self.audit(None, "user_created", username, {"role": role})
+        self.audit(None, "user_created", username, {"role": role, "weak_password": len(password) < MIN_PASSWORD})
         return cur.lastrowid
 
     def users(self) -> list[dict]:
