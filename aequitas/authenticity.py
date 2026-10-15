@@ -14,6 +14,7 @@ frame classifier decides. With no classifier and no metadata, the result says "n
 from __future__ import annotations
 
 import re
+import statistics
 import time
 from pathlib import Path
 
@@ -43,8 +44,10 @@ class AuthenticityCfg(BaseModel):
     # None = metadata checks only.
     frame_model: str | None = "Organika/sdxl-detector"
     frames: int = 8
-    likely_ai_at: float = 0.7  # verdict thresholds on the final likelihood
-    uncertain_at: float = 0.4
+    # Verdict thresholds on the final likelihood. Strict on purpose: the frame detector gave 64 % (per frame
+    # 0.33-0.97) on a re-encoded video of a real photo, so only high scores are called likely AI.
+    likely_ai_at: float = 0.85
+    uncertain_at: float = 0.5
 
 
 def _read_edges(path: Path, n: int = 4 * 1024**2) -> bytes:
@@ -107,7 +110,13 @@ def frame_classifier(model_id: str):
     if model_id not in _CLASSIFIERS:
         from transformers import pipeline
 
-        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id)
+        try:
+            import torch
+
+            device = 0 if torch.cuda.is_available() else -1  # GPU: ~10x faster than the CPU default
+        except ImportError:
+            device = -1
+        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id, device=device)
     return _CLASSIFIERS[model_id]
 
 
@@ -136,7 +145,7 @@ def combine(meta: dict, c2pa: dict | None, frame_p: float | None, cfg: Authentic
         reasons.append("No metadata and no frame check: not enough signal")
         return None, reasons
     p = frame_p
-    reasons.append(f"Frame detector: {p * 100:.0f} % average AI probability over sampled frames")
+    reasons.append(f"Frame detector: {p * 100:.0f} % median AI probability over sampled frames")
     if meta["camera_metadata"]:
         p *= 0.6
         reasons.append("Phone camera metadata present: lowers the likelihood")
@@ -157,7 +166,7 @@ def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
             clf = frame_classifier(cfg.frame_model)
             probs = [ai_probability(clf(img)) for img in sample_frames(path, cfg.frames)]
             if probs:
-                frame_p = round(sum(probs) / len(probs), 4)
+                frame_p = round(statistics.median(probs), 4)  # robust to a few wild frames
                 frame_detail = {"model": cfg.frame_model, "per_frame": [round(x, 3) for x in probs]}
         except Exception as e:  # transformers missing, download failed, unreadable video...
             frame_detail = {"model": cfg.frame_model, "error": str(e)[:200]}
