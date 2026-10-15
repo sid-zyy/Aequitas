@@ -143,7 +143,7 @@ def test_dev_set_covers_every_default_category(tmp_path):
     assert set(DEFAULT_CATEGORIES) | {"none"} == labels
 
     class Oracle(Echo):  # answers the gold label: the plumbing must then score 100 %
-        def classify_text(self, summary, evidence="", categories=None):
+        def classify_text(self, summary, evidence="", categories=None, previous=None):
             return next(i["label"] for i in items if i["summary"] == summary), 0.9, 5.0
 
     r = run_eval(Oracle(""), items, None, concurrency=3, label="oracle", out_dir=tmp_path)

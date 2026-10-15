@@ -9,6 +9,9 @@ analysis:
   mode: triggered       # triggered = YOLO + rules gate the VLM; periodic = no YOLO, VLM reviews every window
   window_s: 4           # periodic mode only
   confirm_votes: 2      # periodic mode: consecutive agreeing windows needed for 'confirmed'
+  # Coarse stage: skip Gemma on windows that clearly look normal (results/improvements/README.md).
+  # Downloads google/siglip-base-patch16-224 (~0.8 GB) on first start; null = off.
+  gate_model: google/siglip-base-patch16-224
 
 models:                 # trained on Kaggle (see kaggle/README.md); leave null until downloaded
   violence_dir: models/violence_clip   # trained on Kaggle (SCVD + RLVS + RWF-2000), results/violence_clip/
