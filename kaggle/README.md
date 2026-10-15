@@ -8,6 +8,18 @@ memory, and outputs `ablation.zip` with `ABLATION.md` (table) and `ablation.png`
 **Steps, budget and decision rule: [docs/ABLATION_PLAN.md](../docs/ABLATION_PLAN.md) §7.** About 3–4 GPU hours on
 GPU T4 x2.
 
+## Which model is most accurate: `model_compare.ipynb` (runs in the background)
+
+Runs our real two-stage pipeline with **gemma4:e2b, gemma4:e4b-it-qat, gemma4:12b-it-qat, qwen3-vl:4b and
+qwen3-vl:8b** on SCVD (Ollama on the T4, the same backend as the demo laptop), and works out the cascade
+combinations (fast model + bigger re-checker) from the saved results without extra GPU time.
+
+1. Import `model_compare.ipynb`; **GPU T4 x2**, Internet **On**.
+2. **Add Input**: "Smart-City CCTV Violence Detection Dataset (SCVD)".
+3. **Save Version → Save & Run All**. About 1.5-3 h (model downloads + 60 clips per model in QUICK mode).
+4. Download `model_compare.zip` → `results/model_compare/`. `COMPARE.md` + `compare.png` (accuracy vs time) for
+   the slides; the winner goes into `config/settings.yaml` (`vlm.model`, or `escalation.model` for the cascade).
+
 ## Improve fight / weapon detection: train `violence_clip.ipynb` on CCTV data
 
 Why: on the faculty's sample clips (v001-v026, w001) Gemma's summaries are too vague to label ("people
