@@ -124,6 +124,47 @@ def test_live_api_needs_sign_in_and_serves_only_configured_footage(tmp_path, loc
 
 def test_bangalore_config_is_valid():
     locs = load_localities("config/bangalore.yaml")
-    assert len(locs) >= 6 and all(len(loc.cameras) >= 3 for loc in locs)
+    city = [loc for loc in locs if not any(c.is_live for c in loc.cameras)]
+    assert len(city) >= 6 and all(len(loc.cameras) >= 3 for loc in city)
+    webcam = [c for loc in locs for c in loc.cameras if c.is_live]
+    assert webcam and webcam[0].source == "0" and webcam[0].view == "close" and webcam[0].window_s == 2.0
     ids = [c.id for loc in locs for c in loc.cameras]
     assert len(ids) == len(set(ids))
+
+
+def test_webcam_camera_runs_live_close_range_and_streams_mjpeg(tmp_path, monkeypatch):
+    made = []
+
+    class FakePipeline:
+        def __init__(self, s, cams, store, run_id=None):
+            made.extend(cams)
+            self.latest_frames = {}
+
+        def run(self):
+            pass
+
+        def stop(self):
+            pass
+
+    import aequitas.pipeline
+
+    monkeypatch.setattr(aequitas.pipeline, "Pipeline", FakePipeline)
+    loc = Locality.model_validate({"id": "demo", "name": "Demo", "cameras": [
+        {"id": "cam", "name": "Webcam", "source": "0", "view": "close", "window_s": 2.0}]})
+    live = LiveManager(Settings(data_dir=tmp_path), EventStore(tmp_path / "t.db"), [loc])
+    assert live.has_footage("cam")  # a live source is always offered
+    live.start("demo")
+    assert made[0].source == "0" and not made[0].loop and made[0].view == "close" and made[0].window_s == 2.0
+    st = live.state("demo")
+    assert st["cameras"][0]["video_url"].endswith("/mjpeg") and st["cameras"][0]["live_source"]
+    live.pipeline.latest_frames["cam"] = np.zeros((10, 10, 3), np.uint8)
+    assert live.latest_frame("cam").shape == (10, 10, 3)
+
+
+def test_close_view_prompt_describes_gestures_without_identities():
+    from aequitas.understand.prompts import CHOICES, summarize_prompt
+
+    p = summarize_prompt(False, view="close")
+    assert "hands and arms" in p and "Never describe faces" in p
+    assert not any(c in p for c in CHOICES)
+    assert "hands and arms" not in summarize_prompt(False)

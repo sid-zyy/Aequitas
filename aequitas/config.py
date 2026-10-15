@@ -259,6 +259,8 @@ class CameraCfg(BaseModel):
     source: str  # rtsp://..., http://..., a file path, or a webcam index like "0"
     realtime: bool = True  # pace file sources at native speed (simulated live)
     loop: bool = False  # replay a file source forever (demo footage standing in for a live camera)
+    view: Literal["cctv", "close"] = "cctv"  # close: a webcam near the people; gestures described in detail
+    window_s: float | None = None  # periodic window for this camera (None = analysis.window_s)
     start_time: str | None = None  # ISO time a file source starts at; None = now
     zones: Zones = Zones()
 

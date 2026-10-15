@@ -26,7 +26,14 @@ log = logging.getLogger(__name__)
 class LiveCamera(BaseModel):
     id: str
     name: str
-    file: str
+    file: str | None = None  # demo footage, looped
+    source: str | None = None  # a live source instead: webcam index ("0") or rtsp:// URL
+    view: str = "cctv"  # "close" for a webcam near the people (gestures described in detail)
+    window_s: float | None = None  # shorter windows react faster (live demo)
+
+    @property
+    def is_live(self) -> bool:
+        return self.source is not None
 
 
 class Locality(BaseModel):
@@ -57,11 +64,13 @@ class LiveManager:
         for loc in localities:  # register the camera points so events and chat know their names
             for c in loc.cameras:
                 store.upsert_camera(CameraCfg(camera_id=c.id, name=c.name, aliases=[f"{loc.name} {c.name}"],
-                                              source=c.file))
+                                              source=c.source or c.file or ""))
 
     def has_footage(self, camera_id: str) -> bool:
         c = self.cameras.get(camera_id)
-        return bool(c) and Path(c.file).is_file()
+        if c is None:
+            return False
+        return c.is_live or (c.file is not None and Path(c.file).is_file())
 
     def start(self, locality_id: str) -> None:
         if locality_id not in self.localities:
@@ -71,7 +80,8 @@ class LiveManager:
                 return
             self._stop_locked()
             loc = self.localities[locality_id]
-            cams = [CameraCfg(camera_id=c.id, name=c.name, source=c.file, realtime=True, loop=True)
+            cams = [CameraCfg(camera_id=c.id, name=c.name, source=c.source or c.file, realtime=True,
+                              loop=not c.is_live, view=c.view, window_s=c.window_s)
                     for c in loc.cameras if self.has_footage(c.id)]
             self.active, self.error, self.started_at = locality_id, None, time.time()
             if not cams:
@@ -100,6 +110,10 @@ class LiveManager:
         with self._lock:
             self._stop_locked()
 
+    def latest_frame(self, camera_id: str):
+        p = self.pipeline
+        return p.latest_frames.get(camera_id) if p is not None else None
+
     def state(self, locality_id: str) -> dict:
         loc = self.localities.get(locality_id)
         if loc is None:
@@ -109,8 +123,10 @@ class LiveManager:
             recent = self.store.recent_windows(c.id, 5)
             latest = recent[0] if recent else None
             cams.append({
-                "id": c.id, "name": c.name, "has_footage": self.has_footage(c.id),
-                "video_url": f"/api/live/cameras/{c.id}/video",
+                "id": c.id, "name": c.name, "has_footage": self.has_footage(c.id), "live_source": c.is_live,
+                "view": c.view,
+                # files play in a <video>; live sources stream the frames the pipeline reads (MJPEG)
+                "video_url": f"/api/live/cameras/{c.id}/{'mjpeg' if c.is_live else 'video'}",
                 "latest": latest, "recent": recent,
                 "behind_live_s": round(latest["lag_ms"] / 1000, 1) if latest and latest["lag_ms"] else None,
             })

@@ -40,7 +40,7 @@ class FakeVlm:
     def __init__(self, summary="A man falls and lies on the floor.", fail=False, delay=0.0):
         self.summary, self.fail, self.delay, self.calls = summary, fail, delay, 0
 
-    def summarize(self, grid_jpeg, highlighted=True):
+    def summarize(self, grid_jpeg, highlighted=True, view="cctv"):
         self.calls += 1
         if self.delay:
             time.sleep(self.delay)

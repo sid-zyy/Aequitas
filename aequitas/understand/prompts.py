@@ -61,8 +61,9 @@ def _category_list(categories: dict[str, str] | None = None) -> str:
     return definition_list(categories or DEFAULT_CATEGORIES)
 
 
-def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
-    """concise=False is the original, longer wording, kept only to measure the time the short one saves."""
+def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str = "cctv") -> str:
+    """concise=False is the original, longer wording, kept only to measure the time the short one saves.
+    view="close": a camera close to the people (a laptop webcam in a live demo): describe gestures in detail."""
     if highlighted:
         focus = _HIGHLIGHT + "Describe what the highlighted people or objects do.\n"
     else:
@@ -74,9 +75,16 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True) -> str:
     else:
         length = ("- summary: one or two plain sentences describing what happens across the four frames.\n"
                   "- visible_evidence: a short phrase naming the most important thing you saw.\n")
+    close = ""
+    if view == "close":
+        close = ("- The camera is close to the people. For each person, describe what their hands and arms do "
+                 "(raising, waving, pointing, a punching or slapping motion, pushing, grabbing), what they hold, "
+                 "and posture changes (standing up, sitting down, falling).\n"
+                 "- Never describe faces or try to say who anyone is.\n")
     return (
         f"{_GRID}{focus}\n"
         "Rules:\n"
+        f"{close}"
         "- Describe only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
         "- Say how many people there are, their posture (standing, walking, running, sitting, lying on the "
         "ground) and any contact between them, and whether any bag or object is left alone.\n"

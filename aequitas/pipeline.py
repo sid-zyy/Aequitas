@@ -42,6 +42,7 @@ class VlmJob:
     event_uid: str | None = None
     last_flush_ms: int = 0
     seq: int | None = None  # periodic mode: order of this window within its camera
+    view: str = "cctv"
 
     @property
     def score(self) -> float:
@@ -150,6 +151,7 @@ class Pipeline:
         self._open: dict[tuple[str, tuple], VlmJob] = {}
         self._open_lock = threading.Lock()
         self._stop = threading.Event()
+        self.latest_frames: dict = {}  # camera_id -> newest BGR frame
         self.keyframe_dir = settings.data_dir / "keyframes"
         self.versions = {
             "mode": self.mode,
@@ -176,6 +178,7 @@ class Pipeline:
                 source.stop()
                 break
             step(frame)
+            self.latest_frames[cam.camera_id] = frame.image  # live preview (webcam MJPEG)
             n += 1
             if self.on_frame is not None:
                 self.on_frame(cam.camera_id, n)
@@ -247,7 +250,7 @@ class Pipeline:
     def _periodic_step(self, cam: CameraCfg, ring: RingBuffer, live: bool = True):
         """live: a camera stream that cannot wait, so windows stretch when the VLM is slow. A file
         (live=False) gets fixed-length windows and waits for the VLM instead, so none of it is skipped."""
-        window_ms = int(self.s.analysis.window_s * 1000)
+        window_ms = int((cam.window_s or self.s.analysis.window_s) * 1000)
 
         state = {"start": None, "last": None, "last_vlm": None}
         a = self.s.analysis
@@ -268,7 +271,7 @@ class Pipeline:
             state["last_vlm"] = end_ms
             grid = make_grid(frames, None, cam.zones, self.s.vlm.tile_px)
             self.queue.put(VlmJob(cam.camera_id, encode_jpeg(grid), wall_ns, window=(start, end_ms),
-                                  seq=self.order.ticket(cam.camera_id)))
+                                  seq=self.order.ticket(cam.camera_id), view=cam.view))
             state["start"] = end_ms
 
         def step(frame) -> None:
@@ -367,7 +370,7 @@ class Pipeline:
     def _process_window(self, job: VlmJob, queue_ms: float) -> None:
         """Understanding runs concurrently; results are applied in window order per camera."""
         u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False,
-                       categories=self.s.categories)
+                       categories=self.s.categories, view=job.view)
         self._record_stage(job, "window", queue_ms, u)
         self.order.finish(job.camera_id, job.seq, (job, u, queue_ms), self._apply_window)
 
