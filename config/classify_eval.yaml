@@ -41,12 +41,16 @@ items:
   - {label: suspicious_activity, summary: "A backpack is left alone near the pillar for a long time after its owner walks away."}
   - {label: suspicious_activity, summary: "A man stands in the same corner of the parking lot for twenty minutes, looking around."}
   - {label: suspicious_activity, summary: "A suitcase stays unattended on the platform bench while no one is near it."}
+  - {label: harassment, summary: "A man keeps following a woman along the footpath and blocks her way when she tries to step aside."}
+  - {label: harassment, summary: "On the crowded bus a man repeatedly touches a woman who pushes his hand away and moves."}
+  - {label: harassment, summary: "Two youths on a scooter circle a girl walking alone, shouting at her as she hurries away."}
   # hard negatives: busy or emotional scenes that are not incidents (guardrail: peaceful gatherings are none)
   - {label: none, summary: "A large crowd walks in a peaceful procession carrying flags and banners and chanting."}
   - {label: none, summary: "People dance and play drums on the street during a festival."}
   - {label: none, summary: "Shoppers walk between the market stalls and a vendor talks to a customer."}
   - {label: none, summary: "A couple jogs along the park path at an even pace."}
   - {label: none, summary: "Two friends hug and laugh near the gate."}
+  - {label: none, summary: "A man walks a few steps behind a woman on a busy footpath; neither looks at the other."}
   - {label: none, summary: "Police officers stand near their vehicle and talk with a shopkeeper."}
   - {label: none, summary: "A cook lights a gas stove at a food stall and a small flame burns under the pan."}
   - {label: none, summary: "People sit quietly on the ground at a protest site listening to a speaker."}
