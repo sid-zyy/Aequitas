@@ -39,7 +39,7 @@ class Echo(LlmClient):
         super().__init__(LlmEndpoint())
         self.reply, self.prompts, self.schemas = reply, [], []
 
-    def _chat(self, messages, schema, name):
+    def _chat(self, messages, schema, name, max_tokens=None):
         self.prompts.append(messages[0]["content"])
         self.schemas.append(schema)
         return self.reply

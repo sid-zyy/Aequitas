@@ -78,3 +78,13 @@ def encode_jpeg(img: np.ndarray, quality: int = 85) -> bytes:
     if not ok:
         raise RuntimeError("JPEG encoding failed")
     return buf.tobytes()
+
+
+def window_motion(frames: list[BufferedFrame], size: int = 64) -> float:
+    """How much changes across a window, 0-1: the largest mean absolute difference between consecutive
+    picked frames, on small grayscale copies (cheap, and blind to compression noise at this size)."""
+    small = [cv2.resize(cv2.cvtColor(f.image, cv2.COLOR_BGR2GRAY), (size, size), interpolation=cv2.INTER_AREA)
+             .astype(np.float32) for f in frames]
+    if len(small) < 2:
+        return 1.0  # nothing to compare: never skip
+    return float(max(np.abs(a - b).mean() for a, b in zip(small, small[1:])) / 255.0)

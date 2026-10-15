@@ -47,6 +47,9 @@ class LlmEndpoint(BaseModel):
     # OpenAI-compatible backend: classify with vLLM structured outputs (`choice`) + logprobs. Turn off
     # for servers without it (they then get a JSON-schema enum and no confidence).
     choice_decoding: bool = True
+    # Output caps. Decode time grows with every output token, so the summary is kept short.
+    max_tokens: int = 384  # any structured call (chat filter, grounded answer)
+    summary_max_tokens: int = 128  # stage 1 JSON: <=35-word summary + <=8-word evidence
 
 
 class VlmCfg(LlmEndpoint):
@@ -90,6 +93,10 @@ class AnalysisCfg(BaseModel):
     window_s: float = 4.0
     confirm_votes: int = 2
     max_gap_s: float = 10.0  # windows further apart than this never merge into one event
+    # Latency: skip the VLM for windows where almost nothing moves (mean frame difference, 0-1), e.g. an
+    # empty corridor. 0 = off. Even when skipping, the VLM looks at least every max_skip_s.
+    skip_static_below: float = 0.0
+    max_skip_s: float = 30.0
 
 
 class FusionCfg(BaseModel):

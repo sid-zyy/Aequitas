@@ -113,7 +113,7 @@ class SchemaOnlyClient(LlmClient):
         super().__init__(LlmEndpoint())
         self.reply = reply
 
-    def _chat(self, messages, schema, name):
+    def _chat(self, messages, schema, name, max_tokens=None):
         assert name == "LabelAnswer" and "images" not in messages[0]
         return self.reply
 
@@ -407,3 +407,64 @@ def test_sse_parser_reads_openai_stream_chunks():
              'data: {"choices":[{"delta":{"content":"events."}}]}', "data: [DONE]",
              'data: {"choices":[{"delta":{"content":"ignored"}}]}']
     assert "".join(sse_deltas(lines)) == "Two events."
+
+
+# ---------- latency levers ----------
+
+def test_summary_calls_are_capped_and_short():
+    from aequitas.understand.vlm_client import openai_payload
+
+    assert openai_payload("m", [{"role": "user", "content": "x"}], {}, "S", 128)["max_tokens"] == 128
+    assert "max_tokens" not in openai_payload("m", [{"role": "user", "content": "x"}], {}, "S")
+    assert "at most 35 words" in summarize_prompt(False)
+
+    seen = []
+
+    class Cap(LlmClient):
+        def _chat(self, messages, schema, name, max_tokens=None):
+            seen.append((name, max_tokens))
+            return '{"summary": "A man walks.", "visible_evidence": "walking"}'
+
+    c = Cap(LlmEndpoint(summary_max_tokens=100, max_tokens=300))
+    c.summarize(b"jpeg")
+    c.structured([{"role": "user", "content": "q"}], SummaryAnswer)
+    assert seen == [("SummaryAnswer", 100), ("SummaryAnswer", 300)]
+
+
+def test_window_motion_separates_static_and_moving_scenes():
+    import numpy as np
+
+    from aequitas.ingest.ring_buffer import BufferedFrame
+    from aequitas.understand.keyframes import window_motion
+
+    rng = np.random.default_rng(0)
+    base = rng.integers(0, 255, (120, 160, 3), dtype=np.uint8)
+    static = [BufferedFrame(i, base.copy(), 1.0, {}) for i in range(4)]
+    moving = [BufferedFrame(i, np.roll(base, 20 * i, axis=1), 1.0, {}) for i in range(4)]
+    assert window_motion(static) < 0.001 < 0.05 < window_motion(moving)
+    assert window_motion(static[:1]) == 1.0  # cannot judge: never skip
+
+
+def test_static_windows_skip_the_vlm(periodic_pipeline):
+    import numpy as np
+
+    from aequitas.ingest.ring_buffer import RingBuffer
+    from aequitas.types import Frame
+
+    p, store = periodic_pipeline
+    p.s.analysis.skip_static_below = 0.01
+    p.s.analysis.window_s = 1.0
+    p.s.analysis.max_skip_s = 3.0
+    cam = p.cameras[0]
+    step = p._periodic_step(cam, RingBuffer(12, 320))
+    img = np.full((60, 80, 3), 90, np.uint8)
+    for i in range(41):  # 10 s of a static scene at 4 fps
+        step(Frame("cam1", i, i * 250, 0, img))
+        while len(p.queue):  # play the worker: take queued windows so new ones can be emitted
+            p.queue.get(0)
+    s = store.stage_summary("up1")
+    assert s["skipped_static"] >= 5  # most windows skipped...
+    rows = store._conn.execute("SELECT COUNT(*) FROM stage_timings WHERE kind='skipped'").fetchone()[0]
+    assert rows == s["skipped_static"]
+    # ...but the VLM still looks at least every max_skip_s: windows queued = 10 s / ~3 s + first one
+    assert p.order.ticket("cam1") >= 3

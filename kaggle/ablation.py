@@ -502,3 +502,150 @@ if len(ok):
 
 shutil.make_archive(str(WORK / "ablation"), "zip", OUT)
 print("Download ablation.zip (results) and, if needed, checkpoints/ from the Output panel.")
+
+# %% [markdown]
+# ## Latency levers on the recommended config (time taken is the top judging criterion)
+#
+# One server, the recommended model + precision. Each lever changes one thing:
+# 1. **Concurrency**: windows in flight at once (vLLM batches them): 1, 2, 4, 8, 16.
+# 2. **Image size**: 2×2 grid of 224 / 336 / 448 px tiles (fewer image tokens = faster prefill).
+# 3. **Summary length cap**: 64 vs 128 output tokens (fewer tokens = faster decode).
+# 4. **Whole video, total execution time**: the real pipeline on a test video (real clips + quiet
+#    stretches), with concurrency 1 vs 8, and skipping static windows off vs on.
+#
+# Levers 2, 3 and 4 also re-check real-clip accuracy, so a faster setting that hurts accuracy shows up.
+
+# %%
+from aequitas.config import CameraCfg, Settings
+from aequitas.store.db import EventStore
+
+LEVERS = []
+
+
+def lever(name: str, setting, **values) -> None:
+    row = {"lever": name, "setting": setting, **values}
+    LEVERS.append(row)
+    with (OUT / "levers.jsonl").open("a") as f:
+        f.write(json.dumps(row) + "\n")
+    print(row)
+
+
+def real_clips_eval(client, tile: int) -> dict:
+    """Accuracy and response time on the real clips with a given tile size."""
+    times, correct = [], 0
+    for v_name, gold, _ in REAL:
+        jpeg = clip_grid(REAL_PATHS[v_name], tile)
+        t0 = time.perf_counter()
+        s, _ = client.summarize(jpeg, highlighted=False)
+        lab = client.classify_text(s.summary, s.visible_evidence, DEFAULT_CATEGORIES)[0] if s else None
+        times.append(time.perf_counter() - t0)
+        correct += (lab in INCIDENT) == (gold == "fighting")
+    times.sort()
+    return {"real_accuracy": round(correct / len(REAL), 3), "real_clip_s": round(times[len(times) // 2], 3)}
+
+
+def make_test_video(path: Path, quiet_s: int = 20, fps: int = 8) -> float:
+    """Real clips separated by quiet stretches (a still frame), like CCTV: mostly nothing happens."""
+    vw = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (640, 360))
+    n = 0
+    for v_name, _, _ in REAL[: 2 * min(4, REAL_CLIPS_PER_CLASS)]:
+        cap = cv2.VideoCapture(str(REAL_PATHS[v_name]))
+        src_fps = cap.get(cv2.CAP_PROP_FPS) or 25
+        k, last = 0, None
+        while True:
+            ok, f = cap.read()
+            if not ok:
+                break
+            if k % max(1, round(src_fps / fps)) == 0:
+                last = cv2.resize(f, (640, 360))
+                vw.write(last)
+                n += 1
+            k += 1
+        cap.release()
+        for _ in range(quiet_s * fps if last is not None else 0):
+            vw.write(last)
+            n += 1
+    vw.release()
+    return n / fps
+
+
+def run_video(video: Path, concurrency: int, skip_static: float) -> dict:
+    from aequitas.pipeline import Pipeline
+
+    s = Settings(data_dir=SCRATCH / f"run-{concurrency}-{skip_static}")
+    shutil.rmtree(s.data_dir, ignore_errors=True)
+    s.analysis.mode = "periodic"
+    s.analysis.skip_static_below = skip_static
+    s.vlm = s.vlm.model_copy(update={"backend": "openai", "host": f"http://127.0.0.1:{PORT}", "model": "m",
+                                     "concurrency": concurrency})
+    store = EventStore(s.db_path)
+    cam = CameraCfg(camera_id="test", name="Test", source=str(video), realtime=False)
+    t0 = time.perf_counter()
+    Pipeline(s, [cam], store, run_id="video").run()
+    total = time.perf_counter() - t0
+    st = store.stage_summary("video")
+    events = store._conn.execute("SELECT category, COUNT(*) FROM events GROUP BY category").fetchall()
+    return {"total_execution_s": round(total, 1), "windows_analysed": st["jobs"],
+            "windows_skipped": st["skipped_static"], "events": {c: n for c, n in events}}
+
+
+best_row, _ = pick(df)
+if best_row is None:
+    print("No recommended config: skipping the latency levers.")
+else:
+    bkey, bprec = best_row["model"], best_row["precision"]
+    REAL_PATHS = {p.name: p for root in Path("/kaggle/input").glob("*") for p in root.rglob("*.mp4")}
+    path = MODELS[bkey] if bprec == "fp16" else str(quantize(MODELS[bkey], bprec))
+    proc, _ = serve(path, bkey)
+    try:
+        url = f"http://127.0.0.1:{PORT}"
+        # 1. concurrency
+        b = run_bench(url, "m", ["summarize", "classify"], [1, 2, 4, 8, 16], 16, label="levers-concurrency",
+                      out_dir=OUT / "reports")
+        for c in ["1", "2", "4", "8", "16"]:
+            s_r, c_r = b["results"]["summarize"][c], b["results"]["classify"][c]
+            lever("concurrency", int(c), window_s=secs((s_r["total_ms"].get("p50") or 0) + (c_r["total_ms"].get("p50") or 0)),
+                  windows_per_s=s_r["requests_per_s"])
+        # 2. image size, 3. summary cap
+        for tile in (224, 336, 448):
+            b = run_bench(url, "m", ["summarize"], [1, 8], 16, label=f"levers-tile{tile}", out_dir=OUT / "reports",
+                          grid_px=2 * tile)
+            extra = {}
+            if REAL:
+                client = OpenAICompatClient(LlmEndpoint(backend="openai", host=url, model="m"))
+                extra = real_clips_eval(client, tile)
+            lever("tile_px", tile, summary_s=secs(b["results"]["summarize"]["1"]["total_ms"].get("p50")),
+                  summary_busy_s=secs(b["results"]["summarize"]["8"]["total_ms"].get("p50")), **extra)
+        for cap in (64, 128):
+            b = run_bench(url, "m", ["summarize"], [1], 16, label=f"levers-cap{cap}", out_dir=OUT / "reports",
+                          max_tokens={"summarize": cap})
+            extra = {}
+            if REAL:
+                client = OpenAICompatClient(LlmEndpoint(backend="openai", host=url, model="m", summary_max_tokens=cap))
+                extra = real_clips_eval(client, 448)
+            lever("summary_max_tokens", cap, summary_s=secs(b["results"]["summarize"]["1"]["total_ms"].get("p50")),
+                  **extra)
+        # 4. whole video
+        if REAL:
+            video = SCRATCH / "test_video.mp4"
+            dur = make_test_video(video)
+            for conc, skip in [(1, 0.0), (8, 0.0), (8, 0.01)]:
+                try:
+                    r = run_video(video, conc, skip)
+                    lever("video_total", f"concurrency {conc}, skip static {'on' if skip else 'off'}",
+                          video_s=round(dur, 1), **r)
+                except Exception as e:
+                    lever("video_total", f"concurrency {conc}, skip {skip}", error=str(e)[:300])
+    finally:
+        stop(proc)
+
+    lv = pd.DataFrame(LEVERS)
+    lv.to_csv(OUT / "levers.csv", index=False)
+    text = ["", f"## Latency levers ({bkey} {bprec})", "",
+            lv.astype(object).where(lv.notna(), "").to_markdown(index=False)]
+    with (OUT / "ABLATION.md").open("a", encoding="utf-8") as f:
+        f.write("\n".join(text) + "\n")
+    print("\n".join(text))
+
+shutil.make_archive(str(WORK / "ablation"), "zip", OUT)
+print("ablation.zip updated with the latency levers.")
