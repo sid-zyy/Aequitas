@@ -22,7 +22,8 @@ from minerva.chat.answer import ChatService
 from minerva.config import CameraCfg, Settings, resolve_device
 from minerva.store.db import EventStore
 from minerva.store.query import QueryFilter
-from minerva.types import Category, Status
+from minerva.taxonomy import label
+from minerva.types import Status
 from minerva.web.jobs import JobManager, frames_expected, probe_video
 
 log = logging.getLogger(__name__)
@@ -125,6 +126,11 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         day0 = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
         return store.stats(int(day0.timestamp() * 1000))
 
+    @app.get("/api/categories")
+    def categories():
+        """The configured stage-2 label set, for filters and badges in the UI."""
+        return [{"name": n, "label": label(n), "definition": d} for n, d in settings.categories.items()]
+
     @app.get("/api/cameras")
     def cameras():
         return [{"camera_id": c["camera_id"], "name": c["name"], "aliases": c["aliases"]} for c in store.cameras()]
@@ -132,7 +138,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     # ---------- events ----------
 
     @app.get("/api/events")
-    def events(camera: str | None = None, category: Category | None = None,
+    def events(camera: str | None = None, category: str | None = None,
                status: Literal["confirmed", "all", "disputed", "rejected", "unverified"] = "confirmed",
                q: str | None = Query(None, max_length=200), limit: int = Query(60, ge=1, le=100)):
         statuses = list(Status) if status == "all" else [Status(status)]

@@ -15,18 +15,18 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from minerva.store.query import QueryFilter
-from minerva.types import CATEGORY_DEFINITIONS, Category, Status
+from minerva.taxonomy import DEFAULT_CATEGORIES, keyword_pattern
+from minerva.types import Status
 
 log = logging.getLogger(__name__)
 
-CategoryName = Literal["person_down", "fighting", "tailgating", "crowd_incident", "suspicious_activity"]
 SubtypeName = Literal["loitering", "abandoned_object", "overcrowding"]
 
 
 class LlmFilter(BaseModel):
     """What the LLM fills in. Deliberately close to the user's words; code does the resolving."""
 
-    categories: list[CategoryName] = Field(default_factory=list)
+    categories: list[str] = Field(default_factory=list)  # configured names; unknown ones are dropped
     subtypes: list[SubtypeName] = Field(default_factory=list)
     cameras: list[str] = Field(default_factory=list)
     start: str | None = None  # local time, YYYY-MM-DDTHH:MM
@@ -45,12 +45,12 @@ class ParseResult:
     method: str = "llm"
 
 
-def _prompt(question: str, now: datetime, cameras: list[dict]) -> str:
+def _prompt(question: str, now: datetime, cameras: list[dict], categories: dict[str, str] | None = None) -> str:
     cams = "\n".join(
         f"- {c['camera_id']}: {c['name']}" + (f" (also called: {', '.join(c['aliases'])})" if c["aliases"] else "")
         for c in cameras
     ) or "- (no cameras registered)"
-    cats = "\n".join(f"- {c.value}: {d}" for c, d in CATEGORY_DEFINITIONS.items())
+    cats = "\n".join(f"- {name}: {d}" for name, d in (categories or DEFAULT_CATEGORIES).items())
     return (
         "Convert the user's question about stored security-camera events into a JSON search filter.\n\n"
         f"Current local time: {now.strftime('%A %Y-%m-%d %H:%M')}\n\n"
@@ -109,7 +109,8 @@ def resolve_cameras(mentions: list[str], cameras: list[dict]) -> tuple[list[str]
     return ids, unknown
 
 
-def finalize(lf: LlmFilter, now: datetime, cameras: list[dict]) -> ParseResult:
+def finalize(lf: LlmFilter, now: datetime, cameras: list[dict],
+             categories: dict[str, str] | None = None) -> ParseResult:
     tz = now.tzinfo
     warnings = []
     cam_ids, unknown = resolve_cameras(lf.cameras, cameras)
@@ -125,7 +126,7 @@ def finalize(lf: LlmFilter, now: datetime, cameras: list[dict]) -> ParseResult:
         start, end = None, None
     statuses = list(Status) if lf.include_unconfirmed else [Status.CONFIRMED]
     f = QueryFilter(
-        categories=[Category(c) for c in lf.categories],
+        categories=[c for c in lf.categories if c in (categories or DEFAULT_CATEGORIES)],
         subtypes=list(lf.subtypes),
         camera_ids=cam_ids,
         start=start,
@@ -141,13 +142,6 @@ def finalize(lf: LlmFilter, now: datetime, cameras: list[dict]) -> ParseResult:
 
 # ---------- keyword fallback ----------
 
-_CATEGORY_WORDS = {
-    "person_down": r"\b(fall|fell|fallen|falling|person down|man down|lying|collaps\w*)\b",
-    "fighting": r"\b(fight\w*|brawl\w*|assault\w*|punch\w*|violen\w*)\b",
-    "tailgating": r"\b(tailgat\w*|piggyback\w*)\b",
-    "crowd_incident": r"\b(crowd\w*|overcrowd\w*|stampede|dispers\w*)\b",
-    "suspicious_activity": r"\b(suspicious|loiter\w*|abandon\w*|unattended|left behind|bags?|luggage)\b",
-}
 _SUBTYPE_WORDS = {
     "loitering": r"\bloiter\w*",
     "abandoned_object": r"\b(abandon\w*|unattended|left behind|bags?|luggage)\b",
@@ -159,9 +153,10 @@ def wants_unconfirmed(question: str) -> bool:
     return bool(re.search(r"\b(unconfirmed|unverified|disputed|rejected|all statuses)\b", question.lower()))
 
 
-def keyword_filter(question: str, now: datetime, cameras: list[dict]) -> LlmFilter:
+def keyword_filter(question: str, now: datetime, cameras: list[dict],
+                   categories: dict[str, str] | None = None) -> LlmFilter:
     q = question.lower()
-    cats = [c for c, rx in _CATEGORY_WORDS.items() if re.search(rx, q)]
+    cats = [c for c in (categories or DEFAULT_CATEGORIES) if re.search(keyword_pattern(c), q)]
     subs = [s for s, rx in _SUBTYPE_WORDS.items() if re.search(rx, q)]
 
     mentions = re.findall(r"\bcam(?:era)?\s*#?\s*\d+\b", q)
@@ -228,9 +223,10 @@ def reconcile(lf: LlmFilter, kw: LlmFilter, question: str) -> LlmFilter:
 
 
 class QuestionParser:
-    def __init__(self, llm=None, tz: tzinfo | None = None):
+    def __init__(self, llm=None, tz: tzinfo | None = None, categories: dict[str, str] | None = None):
         self.llm = llm  # a VlmClient, or None for keyword-only
         self.tz = tz
+        self.categories = categories or DEFAULT_CATEGORIES
 
     def now(self) -> datetime:
         return datetime.now(self.tz) if self.tz else datetime.now().astimezone()
@@ -238,13 +234,14 @@ class QuestionParser:
     def parse(self, question: str, cameras: list[dict], now: datetime | None = None) -> ParseResult:
         now = now or self.now()
         if self.llm is not None:
-            lf = self.llm.structured([{"role": "user", "content": _prompt(question, now, cameras)}], LlmFilter)
+            prompt = _prompt(question, now, cameras, self.categories)
+            lf = self.llm.structured([{"role": "user", "content": prompt}], LlmFilter)
             if lf is not None:
-                lf = reconcile(lf, keyword_filter(question, now, cameras), question)
-                res = finalize(lf, now, cameras)
+                lf = reconcile(lf, keyword_filter(question, now, cameras, self.categories), question)
+                res = finalize(lf, now, cameras, self.categories)
                 res.method = "llm"
                 return res
             log.warning("LLM parse failed, using keyword parser")
-        res = finalize(keyword_filter(question, now, cameras), now, cameras)
+        res = finalize(keyword_filter(question, now, cameras, self.categories), now, cameras, self.categories)
         res.method = "keywords"
         return res

@@ -8,16 +8,14 @@ The prompts never say which rule fired, so the answer is an independent check ra
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
-from minerva.types import CATEGORY_DEFINITIONS, Category
+from minerva.taxonomy import DEFAULT_CATEGORIES, choices, definition_list
 
-VlmCategory = Literal[
-    "person_down", "fighting", "tailgating", "crowd_incident", "suspicious_activity", "none"
-]
-CHOICES: list[str] = [c.value for c in Category] + ["none"]
+CHOICES: list[str] = choices(DEFAULT_CATEGORIES)  # the default label set
 
 
 class SummaryAnswer(BaseModel):
@@ -27,17 +25,21 @@ class SummaryAnswer(BaseModel):
     visible_evidence: str = Field(default="", max_length=300)
 
 
-class LabelAnswer(BaseModel):
-    """Stage 2 output, for backends without choice-constrained decoding (Ollama: JSON-schema enum)."""
+@lru_cache(maxsize=16)
+def label_model(labels: tuple[str, ...]) -> type[BaseModel]:
+    """Stage 2 output schema for backends without choice-constrained decoding (Ollama): a JSON-schema
+    enum over the configured labels."""
+    return create_model("LabelAnswer", category=(Literal[labels], ...))
 
-    category: VlmCategory
+
+LabelAnswer = label_model(tuple(CHOICES))
 
 
 class VlmAnswer(BaseModel):
     """Both stages combined. `confidence` is the classifier's label probability when the backend
     reports log-probabilities (vLLM), else None. The single-call legacy prompt also returns this."""
 
-    category: VlmCategory
+    category: str  # one of the configured labels, or "none"
     summary: str = Field(max_length=500)
     visible_evidence: str = Field(default="", max_length=300)
     confidence: float | None = None
@@ -55,9 +57,8 @@ _HIGHLIGHT = (
 )
 
 
-def _category_list() -> str:
-    cats = "\n".join(f"- {c.value}: {d}" for c, d in CATEGORY_DEFINITIONS.items())
-    return f"{cats}\n- none: none of the above; ordinary activity\n"
+def _category_list(categories: dict[str, str] | None = None) -> str:
+    return definition_list(categories or DEFAULT_CATEGORIES)
 
 
 def summarize_prompt(highlighted: bool = True) -> str:
@@ -77,19 +78,19 @@ def summarize_prompt(highlighted: bool = True) -> str:
     )
 
 
-def classify_text_prompt(summary: str, evidence: str = "") -> str:
+def classify_text_prompt(summary: str, evidence: str = "", categories: dict[str, str] | None = None) -> str:
     ev = f"\nKey evidence: {evidence.strip()}" if evidence.strip() else ""
     return (
         "A security camera clip was described as follows.\n"
         f"Description: {summary.strip()}{ev}\n\n"
         "Choose the ONE category that best matches the description:\n"
-        f"{_category_list()}\n"
+        f"{_category_list(categories)}\n"
         "Use only the description. If it does not clearly describe one of the categories, answer none.\n"
         "Answer with the category name only."
     )
 
 
-def classify_prompt(highlighted: bool = True) -> str:
+def classify_prompt(highlighted: bool = True, categories: dict[str, str] | None = None) -> str:
     """Legacy single-call prompt (category + summary in one VLM call). Kept for `minerva spike`
     comparisons; the pipeline uses summarize_prompt + classify_text_prompt."""
     if highlighted:
@@ -98,7 +99,7 @@ def classify_prompt(highlighted: bool = True) -> str:
         focus = "\nChoose the ONE category that best describes what is happening in the scene:\n"
     return (
         f"{_GRID}{focus}"
-        f"{_category_list()}\n"
+        f"{_category_list(categories)}\n"
         "Rules:\n"
         "- Use only what is visible. Do not guess identities, intentions or anything outside the frames.\n"
         "- If you are unsure, answer none.\n"

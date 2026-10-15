@@ -31,8 +31,8 @@ def _service(settings, use_llm: bool):
         if not llm.ping():
             logging.warning("chat model %s not reachable at %s; using the keyword parser", llm.model, llm.cfg.host)
             llm = None
-    return ChatService(EventStore(settings.db_path), QuestionParser(llm, _tz(settings.chat.timezone)),
-                       summarize=settings.chat.summarize)
+    parser = QuestionParser(llm, _tz(settings.chat.timezone), settings.categories)
+    return ChatService(EventStore(settings.db_path), parser, summarize=settings.chat.summarize)
 
 
 def main(argv: list[str] | None = None) -> int:

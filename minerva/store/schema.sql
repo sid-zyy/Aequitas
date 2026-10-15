@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS events (
   camera_id       TEXT NOT NULL REFERENCES cameras(camera_id),
   start_ts        INTEGER NOT NULL,
   end_ts          INTEGER NOT NULL,
-  category        TEXT NOT NULL CHECK (category IN
-                    ('person_down','fighting','tailgating','crowd_incident','suspicious_activity')),
+  category        TEXT NOT NULL,  -- a configured category name (minerva/taxonomy.py)
   subtype         TEXT,
   status          TEXT NOT NULL CHECK (status IN ('confirmed','disputed','rejected','unverified')),
   confidence      REAL NOT NULL CHECK (confidence BETWEEN 0 AND 1),

@@ -6,13 +6,13 @@ import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from minerva.types import Category, Status
+from minerva.types import Status
 
 
 class QueryFilter(BaseModel):
-    categories: list[Category] = Field(default_factory=list)  # empty = all
+    categories: list[str] = Field(default_factory=list)  # configured category names; empty = all
     subtypes: list[str] = Field(default_factory=list)
     camera_ids: list[str] = Field(default_factory=list)  # empty = all
     start: datetime | None = None  # timezone-aware
@@ -23,6 +23,11 @@ class QueryFilter(BaseModel):
     sort: Literal["newest", "oldest", "confidence"] = "newest"
     limit: int = Field(20, ge=1, le=100)
     intent: Literal["list", "count"] = "list"
+
+    @field_validator("categories", mode="before")
+    @classmethod
+    def _plain(cls, v):
+        return [getattr(c, "value", c) for c in v or []]  # accept the rule Category enum too
 
 
 def to_epoch_ms(dt: datetime) -> int:
@@ -46,7 +51,7 @@ def build_sql(f: QueryFilter, count: bool = False) -> tuple[str, list]:
         params.extend(values)
 
     if f.categories:
-        in_clause("e.category", [c.value for c in f.categories])
+        in_clause("e.category", list(f.categories))
     if f.subtypes:
         in_clause("e.subtype", f.subtypes)
     if f.camera_ids:

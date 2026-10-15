@@ -53,7 +53,7 @@ class FakeClassifier:
     def __init__(self, label="person_down", conf=0.9):
         self.label, self.conf, self.seen = label, conf, []
 
-    def classify_text(self, summary, evidence="", choices=None):
+    def classify_text(self, summary, evidence="", categories=None):
         self.seen.append((summary, evidence))
         return self.label, self.conf, 40.0
 
@@ -125,7 +125,7 @@ def test_classify_text_with_a_schema_enum_has_no_confidence():
 
 
 def test_classify_text_rejects_invalid_output():
-    assert SchemaOnlyClient('{"category": "riot"}').classify_text("x")[0] is None
+    assert SchemaOnlyClient('{"category": "alien_landing"}').classify_text("x")[0] is None
 
 
 # ---------- vLLM structured outputs ----------

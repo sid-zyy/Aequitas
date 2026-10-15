@@ -310,7 +310,8 @@ class Pipeline:
         c = job.cand
         u = Understanding(None, None, None, None)
         if self.vlm is not None:
-            u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=True)
+            u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=True,
+                           categories=self.s.categories)
             self._record_stage(job, "candidate", queue_ms, u)
         fused = fuse(c, u.answer, self.s.fusion)
         if fused.summary is None and u.summary:  # summarized but not classified: keep the description
@@ -334,7 +335,8 @@ class Pipeline:
 
     def _process_window(self, job: VlmJob, queue_ms: float) -> None:
         """Understanding runs concurrently; results are applied in window order per camera."""
-        u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False)
+        u = understand(self.vlm, self.classifier, job.grid_jpeg, highlighted=False,
+                       categories=self.s.categories)
         self._record_stage(job, "window", queue_ms, u)
         self.order.finish(job.camera_id, job.seq, (job, u, queue_ms), self._apply_window)
 

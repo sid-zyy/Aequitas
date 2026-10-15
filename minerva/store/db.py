@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 import time
@@ -72,11 +73,35 @@ class EventStore:
             self._migrate()
 
     def _migrate(self) -> None:
+        self._drop_category_check()
         for table, column, kind in MIGRATIONS:
             have = {r["name"] for r in self._conn.execute(f"PRAGMA table_info({table})")}
             if column not in have:
                 self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
         self._conn.commit()
+
+    def _drop_category_check(self) -> None:
+        """Databases from before configurable categories have a CHECK limiting `category` to the first
+        five. SQLite cannot drop a constraint, so the table is rebuilt (rowids, and so the FTS index
+        and timings, stay valid)."""
+        row = self._conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='events'").fetchone()
+        if row is None or "CHECK (category IN" not in row["sql"]:
+            return
+        new_sql = re.sub(r"CHECK \(category IN\s*\([^)]*\)\)", "", row["sql"]).replace(
+            "CREATE TABLE events", "CREATE TABLE events_new", 1)
+        self._conn.execute("PRAGMA foreign_keys=OFF")
+        try:
+            with self._conn:
+                self._conn.execute(new_sql)
+                self._conn.execute("INSERT INTO events_new SELECT * FROM events")
+                self._conn.execute("DROP TABLE events")  # also drops its indexes and triggers
+                self._conn.execute("ALTER TABLE events_new RENAME TO events")
+        finally:
+            self._conn.execute("PRAGMA foreign_keys=ON")
+        schema = resources.files("minerva.store").joinpath("schema.sql").read_text(encoding="utf-8")
+        self._conn.executescript(schema)  # recreate the indexes and FTS triggers
+        with self._conn:
+            self._conn.execute("INSERT INTO events_fts(events_fts) VALUES ('rebuild')")
 
     def close(self) -> None:
         with self._lock:

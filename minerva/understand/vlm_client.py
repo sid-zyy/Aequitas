@@ -20,13 +20,14 @@ from pydantic import BaseModel, ValidationError
 from minerva.config import LlmEndpoint
 from minerva.understand.prompts import (
     CHOICES,
-    LabelAnswer,
     SummaryAnswer,
     VlmAnswer,
     classify_prompt,
     classify_text_prompt,
+    label_model,
     summarize_prompt,
 )
+from minerva.taxonomy import choices as label_choices
 
 log = logging.getLogger(__name__)
 
@@ -92,19 +93,20 @@ class LlmClient:
     def _choose(self, prompt: str, choices: list[str]) -> tuple[str, float | None]:
         """One label from `choices` and its probability if the backend reports it. The default uses
         a JSON-schema enum, which every backend supports but which gives no confidence."""
-        ans = self.structured([{"role": "user", "content": prompt}], LabelAnswer)
+        ans = self.structured([{"role": "user", "content": prompt}], label_model(tuple(choices)))
         if ans is None:
             raise ValueError("no valid label")
         return ans.category, None
 
     def classify_text(self, summary: str, evidence: str = "",
-                      choices: list[str] | None = None) -> tuple[str | None, float | None, float]:
-        """Stage 2: label the summary text. Returns (label, confidence, ms); label None on failure."""
+                      categories: dict[str, str] | None = None) -> tuple[str | None, float | None, float]:
+        """Stage 2: label the summary text against `categories` (default: the police list).
+        Returns (label, confidence, ms); label None on failure."""
         t0 = time.perf_counter()
-        choices = choices or CHOICES
+        choices = label_choices(categories) if categories else CHOICES
         label, conf = None, None
         try:
-            label, conf = self._choose(classify_text_prompt(summary, evidence), choices)
+            label, conf = self._choose(classify_text_prompt(summary, evidence, categories), choices)
         except Exception as e:
             log.warning("%s classify call failed: %s", self.cfg.backend, e)
         if label not in choices:
