@@ -65,7 +65,7 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
             {busy ? "Signing in…" : "Sign in"}
           </button>
           <p className="note" style={{ marginTop: 16 }}>
-            Citizen? <a href="/report">Report an incident</a> without an account.
+            Citizen? <a href="/report" target="_blank" rel="noreferrer">Report an incident ↗</a> without an account.
           </p>
         </form>
       </div>

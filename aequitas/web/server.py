@@ -555,6 +555,21 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     def list_reports(status: str | None = None):
         return [_report_json(r) for r in reports.list(status)]
 
+    ACTIVE = ("received", "under_review", "action_taken")
+
+    @app.get("/api/reports/active")
+    def active_reports():
+        """The work queue: reports still open, oldest first (longest waiting at the top), with the
+        incident labels the AI found so the officer can triage without opening each one."""
+        rows = [r for r in reports.list(limit=500) if r["status"] in ACTIVE]
+        out = []
+        for r in sorted(rows, key=lambda r: r["created_at"]):
+            j = _report_json(r)
+            f = QueryFilter(camera_ids=[r["camera_id"]], statuses=list(Status), limit=50, sort="oldest")
+            j["categories"] = sorted({e["category"] for e in store.query(f)} - {"none"})
+            out.append(j)
+        return {"reports": out, "counts": {s: sum(r["status"] == s for r in rows) for s in ACTIVE}}
+
     @app.get("/api/reports/{report_id}")
     def get_report(report_id: str, request: Request):
         r = reports.get(report_id)

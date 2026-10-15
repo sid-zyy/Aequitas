@@ -65,6 +65,17 @@ export type Report = {
   audit?: { action: string; created_at: number; username: string | null }[];
 };
 
+export type ActiveQueue = {
+  reports: (Report & { categories: string[] })[];
+  counts: { received: number; under_review: number; action_taken: number };
+};
+
+/** The citizen portal is a separate public site: open it in its own window, not inside the police app. */
+export function openCitizenPortal() {
+  const w = window.open("/report", "aequitas-citizen-portal", "popup,width=560,height=900");
+  if (w) w.focus();
+}
+
 export const api = {
   me: () => request<User>("/api/auth/me"),
   login: (username: string, password: string) => request<User>("/api/auth/login", json({ username, password })),
@@ -73,6 +84,7 @@ export const api = {
   startLive: (id: string) => request<LiveState>(`/api/live/${id}/start`, { method: "POST" }),
   liveState: (id: string) => request<LiveState>(`/api/live/${id}`),
   reports: () => request<Report[]>("/api/reports"),
+  activeReports: () => request<ActiveQueue>("/api/reports/active"),
   report: (id: string) => request<Report>(`/api/reports/${id}`),
   updateReport: (id: string, body: { status?: string; notes?: string }) =>
     request<Report>(`/api/reports/${id}`, { ...json(body), method: "PATCH" }),

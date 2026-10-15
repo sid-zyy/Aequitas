@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { api, User } from "./api";
 import Header from "./components/Header";
+import ActiveRequests from "./pages/ActiveRequests";
 import Bodycam from "./pages/Bodycam";
 import CitizenReport from "./pages/CitizenReport";
 import Live from "./pages/Live";
@@ -29,6 +30,7 @@ export default function App() {
       <Header user={user} onSignOut={() => api.logout().finally(() => setUser(null))} />
       <Routes>
         <Route path="/" element={<Live />} />
+        <Route path="/requests" element={<ActiveRequests />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/bodycam" element={<Bodycam />} />
         <Route path="*" element={<Navigate to="/" replace />} />

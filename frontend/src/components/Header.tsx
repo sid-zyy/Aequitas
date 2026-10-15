@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { User } from "../api";
+import { api, openCitizenPortal, User } from "../api";
 
 export function BrandMark({ size = 34 }: { size?: number }) {
   // A shield with a saffron/green edge: public-safety cue without using any official emblem.
@@ -34,7 +34,19 @@ function Clock() {
   );
 }
 
+function useOpenCount() {
+  const [n, setN] = useState<number | null>(null);
+  useEffect(() => {
+    const load = () => api.activeReports().then((q) => setN(q.counts.received)).catch(() => {});
+    load();
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, []);
+  return n;
+}
+
 export default function Header({ user, onSignOut }: { user: User; onSignOut: () => void }) {
+  const fresh = useOpenCount();
   return (
     <>
       <Tricolour />
@@ -48,11 +60,15 @@ export default function Header({ user, onSignOut }: { user: User; onSignOut: () 
         </div>
         <nav className="tabs">
           <NavLink to="/" end className={({ isActive }) => "tab" + (isActive ? " active" : "")}>Live CCTV</NavLink>
+          <NavLink to="/requests" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>
+            Active requests{!!fresh && <span className="count" title="new, not yet reviewed">{fresh}</span>}
+          </NavLink>
           <NavLink to="/bodycam" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>Bodycam review</NavLink>
-          <NavLink to="/reports" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>Citizen reports</NavLink>
+          <NavLink to="/reports" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>All reports</NavLink>
         </nav>
         <div className="topbar-right">
           <span className="pill"><span className="dot live" /> On-premise AI · no cloud</span>
+          <button className="btn ghost" onClick={openCitizenPortal} title="Opens the public citizen site in its own window">Citizen portal ↗</button>
           <Clock />
           <div className="user-chip">
             <div className="avatar">{user.username.slice(0, 2).toUpperCase()}</div>
