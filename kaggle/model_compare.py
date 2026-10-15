@@ -28,8 +28,11 @@ OUT = WORK / "model_compare"
 OUT.mkdir(parents=True, exist_ok=True)
 QUICK = True  # True: 20 videos per class (~60 videos per model). False: 60 per class.
 PER_CLASS = 20 if QUICK else 60
-MODELS = ["gemma4:e2b", "gemma4:e4b-it-qat", "gemma4:12b-it-qat", "qwen3-vl:4b", "qwen3-vl:8b"]
-CASCADES = [("gemma4:e2b", "gemma4:e4b-it-qat"), ("gemma4:e2b", "gemma4:12b-it-qat"), ("gemma4:e2b", "qwen3-vl:8b")]
+# qwen3-vl's default tags are the thinking variants: with a JSON schema they returned empty answers on Kaggle
+# (run 1: 0/60 valid). The -instruct tags answer directly.
+MODELS = ["gemma4:e2b", "gemma4:e4b-it-qat", "gemma4:12b-it-qat", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct"]
+CASCADES = [("gemma4:e2b", "gemma4:e4b-it-qat"), ("gemma4:e2b", "gemma4:12b-it-qat"),
+            ("gemma4:e2b", "qwen3-vl:8b-instruct")]
 EXCLUDE = {"v001", "v006", "v011", "v026", "w001"}
 LABEL_MAP = {"violence": "fighting", "weaponized": "weapon", "weaponised": "weapon", "nonviolence": "none",
              "non_violence": "none", "normal": "none"}
@@ -112,8 +115,10 @@ for model in MODELS:
         s = Settings()
         s.vlm = s.vlm.model_copy(update={"backend": "ollama", "host": "http://127.0.0.1:11434", "model": model})
         client = make_client(s.vlm)
-        warm = ITEMS[0]  # load the model before timing anything
-        run_dataset_eval(client, client, [warm], s.categories, label="warmup", out_dir=OUT / "reports")
+        # load the model before timing anything; give up early if it cannot answer at all
+        probe = run_dataset_eval(client, client, ITEMS[:5], s.categories, label="warmup", out_dir=OUT / "reports")
+        if probe["classification"]["valid"] == 0:
+            raise RuntimeError(f"{model}: 0 of 5 probe videos gave a valid answer, skipped")
         rep = run_dataset_eval(client, client, ITEMS, s.categories, label=model.replace(":", "_"), out_dir=OUT / "reports")
         rows_file.write_text(json.dumps(rep["rows"]))
         ROWS[model] = rep["rows"]
