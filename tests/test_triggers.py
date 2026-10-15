@@ -74,6 +74,25 @@ def test_person_down_ignores_people_already_lying_and_crouching():
     assert cands == []
 
 
+def test_person_down_survives_id_switch_and_overhead_perspective():
+    # Seen on CAVIAR Rest_FallOnFloor: standing track #4 (~95 px) vanishes, new track #5 appears at the
+    # same spot ~47 px tall with h/w ~1.1 (still "vertical" from a high camera).
+    e = engine()
+    standing = [scene(ts, [person(4, 100, 100, 160, 195)]) for ts in frames(2)]
+    gap = [scene(ts, []) for ts in frames(1, start=2000)]
+    lying = [scene(ts, [person(5, 105, 148, 148, 195)]) for ts in frames(5, start=3000)]
+    cands, _ = run(e, standing + gap + lying)
+    assert len(cands) == 1
+    assert cands[0].track_ids == (5,) and cands[0].detail["method"] == "height_drop"
+
+
+def test_new_person_far_from_anyone_upright_is_not_a_fall():
+    e = engine()
+    standing = [scene(ts, [person(4, 100, 100, 160, 195)]) for ts in frames(2)]
+    elsewhere = [scene(ts, [person(5, 700, 148, 743, 195)]) for ts in frames(5, start=2000)]
+    assert run(e, standing + elsewhere)[0] == []
+
+
 def test_person_down_uses_pose_when_confident():
     from minerva.types import PoseResult
 

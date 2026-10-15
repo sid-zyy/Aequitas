@@ -1,0 +1,2 @@
+# Baseline evaluation on CAVIAR: default thresholds, separate database.
+data_dir: data/eval/caviar

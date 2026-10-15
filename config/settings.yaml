@@ -10,6 +10,10 @@ analysis:
   window_s: 4           # periodic mode only
   confirm_votes: 2      # periodic mode: consecutive agreeing windows needed for 'confirmed'
 
+models:                 # trained on Kaggle (see kaggle/README.md); leave null until downloaded
+  violence_dir: null    # e.g. models/violence_clip
+  hazard_dir: null      # e.g. models/hazard_detector
+
 detector:
   weights: yolo11n.pt
   pose_weights: yolo11n-pose.pt

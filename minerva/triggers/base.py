@@ -23,6 +23,9 @@ class Scene:
     objects: list[TrackObs] = field(default_factory=list)
     motion_ratio: Callable[[Box], float] = lambda box: 0.0
     pose: Callable[[TrackObs], PoseResult | None] = lambda track: None
+    violence: float | None = None  # calibrated clip-model score for the last ~2 s, if a model is loaded
+    violence_threshold: float = 0.5
+    hazards: list = field(default_factory=list)  # minerva.vision.hazards.Hazard, if a hazard model is loaded
 
 
 @dataclass

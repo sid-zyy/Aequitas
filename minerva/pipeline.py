@@ -100,6 +100,17 @@ class Pipeline:
 
             self.detector = Detector(settings.detector, self.device)
             self.pose = PoseEstimator(settings.detector.pose_weights, settings.detector.backend, self.device)
+        self.violence_model = self.hazard_detector = None
+        m = settings.models
+        if self.mode == "triggered" and m.violence_dir:
+            from minerva.vision.violence import ViolenceModel
+
+            self.violence_model = ViolenceModel(m.violence_dir)
+        if self.mode == "triggered" and m.hazard_dir:
+            from minerva.vision.hazards import HazardDetector
+
+            self.hazard_detector = HazardDetector(m.hazard_dir, self.device, m.hazard_conf)
+        self._model_lock = threading.Lock()
         self._det_lock = threading.Lock()  # YOLO models are not thread-safe
         self._pose_lock = threading.Lock()
 
@@ -124,6 +135,8 @@ class Pipeline:
             "detector": settings.detector.weights if self.mode == "triggered" else None,
             "vlm": f"{settings.vlm.backend}:{settings.vlm.model}" if use_vlm else None,
             "rules": RULES_VERSION if self.mode == "triggered" else None,
+            "violence": self.violence_model.meta.get("trained_at") if self.violence_model else None,
+            "hazards": self.hazard_detector.meta.get("trained_at") if self.hazard_detector else None,
         }
         for cam in cameras:
             store.upsert_camera(cam)
@@ -159,6 +172,13 @@ class Pipeline:
         tracker = CameraTracker(self.s.tracker, self.s.detector, self.s.sample_fps)
         motion = MotionMeter()
         engine = TriggerEngine(self.s.triggers, cam)
+        scorer = None
+        v_threshold = 0.5
+        if self.violence_model is not None:
+            from minerva.vision.violence import ViolenceScorer
+
+            scorer = ViolenceScorer(self.violence_model, int(self.s.models.violence_stride_s * 1000))
+            v_threshold = self.s.models.violence_threshold or self.violence_model.threshold
 
         def step(frame) -> None:
             t0 = time.perf_counter()
@@ -176,8 +196,15 @@ class Pipeline:
                 with self._pose_lock:
                     return self.pose(image, track)
 
+            violence, hazards = None, []
+            with self._model_lock:  # trained models are shared across camera threads
+                if scorer is not None:
+                    violence = scorer.update(frame.ts_ms, image)
+                if self.hazard_detector is not None:
+                    hazards = self.hazard_detector(image)
             h, w = image.shape[:2]
-            out = engine.step(Scene(cam.camera_id, frame.ts_ms, w, h, persons, objects, motion.ratio, pose_fn))
+            out = engine.step(Scene(cam.camera_id, frame.ts_ms, w, h, persons, objects, motion.ratio, pose_fn,
+                                    violence, v_threshold, hazards))
             trigger_ms = (time.perf_counter() - t1) * 1000
 
             for cand in out.candidates:

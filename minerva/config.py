@@ -91,6 +91,22 @@ class PersonDownCfg(BaseModel):
     min_pose_conf: float = 0.5
     sustain_s: float = 3.0
     max_drift_frac: float = 0.3  # centroid drift allowed, as a fraction of box width
+    # Overhead cameras: a person lying along the viewing direction still looks "upright" in the image,
+    # but their box height collapses. Down if height <= this fraction of their recent upright height.
+    height_drop_frac: float = 0.6
+    # Trackers often switch ID during a fall; a new track counts as "was upright" if someone stood
+    # upright within this many person-heights of the same spot, within upright_window_s.
+    spatial_match_heights: float = 1.0
+
+
+class ModelsCfg(BaseModel):
+    """Optional trained models (kaggle/ notebooks). Unset = not used."""
+
+    violence_dir: Path | None = None  # folder with violence_clip.onnx + metadata.json
+    violence_stride_s: float = 0.5
+    violence_threshold: float | None = None  # None = the calibrated threshold from metadata.json
+    hazard_dir: Path | None = None  # folder with hazard_detector.pt/.onnx + metadata.json
+    hazard_conf: float = 0.35
 
 
 class FightingCfg(BaseModel):
@@ -100,6 +116,10 @@ class FightingCfg(BaseModel):
     min_erratic_tracks: int = 1
     erratic_window_s: float = 2.0
     sustain_s: float = 1.5
+    # With a violence clip model loaded, a sustained score at/above its threshold also counts,
+    # with no need for two people to be tracked close together.
+    use_clip_model: bool = True
+    min_persons_for_clip: int = 1
 
 
 class TailgatingCfg(BaseModel):
@@ -145,6 +165,7 @@ class Settings(BaseModel):
     ring_buffer_max_width: int = 960
     data_dir: Path = Path("data")
     analysis: AnalysisCfg = AnalysisCfg()
+    models: ModelsCfg = ModelsCfg()
     detector: DetectorCfg = DetectorCfg()
     tracker: TrackerCfg = TrackerCfg()
     vlm: VlmCfg = VlmCfg()
