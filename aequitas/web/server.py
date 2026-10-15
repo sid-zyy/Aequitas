@@ -412,9 +412,36 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
 
     @app.get("/api/live/cameras/{camera_id}/video")
     def live_video(camera_id: str):
-        if not live.has_footage(camera_id):  # only files named in the localities config are served
+        cam = live.cameras.get(camera_id)
+        if cam is None or cam.is_live or not live.has_footage(camera_id):  # only files named in the config
             raise HTTPException(404, "no footage for this camera")
-        return FileResponse(live.cameras[camera_id].file, media_type="video/mp4")
+        return FileResponse(cam.file, media_type="video/mp4")
+
+    @app.get("/api/live/cameras/{camera_id}/mjpeg")
+    def live_mjpeg(camera_id: str):
+        """The frames the pipeline is reading from a live source (webcam/RTSP), as an MJPEG stream. The
+        browser cannot open the webcam itself while the pipeline holds it."""
+        cam = live.cameras.get(camera_id)
+        if cam is None or not cam.is_live:
+            raise HTTPException(404, "not a live camera")
+
+        def frames():
+            import cv2
+
+            idle = 0
+            while idle < 300:  # stop after ~30 s without frames (analysis stopped)
+                img = live.latest_frame(camera_id)
+                if img is None:
+                    idle += 1
+                    time.sleep(0.1)
+                    continue
+                idle = 0
+                ok, jpg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                if ok:
+                    yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg.tobytes() + b"\r\n"
+                time.sleep(0.12)
+
+        return StreamingResponse(frames(), media_type="multipart/x-mixed-replace; boundary=frame")
 
     # ---------- citizen portal (public) ----------
 

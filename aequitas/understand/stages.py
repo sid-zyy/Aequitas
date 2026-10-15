@@ -24,8 +24,8 @@ class Understanding:
 
 
 def understand(vlm, classifier, grid_jpeg: bytes, highlighted: bool,
-               categories: dict[str, str] | None = None) -> Understanding:
-    s, summarize_ms = vlm.summarize(grid_jpeg, highlighted=highlighted)
+               categories: dict[str, str] | None = None, view: str = "cctv") -> Understanding:
+    s, summarize_ms = vlm.summarize(grid_jpeg, highlighted=highlighted, view=view)
     if s is None:
         return Understanding(None, None, summarize_ms, None)
     label, conf, classify_ms = classifier.classify_text(s.summary, s.visible_evidence, categories)

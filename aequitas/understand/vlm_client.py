@@ -84,11 +84,12 @@ class LlmClient:
 
     # ---------- the two pipeline stages ----------
 
-    def summarize(self, grid_jpeg: bytes, highlighted: bool = True) -> tuple[SummaryAnswer | None, float]:
+    def summarize(self, grid_jpeg: bytes, highlighted: bool = True,
+                  view: str = "cctv") -> tuple[SummaryAnswer | None, float]:
         """Stage 1: the VLM describes the key-frame grid."""
         t0 = time.perf_counter()
         ans = self.structured(
-            [{"role": "user", "content": summarize_prompt(highlighted, self.cfg.concise_summary),
+            [{"role": "user", "content": summarize_prompt(highlighted, self.cfg.concise_summary, view),
               "images": [grid_jpeg]}],
             SummaryAnswer,
             max_tokens=self.cfg.summary_max_tokens,

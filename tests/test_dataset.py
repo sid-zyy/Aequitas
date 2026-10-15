@@ -53,7 +53,7 @@ def test_rouge_l():
 
 
 class FakeVlm:
-    def summarize(self, grid, highlighted=True):
+    def summarize(self, grid, highlighted=True, view="cctv"):
         return SummaryAnswer(summary="A man follows a woman along the road.", visible_evidence="following"), 900.0
 
 
