@@ -49,7 +49,10 @@ export default function CameraTile({ cam, running }: { cam: LiveCamera; running:
               <span className="chip accent">Summary {secs(w.summarize_ms)}</span>
               <span className="chip accent">Label {secs(w.classify_ms, 2)}</span>
               {w.violence != null && <span className="chip saffron">Clip model {(w.violence * 100).toFixed(0)}%</span>}
-              {w.source === "clip_model" && <span className="chip saffron">raised by clip model</span>}
+              {w.source?.startsWith("clip_model") && <span className="chip saffron">raised by clip model</span>}
+              {w.source?.includes("rechecked:") && (
+                <span className="chip accent">re-checked by {w.source.split("rechecked:")[1]}</span>
+              )}
             </div>
             <p className="summary">{w.summary ?? "—"}</p>
             {alerting ? (

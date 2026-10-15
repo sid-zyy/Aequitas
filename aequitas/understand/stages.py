@@ -15,6 +15,7 @@ class Understanding:
     summary: str | None  # kept even when classification failed
     summarize_ms: float | None
     classify_ms: float | None
+    escalated: str | None = None  # model that re-checked this window (cascade), if any
 
     @property
     def vlm_ms(self) -> float | None:
@@ -34,6 +35,29 @@ def understand(vlm, classifier, grid_jpeg: bytes, highlighted: bool,
         return Understanding(None, summary, summarize_ms, classify_ms)
     ans = VlmAnswer(category=label, summary=summary, visible_evidence=s.visible_evidence, confidence=conf)
     return Understanding(ans, summary, summarize_ms, classify_ms)
+
+
+def needs_escalation(u: Understanding, violence: float | None, band_low: float) -> bool:
+    """Cascade rule: the bigger model re-checks a window only when it matters, so the average time per
+    window stays close to the small model's. Re-check when a stage failed, an incident was flagged, or the
+    violence clip model is at least `band_low` (uncertain or confident)."""
+    if u.answer is None:
+        return True
+    if u.answer.category != "none":
+        return True
+    return violence is not None and violence >= band_low
+
+
+def escalate(u: Understanding, big, grid_jpeg: bytes, highlighted: bool, categories: dict[str, str] | None,
+             view: str = "cctv") -> Understanding:
+    """Re-runs both stages with the bigger model. Its verdict replaces the small model's; the times add
+    up (both really ran). If the bigger model fails, the small model's result stands."""
+    v = understand(big, big, grid_jpeg, highlighted, categories, view)
+    total_s = (u.summarize_ms or 0) + (v.summarize_ms or 0)
+    total_c = (u.classify_ms or 0) + (v.classify_ms or 0)
+    if v.answer is None:
+        return Understanding(u.answer, u.summary, total_s, total_c, escalated=None)
+    return Understanding(v.answer, v.summary, total_s, total_c, escalated=big.model)
 
 
 class InOrder:

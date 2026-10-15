@@ -83,6 +83,13 @@ class EndpointOverride(BaseModel):
         return any(v is not None for v in (self.backend, self.host, self.model, self.api_key_env, self.think))
 
 
+class EscalationCfg(EndpointOverride):
+    """Cascade: a bigger model re-checks windows the fast model flags (model=None: off). Falls back to the
+    VLM endpoint for anything left unset, so `model: gemma4:e4b-it-qat` alone is enough with Ollama."""
+
+    violence_band_low: float = 0.35  # also re-check when the clip model scores at least this
+
+
 class ChatCfg(EndpointOverride):
     summarize: bool = True  # add an LLM-written summary that may only cite retrieved event IDs
     timezone: str | None = None  # IANA name; None = system local time
@@ -215,6 +222,7 @@ class Settings(BaseModel):
     tracker: TrackerCfg = TrackerCfg()
     vlm: VlmCfg = VlmCfg()
     classifier: EndpointOverride = EndpointOverride()  # stage 2, text only
+    escalation: EscalationCfg = EscalationCfg()  # cascade re-check by a bigger model
     chat: ChatCfg = ChatCfg()
     fusion: FusionCfg = FusionCfg()
     triggers: TriggersCfg = TriggersCfg()
