@@ -80,6 +80,15 @@ def encode_jpeg(img: np.ndarray, quality: int = 85) -> bytes:
     return buf.tobytes()
 
 
+def window_detail(frames: list[BufferedFrame], size: int = 64) -> float:
+    """Picture detail of a window: the highest grayscale standard deviation (0-255) of its frames. A covered or
+    black camera is ~0-2; the demo clips' frames are 41 or more. Below a few, there is nothing to look at."""
+    if not frames:
+        return 0.0
+    return float(max(cv2.resize(cv2.cvtColor(f.image, cv2.COLOR_BGR2GRAY), (size, size),
+                                interpolation=cv2.INTER_AREA).std() for f in frames))
+
+
 def window_motion(frames: list[BufferedFrame], size: int = 64) -> float:
     """How much changes across a window, 0-1: the largest mean absolute difference between consecutive
     picked frames, on small grayscale copies (cheap, and blind to compression noise at this size)."""
