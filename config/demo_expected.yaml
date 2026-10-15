@@ -1,0 +1,25 @@
+# Expected incidents per demo clip. required = must be detected; optional = neither a miss nor a
+# false alarm; anything else detected is a false alarm. w001: weapon clip, weapon or fighting both fine.
+# accident.mp4: it is unclear whether a collision is visible, so it is optional.
+
+fac-v001:       {required: [fighting]}
+fac-v006:       {required: [fighting]}
+fac-v011:       {required: [fighting]}
+fac-v026:       {required: [fighting]}
+fac-w001:       {optional: [fighting, weapon]}
+punching:       {required: [fighting], optional: [harassment]}
+arrest-1:       {required: [arrest], optional: [fighting]}
+arrest-2:       {required: [arrest], optional: [fighting]}
+arrest-3:       {required: [arrest], optional: [fighting]}
+arrest-4:       {required: [arrest], optional: [fighting]}
+fire-rescue:    {required: [fire], optional: [accident]}
+accident:       {optional: [accident]}
+brigade-road:   {}
+trinity:        {}
+kumble-circle:  {}
+80ft-road:      {}
+forum:          {}
+phoenix:        {}
+100ft-road:     {}
+ksr-station:    {}
+flyover:        {}

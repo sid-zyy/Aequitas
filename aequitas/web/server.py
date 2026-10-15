@@ -112,6 +112,9 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     app = FastAPI(title="Aequitas", docs_url="/api/docs", redoc_url=None)
 
     auth = Auth(store, settings.auth.session_hours, settings.auth.max_failures, settings.auth.lockout_s)
+    if settings.auth.demo_admin and not auth.users():
+        auth.create_user("admin", "admin", "admin", allow_weak=True)
+        log.warning("no accounts yet: created demo account admin/admin (change it: aequitas create-user)")
     app.state.auth = auth
 
     @app.middleware("http")
@@ -467,6 +470,20 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             log.exception("authenticity check failed for %s", report_id)
             reports.set_authenticity(report_id, {"error": str(e)[:300]})
 
+    def _resume_authenticity() -> None:
+        """A check runs in a thread, so a restart mid-check left the report 'checking…' forever.
+        Re-run any report that has no result yet, one at a time."""
+        for r in reports.list(limit=500):
+            if r.get("authenticity"):
+                continue
+            up = store.upload(r["upload_id"]) or {}
+            if up.get("path") and Path(up["path"]).exists():
+                _check_authenticity(r["report_id"], up["path"])
+            else:
+                reports.set_authenticity(r["report_id"], {"error": "video file missing"})
+
+    threading.Thread(target=_resume_authenticity, daemon=True, name="authenticity-resume").start()
+
     @app.post("/api/citizen/reports")
     def citizen_report(
         request: Request,
@@ -566,7 +583,12 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         for r in sorted(rows, key=lambda r: r["created_at"]):
             j = _report_json(r)
             f = QueryFilter(camera_ids=[r["camera_id"]], statuses=list(Status), limit=50, sort="oldest")
-            j["categories"] = sorted({e["category"] for e in store.query(f)} - {"none"})
+            evs = [e for e in store.query(f) if e["category"] != "none"]
+            t0 = (store.upload(r["upload_id"]) or {}).get("start_ts") or 0
+            j["categories"] = sorted({e["category"] for e in evs})
+            j["findings"] = [{"category": e["category"], "status": e["status"],
+                              "at_s": round((e["start_ts"] - t0) / 1000, 1),
+                              "summary": e.get("summary")} for e in evs[:6]]
             out.append(j)
         return {"reports": out, "counts": {s: sum(r["status"] == s for r in rows) for s in ACTIVE}}
 

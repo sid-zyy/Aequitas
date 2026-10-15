@@ -1,0 +1,25 @@
+# Demo-clip evaluation: one camera per clip (periodic mode). Footage: data/footage (scripts/get_footage.py).
+# Faculty clips v*/w* never seen by the violence model in training.
+
+cameras:
+  - {camera_id: fac-v001, name: "fac-v001", source: data/footage/faculty/v001.mp4, realtime: false, start_time: "2026-10-16T09:00:00"}
+  - {camera_id: fac-v006, name: "fac-v006", source: data/footage/faculty/v006.mp4, realtime: false, start_time: "2026-10-16T09:01:00"}
+  - {camera_id: fac-v011, name: "fac-v011", source: data/footage/faculty/v011.mp4, realtime: false, start_time: "2026-10-16T09:02:00"}
+  - {camera_id: fac-v026, name: "fac-v026", source: data/footage/faculty/v026.mp4, realtime: false, start_time: "2026-10-16T09:03:00"}
+  - {camera_id: fac-w001, name: "fac-w001", source: data/footage/faculty/w001.mp4, realtime: false, start_time: "2026-10-16T09:04:00"}
+  - {camera_id: punching, name: "punching", source: data/footage/incidents/punching.mp4, realtime: false, start_time: "2026-10-16T09:05:00"}
+  - {camera_id: arrest-1, name: "arrest-1", source: data/footage/incidents/arrest-1.mp4, realtime: false, start_time: "2026-10-16T09:06:00"}
+  - {camera_id: arrest-2, name: "arrest-2", source: data/footage/incidents/arrest-2.mp4, realtime: false, start_time: "2026-10-16T09:07:00"}
+  - {camera_id: arrest-3, name: "arrest-3", source: data/footage/incidents/arrest-3.mp4, realtime: false, start_time: "2026-10-16T09:08:00"}
+  - {camera_id: arrest-4, name: "arrest-4", source: data/footage/incidents/arrest-4.mp4, realtime: false, start_time: "2026-10-16T09:09:00"}
+  - {camera_id: fire-rescue, name: "fire-rescue", source: data/footage/incidents/fire-rescue.mp4, realtime: false, start_time: "2026-10-16T09:10:00"}
+  - {camera_id: accident, name: "accident", source: data/footage/incidents/accident.mp4, realtime: false, start_time: "2026-10-16T09:11:00"}
+  - {camera_id: brigade-road, name: "brigade-road", source: data/footage/mg-road/brigade-road.mp4, realtime: false, start_time: "2026-10-16T09:12:00"}
+  - {camera_id: trinity, name: "trinity", source: data/footage/mg-road/trinity.mp4, realtime: false, start_time: "2026-10-16T09:13:00"}
+  - {camera_id: kumble-circle, name: "kumble-circle", source: data/footage/mg-road/kumble-circle.mp4, realtime: false, start_time: "2026-10-16T09:14:00"}
+  - {camera_id: 80ft-road, name: "80ft-road", source: data/footage/koramangala/80ft-road.mp4, realtime: false, start_time: "2026-10-16T09:15:00"}
+  - {camera_id: forum, name: "forum", source: data/footage/koramangala/forum.mp4, realtime: false, start_time: "2026-10-16T09:16:00"}
+  - {camera_id: phoenix, name: "phoenix", source: data/footage/whitefield/phoenix.mp4, realtime: false, start_time: "2026-10-16T09:17:00"}
+  - {camera_id: 100ft-road, name: "100ft-road", source: data/footage/indiranagar/100ft-road.mp4, realtime: false, start_time: "2026-10-16T09:18:00"}
+  - {camera_id: ksr-station, name: "ksr-station", source: data/footage/majestic/ksr-station.mp4, realtime: false, start_time: "2026-10-16T09:19:00"}
+  - {camera_id: flyover, name: "flyover", source: data/footage/electronic-city/flyover.mp4, realtime: false, start_time: "2026-10-16T09:20:00"}

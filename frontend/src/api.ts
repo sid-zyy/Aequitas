@@ -66,7 +66,8 @@ export type Report = {
 };
 
 export type ActiveQueue = {
-  reports: (Report & { categories: string[] })[];
+  reports: (Report & { categories: string[];
+    findings: { category: string; status: string; at_s: number; summary: string | null }[] })[];
   counts: { received: number; under_review: number; action_taken: number };
 };
 

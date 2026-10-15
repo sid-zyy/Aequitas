@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveQueue, api, label, openCitizenPortal } from "../api";
 
@@ -18,6 +18,7 @@ function age(ms: number) {
 export default function ActiveRequests() {
   const [q, setQ] = useState<ActiveQueue | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [open, setOpen] = useState<string | null>(null);
   const seen = useRef<Set<string> | null>(null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const nav = useNavigate();
@@ -75,7 +76,8 @@ export default function ActiveRequests() {
                 {rows.map((r) => {
                   const pct = r.authenticity?.ai_likelihood_pct;
                   return (
-                    <tr key={r.report_id} className={fresh.has(r.report_id) ? "fresh" : ""}>
+                    <Fragment key={r.report_id}>
+                    <tr className={(fresh.has(r.report_id) ? "fresh" : "") + (open === r.report_id ? " expanded" : "")}>
                       <td><b className="mono">{r.report_id}</b>{r.duplicate_of && <div><span className="badge unverified">duplicate</span></div>}</td>
                       <td className="mono">{age(r.created_at)}</td>
                       <td><span className="badge status">{label(r.status)}</span></td>
@@ -95,9 +97,39 @@ export default function ActiveRequests() {
                           <button key={n.to} className={"btn" + (n.to === "rejected" ? " ghost" : " navy")} style={{ marginRight: 6 }}
                             onClick={() => move(r.report_id, n.to)}>{n.text}</button>
                         ))}
+                        <button className="btn" style={{ marginRight: 6 }}
+                          onClick={() => setOpen(open === r.report_id ? null : r.report_id)}>
+                          {open === r.report_id ? "▲ Hide" : "▶ Watch"}
+                        </button>
                         <button className="btn ghost" onClick={() => nav(`/reports?id=${r.report_id}`)}>Open</button>
                       </td>
                     </tr>
+                    {open === r.report_id && (
+                      <tr className="review-row">
+                        <td colSpan={7}>
+                          <div className="review">
+                            <video className="player" src={r.video_url} controls autoPlay muted playsInline />
+                            <div>
+                              <div className="section-label">What the AI saw (needs officer confirmation)</div>
+                              {!r.findings.length && <p className="note">Nothing flagged{r.analysis.status !== "done" ? " yet: still analysing" : ""}.</p>}
+                              <ul className="history">
+                                {r.findings.map((f, i) => (
+                                  <li key={i}>
+                                    <span className="t mono">{f.at_s >= 0 && f.at_s < 36000 ? `${f.at_s.toFixed(0)} s` : ""}</span>
+                                    <span><b style={{ color: "#ffb3bb" }}>{label(f.category)}</b>
+                                      {f.status !== "confirmed" && <span className="note"> (single window)</span>}: {f.summary}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {r.authenticity && !r.authenticity.error && (
+                                <p className="note">AI-generated check: {r.authenticity.reasons?.[0]}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })}
               </tbody>

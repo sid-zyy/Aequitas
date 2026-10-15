@@ -255,4 +255,34 @@ def test_active_requests_queue_is_open_reports_oldest_first(app_client, tmp_path
     cam = c.store._conn.execute("SELECT camera_id FROM reports WHERE report_id=?", (first,)).fetchone()[0]
     c.store.insert_event(EventRecord("e1", cam, 0, 4000, "fighting", None, "unverified", 0.8, 0.0,
                                      "fighting", "two people trade punches", None, [], "k.jpg", {}))
-    assert c.get("/api/reports/active").json()["reports"][0]["categories"] == ["fighting"]
+    top = c.get("/api/reports/active").json()["reports"][0]
+    assert top["categories"] == ["fighting"] and top["findings"][0]["summary"] == "two people trade punches"
+
+
+def test_unfinished_authenticity_checks_resume_after_a_restart(app_client, tmp_path, monkeypatch):
+    rid = _report(app_client, tmp_path).json()["report_id"]
+    for _ in range(50):  # let the first check finish, then pretend the server died mid-check
+        if app_client.store._conn.execute("SELECT authenticity FROM reports").fetchone()[0]:
+            break
+        time.sleep(0.05)
+    app_client.store._conn.execute("UPDATE reports SET authenticity=NULL")
+    app_client.store._conn.commit()
+    s = Settings(data_dir=app_client.tmp / "data", authenticity={"frame_model": None})
+    web.create_app(s, ChatService(app_client.store, QuestionParser(None)), [])  # "restart"
+    for _ in range(100):
+        row = app_client.store._conn.execute("SELECT authenticity FROM reports WHERE report_id=?", (rid,)).fetchone()
+        if row[0]:
+            break
+        time.sleep(0.05)
+    assert row[0] and "verdict" in row[0]
+
+
+def test_fresh_install_gets_a_demo_admin_only_when_there_are_no_accounts(tmp_path):
+    s = Settings(data_dir=tmp_path / "fresh", authenticity={"frame_model": None})
+    c = TestClient(web.create_app(s, ChatService(EventStore(s.db_path), QuestionParser(None)), []))
+    assert c.post("/api/auth/login", json={"username": "admin", "password": "admin"}).status_code == 200
+    s2 = Settings(data_dir=tmp_path / "existing", authenticity={"frame_model": None})
+    store = EventStore(s2.db_path)
+    Auth(store).create_user("commissioner", PW, "admin")
+    c2 = TestClient(web.create_app(s2, ChatService(store, QuestionParser(None)), []))
+    assert c2.post("/api/auth/login", json={"username": "admin", "password": "admin"}).status_code == 401

@@ -265,3 +265,8 @@ table.queue tr.fresh td { animation: fresh 2.5s ease-out; }
   .topbar { flex-wrap: wrap; row-gap: 8px; }
   .topbar-right .pill { display: none; }
 }
+table.queue tr.expanded td { background: var(--panel-2); border-bottom-color: transparent; }
+table.queue tr.review-row td { background: var(--panel-2); padding: 4px 12px 16px; }
+.review { display: grid; grid-template-columns: minmax(280px, 560px) 1fr; gap: 18px; align-items: start; }
+.review .player { width: 100%; border-radius: 8px; background: #000; max-height: 360px; }
+@media (max-width: 900px) { .review { grid-template-columns: 1fr; } }

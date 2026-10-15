@@ -17,16 +17,21 @@ and Qwen2.5-VL-3B are the tested candidates. Non-local hosts are refused unless 
 **Grounded answers.** Every listed event has an `[#id]` reference. The optional LLM summary is kept only if it
 cites retrieved events and nothing else.
 
-## Setup
+## Setup (fresh clone)
 
 ```bash
 python -m venv .venv
 .venv\Scripts\python -m pip install -e .[dev]
-ollama pull qwen2.5vl:3b
+ollama pull gemma4:e2b                      # the vision model the app uses (4.6 GB)
+python scripts/get_footage.py               # demo street + incident clips into data/footage
 ```
 
 On an NVIDIA machine, install the CUDA build of PyTorch first (see pytorch.org), then the line above.
 `device: auto` in `config/settings.yaml` picks the GPU automatically.
+
+Optional, recommended: the trained **violence clip model** (127 MB, not in git). Unzip `violence_clip.zip`
+(from `kaggle/violence_clip.ipynb`, or ask the team for it) into `models/violence_clip/`. Without it the app
+still runs; it just misses fights that Gemma describes vaguely (results/violence_clip/README.md).
 
 ## Web app
 
@@ -34,16 +39,17 @@ On an NVIDIA machine, install the CUDA build of PyTorch first (see pytorch.org),
 .venv\Scripts\python -m aequitas web      # http://127.0.0.1:8000
 ```
 
-- **Analyze video:** upload footage (MP4/MOV/AVI/MKV/WebM, up to 4 GB), pick or create a camera, choose
-  tracking-triggered or VLM-review mode and the vision model. Jobs run in the background with live progress.
-- **Ask Aequitas:** chat in plain language. Answers list matching events with `[#id]` references and key frames.
-- **Event log:** filter by camera, category, status or summary text. Open an event to see its key frames,
-  details, and the uploaded video at the moment it happened.
-- **Overview:** incident counts by category and the latest confirmed incidents.
+**Sign in with `admin` / `admin`.** On first start with an empty database the app creates this demo account
+(written to the audit log). It is for a laptop demo only: the server listens on 127.0.0.1. Make real accounts
+with `.venv\Scripts\python -m aequitas create-user --username <name> --role admin` and set `auth.demo_admin: false`.
 
-The server binds to localhost only. The API is documented at `/api/docs`.
-Cameras created from the upload form have no zones yet, so the tailgating, crowd and loitering rules
-only run on cameras whose zones are defined in `config/cameras.yaml`.
+- **Live CCTV:** pick a Bengaluru locality; each camera's footage is summarised, labelled and timed live.
+- **Active requests:** open citizen reports, longest waiting first, with the video, what the AI found and the
+  AI-generated likelihood.
+- **Bodycam review / All reports:** uploaded footage and the full citizen-report archive.
+- **Citizen portal** (`/report`, opens in its own window): public upload with a tracking code.
+
+The API is documented at `/api/docs`.
 
 ## Command line
 
