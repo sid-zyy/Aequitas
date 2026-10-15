@@ -213,8 +213,9 @@ class EventStore:
         """Per-stage totals for one run: job count, and sum/mean ms of each stage."""
         with self._lock:
             r = self._conn.execute(
-                "SELECT SUM(kind NOT IN ('skipped','gated')) AS jobs, SUM(ok AND kind NOT IN ('skipped','gated')) AS ok, "
-                "SUM(kind='skipped') AS skipped, SUM(kind='gated') AS gated, SUM(summarize_ms) AS sum_s, AVG(summarize_ms) AS avg_s, "
+                "SELECT SUM(kind NOT IN ('skipped','gated','blank')) AS jobs, "
+                "SUM(ok AND kind NOT IN ('skipped','gated','blank')) AS ok, "
+                "SUM(kind='skipped') AS skipped, SUM(kind='gated') AS gated, SUM(kind='blank') AS blank, SUM(summarize_ms) AS sum_s, AVG(summarize_ms) AS avg_s, "
                 "SUM(classify_ms) AS sum_c, AVG(classify_ms) AS avg_c, AVG(queue_ms) AS avg_q "
                 "FROM stage_timings WHERE run_id=?", (run_id,),
             ).fetchone()
@@ -224,6 +225,7 @@ class EventStore:
 
         return {"jobs": r["jobs"] or 0, "ok": r["ok"] or 0, "skipped_static": r["skipped"] or 0,
                 "skipped_gate": r["gated"] or 0,
+                "skipped_blank": r["blank"] or 0,
                 "summarize_ms": {"total": rnd(r["sum_s"]), "mean": rnd(r["avg_s"])},
                 "classify_ms": {"total": rnd(r["sum_c"]), "mean": rnd(r["avg_c"])},
                 "queue_ms": {"mean": rnd(r["avg_q"])}}

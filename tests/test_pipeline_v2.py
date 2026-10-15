@@ -457,7 +457,7 @@ def test_static_windows_skip_the_vlm(periodic_pipeline):
     p.s.analysis.max_skip_s = 3.0
     cam = p.cameras[0]
     step = p._periodic_step(cam, RingBuffer(12, 320))
-    img = np.full((60, 80, 3), 90, np.uint8)
+    img = np.random.default_rng(1).integers(0, 255, (60, 80, 3), dtype=np.uint8)  # textured, unchanging
     for i in range(41):  # 10 s of a static scene at 4 fps
         step(Frame("cam1", i, i * 250, 0, img))
         while len(p.queue):  # play the worker: take queued windows so new ones can be emitted
@@ -468,6 +468,29 @@ def test_static_windows_skip_the_vlm(periodic_pipeline):
     assert rows == s["skipped_static"]
     # ...but the VLM still looks at least every max_skip_s: windows queued = 10 s / ~3 s + first one
     assert p.order.ticket("cam1") >= 3
+
+
+def test_blank_windows_never_reach_the_models(periodic_pipeline):
+    """Seen live: all-black webcam frames gave a 'confirmed fighting' (clip model 0.96, Gemma invented people)."""
+    import numpy as np
+
+    from aequitas.ingest.ring_buffer import BufferedFrame, RingBuffer
+    from aequitas.types import Frame
+    from aequitas.understand.keyframes import window_detail
+
+    assert window_detail([BufferedFrame(0, np.zeros((48, 64, 3), np.uint8), 1.0, {})]) == 0.0
+    noise = np.random.default_rng(0).integers(0, 255, (48, 64, 3), dtype=np.uint8)
+    assert window_detail([BufferedFrame(0, np.zeros((48, 64, 3), np.uint8), 1.0, {}),
+                          BufferedFrame(1, noise, 1.0, {})]) > 40  # one real frame is enough to look
+    p, store = periodic_pipeline
+    p.s.analysis.window_s = 1.0
+    step = p._periodic_step(p.cameras[0], RingBuffer(12, 320))
+    for i in range(21):  # 5 s of a covered camera
+        step(Frame("cam1", i, i * 250, 0, np.zeros((60, 80, 3), np.uint8)))
+    assert len(p.queue) == 0 and store.stage_summary("up1")["skipped_blank"] >= 4
+    for i in range(21, 30):  # the lens is uncovered: windows go to the VLM again
+        step(Frame("cam1", i, i * 250, 0, noise))
+    assert len(p.queue) == 1
 
 
 def test_file_sources_analyse_every_window_even_with_a_slow_vlm(periodic_pipeline):

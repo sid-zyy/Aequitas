@@ -106,6 +106,9 @@ class AnalysisCfg(BaseModel):
     # Latency: skip the VLM for windows where almost nothing moves (mean frame difference, 0-1), e.g. an
     # empty corridor. 0 = off. Even when skipping, the VLM looks at least every max_skip_s.
     skip_static_below: float = 0.0
+    # Skip windows with no picture (covered lens, black or blank frames): highest grayscale std below this (0-255).
+    # Demo clips are 41+; black frames 0-2. 0 = off.
+    skip_blank_below: float = 6.0
     max_skip_s: float = 30.0
     # Stage 2 also sees the previous window's summary from the same camera (sequences such as an arrest).
     # Measured (scripts/bench_variants.py, 72 windows): arrest 7->8/12, fire 6->8/10, 0 false alarms, +0.03 s.

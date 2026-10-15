@@ -23,7 +23,7 @@ from aequitas.store.db import EventRecord, EventStore, Timings
 from aequitas.types import Candidate
 from aequitas.understand.fusion import fuse, fuse_window
 from aequitas.understand.gate import should_skip
-from aequitas.understand.keyframes import encode_jpeg, make_grid, window_motion
+from aequitas.understand.keyframes import encode_jpeg, make_grid, window_detail, window_motion
 from aequitas.understand.periodic import WindowAggregator
 from aequitas.understand.stages import InOrder, Understanding, escalate, needs_escalation, understand
 
@@ -292,6 +292,13 @@ class Pipeline:
                 log.debug("%s: window stretched to %.1f s (VLM slower than real time)",
                           cam.camera_id, (end_ms - start) / 1000)
             frames = ring.pick(start, end_ms)
+            if a.skip_blank_below > 0 and window_detail(frames) < a.skip_blank_below:
+                # Black, covered or blank picture: nothing to see. Both models invent things on it (seen live:
+                # black frames scored 0.96 on the violence model and Gemma described "two people pushing").
+                self.store.record_stage(self.run_id, cam.camera_id, "blank", None, None, None, True)
+                state["vmax"] = None
+                state["start"] = end_ms
+                return
             if a.skip_static_below > 0 and state["last_vlm"] is not None \
                     and end_ms - state["last_vlm"] < a.max_skip_s * 1000 \
                     and window_motion(frames) < a.skip_static_below:
