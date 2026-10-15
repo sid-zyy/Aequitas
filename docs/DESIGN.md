@@ -229,6 +229,16 @@ If M0 measures above 5.5 GB: lower Ollama `num_ctx` to 2048, then drop to `qwen3
 | qwen2.5vl:3b, 896 px 2×2 grid, **uncached** | ~42–46 s per call; 3/3 valid JSON |
 | Chat question → filter (text only) | ~6 s |
 
+**Gemma 4 E2B vs Qwen2.5-VL-3B** (same 896 px grid, unique image per call, CPU):
+
+| Model | Download | Uncached call (p50) | Cold start | Valid JSON | Static scene answered `none` |
+|---|---|---|---|---|---|
+| qwen2.5vl:3b | 3.2 GB | ~44 s | ~40 s | 8/8 | 6 of 12 calls across runs (others "tailgating") |
+| **gemma4:e2b** | 4.6 GB | **~16 s** | ~16 s | 8/8 | **8 of 8** |
+
+Gemma 4 E2B is about 2.7× faster on this CPU and made no false calls on the static scene, so it is now the
+default VLM. One still scene is not an accuracy benchmark: the M5 evaluation on labelled clips decides.
+
 Lessons:
 - **Ollama caches identical prompts and images.** A repeated image returns in ~4 s, which is misleading.
   The spike now uses a different image for every call.

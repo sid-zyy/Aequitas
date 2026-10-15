@@ -142,10 +142,14 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
     grid_img = make_grid(buf, cand, Zones(), settings.vlm.tile_px)
     grid_jpeg = encode_jpeg(grid_img)
 
+    run_seed = int(time.time() * 1000) % 100_000
+
     def unique_grid(i: int) -> bytes:
-        # Every call gets a different image: Ollama caches identical prompts+images, which would
-        # make warm calls look ~10x faster than real events.
-        return encode_jpeg(np.roll(grid_img, shift=17 * (i + 1), axis=1))
+        # Every call, in every run, gets a different image: Ollama caches identical prompts+images,
+        # which would make calls look ~10x faster than real events (seen twice in M0).
+        img = np.roll(grid_img, shift=17 * (i + 1) + run_seed % 97, axis=1).copy()
+        img[0, 0] = (run_seed + i) % 256  # one pixel is enough to change the image hash
+        return encode_jpeg(img)
     out_dir = settings.data_dir / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "spike-grid.jpg").write_bytes(grid_jpeg)
