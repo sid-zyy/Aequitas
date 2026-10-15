@@ -1,0 +1,23 @@
+# Cameras. Zone coordinates are normalised: (0,0) top-left, (1,1) bottom-right.
+# source: a file path, rtsp://host:8554/path, or a webcam index such as "0".
+
+cameras:
+  - camera_id: cam1
+    name: Lobby entrance
+    aliases: ["camera 1", "entrance", "lobby", "front door"]
+    source: data/videos/cam1.mp4
+    realtime: true
+    zones:
+      entry_line: {p1: [0.25, 0.75], p2: [0.75, 0.75], entering: positive}
+      crowd_zone: {polygon: [[0, 0], [1, 0], [1, 1], [0, 1]], max_people: 8}
+      watch_zones:
+        lobby: [[0.1, 0.3], [0.9, 0.3], [0.9, 1.0], [0.1, 1.0]]
+
+  - camera_id: cam2
+    name: Corridor
+    aliases: ["camera 2", "corridor", "hallway"]
+    source: data/videos/cam2.mp4
+    realtime: true
+    zones:
+      watch_zones:
+        corridor: [[0, 0], [1, 0], [1, 1], [0, 1]]
