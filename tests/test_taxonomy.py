@@ -16,7 +16,7 @@ from test_store_chat import NOW
 
 
 def test_default_list_has_the_police_categories_and_none():
-    for c in ["arrest", "fire", "riot", "chase", "weapon", "fighting", "person_down"]:
+    for c in ["arrest", "fire", "riot", "chase", "weapon", "fighting", "person_down", "harassment"]:
         assert c in DEFAULT_CATEGORIES
     assert choices(DEFAULT_CATEGORIES)[-1] == "none" and label("person_down") == "person down"
 

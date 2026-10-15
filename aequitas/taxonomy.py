@@ -12,6 +12,8 @@ NONE = "none"
 
 # Order matters a little: it is the order shown to the model and in the UI.
 DEFAULT_CATEGORIES: dict[str, str] = {
+    "harassment": ("a person follows, blocks, touches, gropes, grabs or threatens another person who tries to "
+                   "move away or resist (stalking, eve-teasing, molestation)"),
     "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
     "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
     "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
@@ -72,6 +74,7 @@ KEYWORDS: dict[str, str] = {
     "chase": r"\b(chas\w*|pursu\w*|running after|fleeing|fled)\b",
     "accident": r"\b(accidents?|crash\w*|collision|collided|hit[- ]and[- ]run)\b",
     "theft": r"\b(theft|thie\w*|snatch\w*|stole|stolen|steal\w*|robbery|rob\w*)\b",
+    "harassment": r"\b(harass\w*|stalk\w*|eve[- ]?teas\w*|molest\w*|grop\w*|catcall\w*|follow(ed|ing) (her|him|a woman))\b",
     "vandalism": r"\b(vandal\w*|smash\w*|graffiti|damag\w*)\b",
 }
 
