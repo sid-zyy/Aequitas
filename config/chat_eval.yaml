@@ -1,0 +1,41 @@
+# Chatbot check: questions with the search filter they should produce (`aequitas eval-chat`).
+# "now" is fixed so time ranges are exact. Scored per field: categories, cameras, start/end (to the minute,
+# +-1 min), intent (list/count), include_unconfirmed. Written before any model was run on it; a small
+# development set, not a measured accuracy on real officers' questions.
+now: "2026-10-16T15:30"   # a Friday
+cameras:
+  - {camera_id: mg-road, name: MG Road Metro, aliases: [mg road]}
+  - {camera_id: brigade, name: Brigade Road, aliases: []}
+  - {camera_id: ksr, name: KSR Station, aliases: [majestic, railway station]}
+  - {camera_id: forum, name: Forum Mall, aliases: []}
+  - {camera_id: cam2, name: Corridor, aliases: [camera 2]}
+items:
+  - {q: "Show all fights on MG Road today", categories: [fighting], cameras: [mg-road], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "How many fires were there yesterday?", categories: [fire], start: "2026-10-15T00:00", end: "2026-10-15T23:59", intent: count}
+  - {q: "Any stone pelting near Brigade Road this morning?", categories: [riot], cameras: [brigade], start: "2026-10-16T06:00", end: "2026-10-16T12:00"}
+  - {q: "List arrests at the railway station in the last 2 hours", categories: [arrest], cameras: [ksr], start: "2026-10-16T13:30", end: "2026-10-16T15:30"}
+  - {q: "Was anyone carrying a knife at Forum Mall?", categories: [weapon], cameras: [forum]}
+  - {q: "Show unconfirmed incidents from camera 2", cameras: [cam2], include_unconfirmed: true}
+  - {q: "How many road accidents this week?", categories: [accident], start: "2026-10-12T00:00", end: "2026-10-16T15:30", intent: count}
+  - {q: "Any chain snatching today?", categories: [theft], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "Did someone collapse at Majestic yesterday?", categories: [person_down], cameras: [ksr], start: "2026-10-15T00:00", end: "2026-10-15T23:59"}
+  - {q: "Show me harassment incidents this afternoon", categories: [harassment], start: "2026-10-16T12:00", end: "2026-10-16T15:30"}
+  - {q: "Any bags left unattended at KSR Station?", categories: [suspicious_activity], cameras: [ksr]}
+  - {q: "How many vandalism events at Brigade Road?", categories: [vandalism], cameras: [brigade], intent: count}
+  - {q: "Show every incident in the last 30 minutes", start: "2026-10-16T15:00", end: "2026-10-16T15:30"}
+  - {q: "Was there a stampede anywhere today?", categories: [crowd_incident], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "List chases on MG Road and Brigade Road", categories: [chase], cameras: [mg-road, brigade]}
+  - {q: "Show the earliest fight today", categories: [fighting], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "Was there a riot near Forum Mall yesterday?", categories: [riot], cameras: [forum], start: "2026-10-15T00:00", end: "2026-10-15T23:59"}
+  - {q: "How many people were arrested this morning?", categories: [arrest], start: "2026-10-16T06:00", end: "2026-10-16T12:00", intent: count}
+  - {q: "Any tailgating at the corridor?", categories: [tailgating], cameras: [cam2]}
+  - {q: "Show fires and accidents today", categories: [fire, accident], start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  - {q: "What happened at MG Road in the last hour?", cameras: [mg-road], start: "2026-10-16T14:30", end: "2026-10-16T15:30"}
+  - {q: "Show disputed weapon detections", categories: [weapon], include_unconfirmed: true}
+  - {q: "Did anyone fall down on camera 2 this afternoon?", categories: [person_down], cameras: [cam2], start: "2026-10-16T12:00", end: "2026-10-16T15:30"}
+  - {q: "Count harassment incidents yesterday", categories: [harassment], start: "2026-10-15T00:00", end: "2026-10-15T23:59", intent: count}
+  - {q: "Show burning vehicles at Majestic", categories: [fire], cameras: [ksr]}
+  - {q: "Any thefts at Forum Mall in the last 3 hours?", categories: [theft], cameras: [forum], start: "2026-10-16T12:30", end: "2026-10-16T15:30"}
+  - {q: "Show all events today", start: "2026-10-16T00:00", end: "2026-10-16T15:30"}
+  # guardrail: a peaceful gathering is never an incident category
+  - {q: "Is there a peaceful protest at MG Road?", cameras: [mg-road]}

@@ -139,6 +139,22 @@ def test_llm_hallucinations_are_reconciled_with_the_question(store, monkeypatch)
     assert f.start is not None
 
 
+def test_llm_intent_and_invented_times_are_overruled(monkeypatch):
+    # Seen with gemma4:e2b (config/chat_eval.yaml): yes/no questions read as counts, times invented or changed.
+    cams = [{"camera_id": c.camera_id, "name": c.name, "aliases": c.aliases} for c in CAMS]
+    llm = FakeLlm(LlmFilter(categories=["fighting"], intent="count", start="2026-10-15T14:00",
+                            end="2026-10-15T15:00"))
+    parser = QuestionParser(llm)
+    f = parser.parse("Any fights in the last 30 minutes?", cams, now=NOW).filter
+    assert f.intent == "list"  # no 'how many'
+    assert f.end - f.start == timedelta(minutes=30)  # the keyword reading of the time wins
+    f = parser.parse("Any fights on camera 2?", cams, now=NOW).filter
+    assert f.start is None and f.end is None  # no time asked: the invented one is dropped
+    llm.result = LlmFilter(categories=["fighting"], start="2026-10-15T14:00", end="2026-10-15T15:00")
+    f = parser.parse("fights since 2 pm", cams, now=NOW).filter
+    assert f.start is not None  # a time only the LLM can read is kept
+
+
 def test_unknown_camera_is_reported(store, monkeypatch):
     parser = QuestionParser(FakeLlm(LlmFilter(cameras=["parking lot"])))
     monkeypatch.setattr(parser, "now", lambda: NOW)

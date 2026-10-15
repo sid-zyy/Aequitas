@@ -77,7 +77,7 @@ KEYWORDS: dict[str, str] = {
     "arrest": r"\b(arrest\w*|detain\w*|handcuff\w*|custody|apprehend\w*)\b",
     "chase": r"\b(chas\w*|pursu\w*|running after|fleeing|fled)\b",
     "accident": r"\b(accidents?|crash\w*|collision|collided|hit[- ]and[- ]run)\b",
-    "theft": r"\b(theft|thie\w*|snatch\w*|stole|stolen|steal\w*|robbery|rob\w*)\b",
+    "theft": r"\b(thefts?|thie\w*|snatch\w*|stole|stolen|steal\w*|robbery|rob\w*)\b",
     "harassment": r"\b(harass\w*|stalk\w*|eve[- ]?teas\w*|molest\w*|grop\w*|catcall\w*|follow(ed|ing) (her|him|a woman))\b",
     "vandalism": r"\b(vandal\w*|smash\w*|graffiti|damag\w*)\b",
 }

@@ -86,6 +86,12 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--concurrency", type=int, default=4)
     ev.add_argument("--label", default="", help="e.g. w4a16, used in the report name")
 
+    ec = sub.add_parser("eval-chat", help="chatbot: questions -> search filters, scored per field")
+    ec.add_argument("--questions", default="config/chat_eval.yaml")
+    ec.add_argument("--models", nargs="*", default=None,
+                    help="models to compare (default: the chat model); the keyword parser is always the baseline")
+    ec.add_argument("--label", default="")
+
     ds = sub.add_parser("eval-dataset", help="run a labelled video dataset (e.g. the faculty's) through all stages")
     ds.add_argument("--data", required=True, help="dataset folder")
     ds.add_argument("--manifest", default=None, help="CSV/JSON/JSONL listing videos (default: auto-detect)")
@@ -187,6 +193,28 @@ def main(argv: list[str] | None = None) -> int:
         report = run_eval(make_client(ep), items, cats or settings.categories, args.concurrency, args.label,
                           settings.data_dir / "reports")
         print(summary_line(report))
+        return 0
+
+    if args.cmd == "eval-chat":
+        from aequitas.chat.parser import QuestionParser
+        from aequitas.eval import chat_eval
+        from aequitas.understand.vlm_client import make_client
+
+        items, cams, now = chat_eval.load(args.questions)
+        ep = settings.chat.endpoint(settings.vlm)
+        results = {"keywords only": chat_eval.run(QuestionParser(None, categories=settings.categories), items, cams, now)}
+        for model in args.models or [ep.model]:
+            llm = make_client(ep.model_copy(update={"model": model}))
+            results[model] = chat_eval.run(QuestionParser(llm, categories=settings.categories), items, cams, now)
+        print(chat_eval.report_table(results))
+        for name, r in results.items():
+            wrong = [row for row in r["rows"] if not row["all"]]
+            if wrong:
+                print(f"\n{name}: wrong on {len(wrong)}")
+                for row in wrong:
+                    bad = [k for k in chat_eval.FIELDS if not row[k]]
+                    print(f"  - {row['q']}  ({', '.join(bad)}) got {row['got']}")
+        print(f"Report: {chat_eval.save(results, args.label, settings.data_dir / 'reports')}")
         return 0
 
     if args.cmd == "eval-dataset":
