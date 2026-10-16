@@ -99,7 +99,7 @@ All on the RTX 4050 laptop with Ollama unless noted. Details are in the linked f
 not fit unquantised.
 
 1. Clone, then `python -m venv .venv`. Install the CUDA build of PyTorch, then
-   `.venv\Scripts\python -m pip install -e .[dev,detector]`.
+   `.venv\Scripts\python -m pip install -e .[dev,detector,rfdetr]`.
 2. `ollama pull gemma4:e2b` (~4.6 GB). Warm it before a demo: the first call loads the model, ~107 s.
 3. Violence model: unzip `violence_clip.zip` into `models/violence_clip/` (127 MB, not in git).
 4. `python scripts/get_footage.py` (demo clips), `bash scripts/get_caviar.sh` (CAVIAR evaluation).
@@ -141,7 +141,9 @@ numbers in the docs.
   push with a second person). Wire the skeleton model in as a webcam second signal only if it separates these.
 - [x] RF-DETR integrated behind `detector.family: rfdetr` (`pip install -e .[rfdetr]`). CAVIAR rules: YOLO11n 0/6 →
   RF-DETR-S 3/6 triggered, 2/6 confirmed, 0 confirmed false alarms (same YOLO-tuned thresholds; docs/DETECTION.md)
-- [ ] **Owner decides** whether `config/settings.yaml` switches to `family: rfdetr`; then retune tracker/confidence
+- [x] `config/settings.yaml` uses `family: rfdetr` since 2026-10-16 (owner's decision; falls back to YOLO if `rfdetr` isn't
+  installed). Code default stays `yolo`
+- [ ] Retune tracker/confidence
   thresholds on non-test data, and export to ONNX/TensorRT for latency
 - [ ] Abandoned object on CAVIAR: RF-DETR sees the 16×22 px bag (YOLO never does) but at 0.10–0.25 confidence, which
   `fuse_score` drops; the bag is also present only ~16 s against `unattended_s: 30`

@@ -180,7 +180,7 @@ class Pipeline:
         self.keyframe_dir = settings.data_dir / "keyframes"
         self.versions = {
             "mode": self.mode,
-            "detector": settings.detector.name() if self.mode == "triggered" else None,
+            "detector": self.detector.name if self.detector is not None else None,  # the one loaded, after any fallback
             "vlm": f"{settings.vlm.backend}:{settings.vlm.model}" if use_vlm else None,
             "classifier": f"{self.classifier.cfg.backend}:{self.classifier.model}" if self.classifier else None,
             "rules": RULES_VERSION if self.mode == "triggered" else None,

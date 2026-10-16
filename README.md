@@ -26,7 +26,7 @@ model hosts are refused unless `allow_remote: true`.
 
 ```bash
 python -m venv .venv
-.venv\Scripts\python -m pip install -e .[dev,detector]   # detector: AI-likelihood check + scene gate
+.venv\Scripts\python -m pip install -e .[dev,detector,rfdetr]   # detector: AI-likelihood check + scene gate; rfdetr: person detector (triggered mode)
 ollama pull gemma4:e2b                      # the vision model the app uses (4.6 GB)
 python scripts/get_footage.py               # demo street + incident clips into data/footage
 ```
