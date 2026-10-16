@@ -16,11 +16,12 @@ def main() -> None:
         if not line.strip() or line.startswith("#"):
             continue
         rel, vid, *_ = line.split()
+        vid, _, width = vid.partition("@")  # "7120813@1366": a clip whose 720p file is not 1280 wide
         dest = OUT / rel
         if dest.exists() and dest.stat().st_size > 0:
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
-        req = urllib.request.Request(f"https://www.pexels.com/download/video/{vid}/?h=720&w=1280",
+        req = urllib.request.Request(f"https://www.pexels.com/download/video/{vid}/?h=720&w={width or 1280}",
                                      headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=300) as r, dest.open("wb") as f:
             f.write(r.read())

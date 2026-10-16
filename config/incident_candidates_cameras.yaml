@@ -1,0 +1,14 @@
+# Candidate incident clips for the Bengaluru Live CCTV cameras (fire, accident, vandalism, theft, person down).
+# Free Pexels clips in data/footage/staged_candidates (px-<pexels id>.mp4). Run with config/eval_incident_candidates.yaml;
+# a clip goes on a camera only if the pipeline labels it correctly.
+cameras:
+  - {camera_id: fire-aerial, name: fire-aerial, source: data/footage/staged_candidates/px-11574594.mp4, realtime: false, start_time: "2026-10-17T09:00:00"}
+  - {camera_id: fire-ladder, name: fire-ladder, source: data/footage/staged_candidates/px-6741632.mp4, realtime: false, start_time: "2026-10-17T09:03:00"}
+  - {camera_id: fire-smoke, name: fire-smoke, source: data/footage/staged_candidates/px-6746452.mp4, realtime: false, start_time: "2026-10-17T09:04:00"}
+  - {camera_id: accident-highway, name: accident-highway, source: data/footage/staged_candidates/px-12753260.mp4, realtime: false, start_time: "2026-10-17T09:05:00"}
+  - {camera_id: accident-night, name: accident-night, source: data/footage/staged_candidates/px-11387544.mp4, realtime: false, start_time: "2026-10-17T09:06:00"}
+  - {camera_id: accident-wreck, name: accident-wreck, source: data/footage/staged_candidates/px-3974558.mp4, realtime: false, start_time: "2026-10-17T09:07:00"}
+  - {camera_id: vandalism-graffiti, name: vandalism-graffiti, source: data/footage/staged_candidates/px-7120813.mp4, realtime: false, start_time: "2026-10-17T09:08:00"}
+  - {camera_id: theft-car, name: theft-car, source: data/footage/staged_candidates/px-854221.mp4, realtime: false, start_time: "2026-10-17T09:09:00"}
+  - {camera_id: theft-breakin, name: theft-breakin, source: data/footage/staged_candidates/px-8104041.mp4, realtime: false, start_time: "2026-10-17T09:10:00"}
+  - {camera_id: person-down-stretcher, name: person-down-stretcher, source: data/footage/staged_candidates/px-8944324.mp4, realtime: false, start_time: "2026-10-17T09:11:00"}

@@ -23,3 +23,6 @@ incidents/arrest-4.mp4 7714094 Police officers arresting suspects
 incidents/punching.mp4 15094459 A man in black shirt punching
 incidents/accident.mp4 4686100 Drone footage of car accident at an intersection
 incidents/fire-rescue.mp4 19539603 Fire fighter rescue
+incidents/fire-building.mp4 11574594 Aerial view of a fire engulfing a rural building with emergency services
+incidents/accident-wreck.mp4 3974558 A heavily damaged car on an urban street after a front-end collision
+incidents/vandalism.mp4 7120813@1366 Graffiti sprayed on glass inside an abandoned building
