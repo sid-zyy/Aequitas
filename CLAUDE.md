@@ -24,12 +24,12 @@ requirement seems impossible, say so to the owner.
    - **LATENCY, meaning total execution time (weighted most heavily).** Every stage must be timed, and the
      total time must be visible in the demo.
 
-Status of each item and the build order: HANDOVER.md §6 (Phases 1–5 and 8) and docs/HACKATHON_PLAN.md.
+Status of each item: HANDOVER.md §6 ("Faculty requirements") and the status column in docs/HACKATHON_PLAN.md.
 
 ---
 
 Start every new session by reading **HANDOVER.md**. It holds the project state, the decisions, and the
-phased plan. Its §6 checklist says what to do next.
+plan. Its §6 checklist says what to do next. **docs/ARCHITECTURE.md** explains how the system works.
 
 ## Rules from the project owner
 - **Never add Claude as a contributor.** No `Co-Authored-By` trailers and no "Generated with" lines in

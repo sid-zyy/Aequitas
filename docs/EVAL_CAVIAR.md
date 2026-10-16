@@ -44,6 +44,14 @@ The loosened thresholds were tuned on these same clips, so even a better number 
 
 ## What this changes
 
+> **Follow-up 2026-10-16** (docs/TRACKING.md, against CAVIAR's ground-truth tracks):
+> - The weak detector is confirmed as the bottleneck. YOLO11n at 640 px matches 2–33 % of labelled people
+>   and keeps a fixed false "person" on the left of the frame.
+> - YOLO11m at 960 px tripled tracking quality (IDF1 0.05 → 0.14–0.16), whichever tracker is used.
+> - Its latency on the 4050 is not timed yet.
+> - Periodic mode (VLM review every window, with the violence clip model as the second signal) became the
+>   main mode (ARCHITECTURE.md §4).
+
 1. **The trigger + VLM agreement design holds up:** the VLM alone would have flooded operators with false falls.
    But the trigger side needs a much better person detector on low-res CCTV.
 2. **Next experiments**

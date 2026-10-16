@@ -114,6 +114,14 @@ false-alarm rate on long normal footage (rallies, festivals, markets).
 
 ## Next steps (in order)
 
+> **Status 2026-10-16:** the hackathon faculty requirements come first (HANDOVER.md §6). Of the steps below:
+> - Done: the CAVIAR baseline (step 1); the bodycam review UI and report export (step 5, without redaction);
+>   the violence clip classifier (step 7)
+> - Not trained yet: the hazard detector (steps 3 and 7)
+> - Not started: profiles, the per-frame table, audio, staged footage, stone pelting
+>
+> How the built system works: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 | # | Step | Part | Size |
 |---|---|---|---|
 | 1 | Finish the **CAVIAR baseline**, fix what it exposes (rules on real low-res footage) | Core / 1 | Small, in progress |
@@ -144,7 +152,7 @@ Steps 3, 4 and 6 can run in parallel once step 2 lands.
      with volunteers (foam props for stones and sticks) and CC-licensed public footage where the licence
      is clear. There is still no real Indian riot footage, and **the report must say so**: accuracy on
      real Indian riots is unmeasured until such data exists.
-3. **GPU arriving soon.** When it arrives:
+3. **GPU (arrived: RTX 4050 Laptop 6 GB; results in DESIGN.md §4.4).** The original plan:
    - Install the CUDA build of PyTorch.
    - Re-run `aequitas spike` (including `gemma4:e4b` and YOLO11s/m) and record the results in DESIGN.md §4.3.
    - Raise the defaults (larger detector, per-frame inference at 8 fps, VLM review in real time).

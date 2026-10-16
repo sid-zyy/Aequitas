@@ -1,10 +1,19 @@
 # Aequitas — Refined Design (v0.2)
 
+> **This is the original design (2026-10-15), kept for its event definitions, M0 measurements and reasoning.**
+> The system as built is described in [ARCHITECTURE.md](ARCHITECTURE.md), and where they differ, ARCHITECTURE.md wins.
+> The main differences:
+> - periodic mode is the main mode
+> - understanding is two stages (summarise → classify), not one VLM call
+> - the category list is configurable (14 police categories), not a fixed enum
+> - the frontend is React, not Gradio
+> - the target GPU is an RTX 4050 6 GB (§4.4)
+
 Live video event summarization, classification and conversational querying.
 Refines `Video_Event_System_Problem_Statement_and_Plan.pdf`. This doc is the contract
 the code is built against; change it here first, then in code.
 
-**Hardware:** the target GPU is not settled. The development laptop has no NVIDIA GPU
+**Hardware (at the time of writing):** the target GPU was not settled; it is now an RTX 4050 Laptop, 6 GB (§4.4). The development laptop has no NVIDIA GPU
 (Intel Iris Xe, 32 GB RAM), so everything also runs on CPU. `device: auto` picks CUDA when present.
 Only §4.2 (model sizes) depends on the card.
 
