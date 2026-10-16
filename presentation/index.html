@@ -264,23 +264,24 @@ table.dense td { padding: 8px 18px; }
 .axis .ticks { display: flex; justify-content: space-between; }
 
 
-/* --- architecture --- */
-.arch { display: grid; grid-template-columns: 1fr 28px 1.05fr 28px 1.35fr 28px 1fr 28px 1.15fr; align-items: stretch; flex: 1; min-height: 0; }
-.arch > * { min-width: 0; }
-.acol { display: flex; flex-direction: column; gap: 12px; }
-.acol .h { font-family: var(--mono); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding-bottom: 4px; }
-.abox { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
-.abox b { font-size: 19px; font-weight: 600; line-height: 1.2; }
-.abox span { font-size: 14px; color: var(--muted); line-height: 1.35; }
-.abox i { font-style: normal; font-family: var(--mono); font-size: 14px; color: var(--saffron); }
-.abox.stage-n { border-color: var(--accent); }
-.abox.stage-n b::before { content: attr(data-k); display: block; font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .1em; color: var(--accent); margin-bottom: 2px; }
-.abox.cpu { border-style: dashed; }
-.abox.human { border-color: var(--ok); }
-.lane { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: var(--faint); text-transform: uppercase; margin-top: 4px; }
-.aarrow { display: grid; place-items: center; color: var(--faint); font-size: 22px; }
-
-
+/* --- architecture diagram (inline SVG) --- */
+.dgwrap { flex: 1; min-height: 0; display: flex; }
+.dg { width: 100%; height: 100%; overflow: visible; }
+.dg text { font-family: var(--body); fill: var(--fg); }
+.dg .t { font-size: 19px; font-weight: 600; }
+.dg .s { font-size: 14px; fill: var(--muted); }
+.dg .k { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; fill: var(--faint); }
+.dg .k.cy { fill: var(--accent); }
+.dg .ms { font-family: var(--mono); font-size: 14px; fill: var(--saffron); }
+.dg .wl { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+.dg .box { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+.dg .box.stg { stroke: var(--accent); }
+.dg .box.human { stroke: var(--ok); }
+.dg .lane { fill: rgba(255, 255, 255, .018); stroke: var(--line); stroke-width: 1; }
+.dg .bound { fill: none; stroke: var(--faint); stroke-width: 1.2; stroke-dasharray: 6 6; }
+.dg .wire { fill: none; stroke: var(--muted); stroke-width: 1.8; }
+.dg .wire.dash { stroke-dasharray: 6 5; }
+.dg .ahp, .dg .dot { fill: var(--muted); }
 /* --- end --- */
 .slide.active .end img { animation: kbs 14s ease-out both; }
 @keyframes kbs { from { transform: scale(1.15); } to { transform: scale(1); } }
@@ -415,46 +416,118 @@ table.dense td { padding: 8px 18px; }
 
 <!-- 7b · architecture -->
 <section class="slide" data-title="Architecture">
-  <div class="eyebrow rv">Architecture · one laptop, offline · React + FastAPI over one SQLite file</div>
-  <h2 class="rv" style="--i:1;font-size:60px">Cheap checks first. The big model only looks when it has to.</h2>
-  <div class="arch rv" style="--i:2">
-    <div class="acol">
-      <div class="h">Sources</div>
-      <div class="abox"><b>CCTV</b><span>RTSP or looping street footage</span></div>
-      <div class="abox"><b>Bodycam</b><span>whole recordings, uploaded</span></div>
-      <div class="abox"><b>Citizen portal</b><span>phone video + report in English, Hindi or Kannada</span></div>
-      <div class="abox"><b>Webcam</b><span>close range</span></div>
-    </div>
-    <div class="aarrow">→</div>
-    <div class="acol">
-      <div class="h">Ingest</div>
-      <div class="abox"><b>4-second windows</b><span>4 fps, one thread per camera, 4 frames as a 2×2 grid</span></div>
-      <div class="abox"><b>Skip blank / static</b><span>unchanged frames never reach a model</span><i>~0 ms</i></div>
-      <div class="abox"><b>SigLIP scene gate</b><span>calm street scenes skip Gemma</span><i>44 ms · GPU</i></div>
-    </div>
-    <div class="aarrow">→</div>
-    <div class="acol">
-      <div class="h">Understand</div>
-      <div class="lane">GPU · Ollama · Gemma 4 E2B, 4-bit, MTP</div>
-      <div class="abox stage-n"><b data-k="STAGE 1">Summarise</b><span>describes only what is visible; never sees the label list</span><i>0.58 s</i></div>
-      <div class="abox stage-n"><b data-k="STAGE 2">Classify</b><span>one label from the summary text alone</span><i>0.32 s</i></div>
-      <div class="lane">CPU · beside the GPU</div>
-      <div class="abox cpu"><b>Violence model</b><span>r3d-18 ONNX on motion, 2 s clips</span><i>90 ms</i></div>
-      <div class="abox cpu"><b>RF-DETR + tracker + rules</b><span>triggered mode: crowd, fight, person-down and tailgating rules</span><i>26 ms a frame</i></div>
-    </div>
-    <div class="aarrow">→</div>
-    <div class="acol">
-      <div class="h">Decide</div>
-      <div class="abox"><b>Fusion</b><span>VLM and violence model vote; two windows must agree to confirm</span></div>
-      <div class="abox"><b>Evidence store</b><span>SQLite: events, every window, every stage's time; key frame, camera, SHA-256 of the file</span></div>
-    </div>
-    <div class="aarrow">→</div>
-    <div class="acol">
-      <div class="h">People</div>
-      <div class="abox human"><b>Officer's queue</b><span>confirm or dismiss; every decision audited</span></div>
-      <div class="abox stage-n"><b data-k="STAGE 3">Chat</b><span>question → filter → SQL. The answer cites event IDs and is dropped if it cites one it wasn't given</span><i>0.45 s · streamed</i></div>
-      <div class="abox"><b>Latency panel</b><span>per-stage and total time for every upload</span></div>
-    </div>
+  <div class="eyebrow rv">Architecture · React + FastAPI over one SQLite file</div>
+  <h2 class="rv" style="--i:1;font-size:56px">Cheap checks first. The big model only looks when it has to.</h2>
+  <div class="dgwrap rv" style="--i:2">
+    <svg class="dg" viewBox="0 0 1376 610" role="img" aria-label="Architecture: sources feed ingest, which splits into a GPU lane (scene gate, summarise, classify) and a CPU lane (violence model, detector and rules); both feed fusion, which writes events to the SQLite evidence store; the React app reads the store for the officer queue, chat and latency panel.">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker><marker id="ah-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+    <rect class="bound" x="205" y="6" width="1166" height="600" rx="10"/>
+    <text class="k" x="221" y="28">ONE LAPTOP · OFFLINE · RTX 4050, 6 GB · NOTHING LEAVES THE STATION</text>
+    <g transform="translate(0,40)">
+    <text class="k" x="0" y="-12">SOURCES</text>
+    <rect class="box " x="0" y="0" width="180" height="62" rx="6"/>
+    <text class="t" x="14" y="26">CCTV</text>
+    <text class="s" x="14" y="48">RTSP cameras</text>
+    <path class="wire " d="M180,31 H223" marker-end="url(#ah)"/>
+    <rect class="box " x="0" y="78" width="180" height="62" rx="6"/>
+    <text class="t" x="14" y="104">Bodycam</text>
+    <text class="s" x="14" y="126">whole recordings</text>
+    <path class="wire " d="M180,109 H223" marker-end="url(#ah)"/>
+    <rect class="box " x="0" y="156" width="180" height="62" rx="6"/>
+    <text class="t" x="14" y="182">Citizen phone</text>
+    <text class="s" x="14" y="204">report in EN · HI · KN</text>
+    <path class="wire " d="M180,187 H223" marker-end="url(#ah)"/>
+    <rect class="box " x="0" y="234" width="180" height="62" rx="6"/>
+    <text class="t" x="14" y="260">Webcam</text>
+    <text class="s" x="14" y="282">close range</text>
+    <path class="wire " d="M180,265 H223" marker-end="url(#ah)"/>
+    <rect class="lane" x="225" y="0" width="230" height="296" rx="8"/>
+    <text class="k" x="241" y="22">INGEST</text>
+    <rect class="box " x="241" y="36" width="198" height="104" rx="6"/>
+    <text class="t" x="255" y="62">4-second windows</text>
+    <text class="s" x="255" y="84">4 fps · 2×2 grid</text>
+    <text class="s" x="255" y="103">one thread per camera</text>
+    <rect class="box " x="241" y="176" width="198" height="104" rx="6"/>
+    <text class="t" x="255" y="202">Skip blank / static</text>
+    <text class="s" x="255" y="224">unchanged frames</text>
+    <text class="s" x="255" y="243">never reach a model</text>
+    <path class="wire " d="M340,140 V174" marker-end="url(#ah)"/>
+    <path class="wire " d="M439,228 H485 V88 H524" marker-end="url(#ah)"/>
+    <path class="wire " d="M485,228 V244 H524" marker-end="url(#ah)"/>
+    <circle class="dot" cx="485" cy="228" r="4"/>
+    <rect class="lane gpu" x="510" y="0" width="550" height="150" rx="8"/>
+    <text class="k" x="526" y="22">GPU · OLLAMA · GEMMA 4 E2B, 4-BIT, MTP DRAFTER</text>
+    <rect class="box " x="526" y="40" width="150" height="96" rx="6"/>
+    <text class="t" x="540" y="66">SigLIP gate</text>
+    <text class="s" x="540" y="88">calm scenes</text>
+    <text class="s" x="540" y="107">skip Gemma</text>
+    <text class="ms" x="540" y="130">44 ms</text>
+    <rect class="box stg" x="712" y="40" width="160" height="96" rx="6"/>
+    <text class="k cy" x="726" y="62">STAGE 1</text>
+    <text class="t" x="726" y="86">Summarise</text>
+    <text class="s" x="726" y="108">what is visible</text>
+    <text class="ms" x="726" y="131">0.58 s</text>
+    <rect class="box stg" x="908" y="40" width="136" height="96" rx="6"/>
+    <text class="k cy" x="922" y="62">STAGE 2</text>
+    <text class="t" x="922" y="86">Classify</text>
+    <text class="s" x="922" y="108">from the text</text>
+    <text class="ms" x="922" y="131">0.32 s</text>
+    <path class="wire " d="M676,88 H710" marker-end="url(#ah)"/>
+    <path class="wire " d="M872,88 H906" marker-end="url(#ah)"/>
+    <rect class="lane" x="510" y="170" width="550" height="126" rx="8"/>
+    <text class="k" x="526" y="192">CPU · BESIDE THE GPU</text>
+    <rect class="box " x="526" y="206" width="250" height="76" rx="6"/>
+    <text class="t" x="540" y="232">Violence model</text>
+    <text class="s" x="540" y="254">r3d-18 ONNX · every window</text>
+    <text class="ms" x="762" y="232" text-anchor="end">90 ms</text>
+    <rect class="box " x="800" y="206" width="244" height="76" rx="6"/>
+    <text class="t" x="814" y="232">Detector + rules</text>
+    <text class="s" x="814" y="254">RF-DETR · crowd, fight, fall</text>
+    <text class="ms" x="1030" y="232" text-anchor="end">26 ms</text>
+    <path class="wire dash" d="M922,206 V160 H792 V138" marker-end="url(#ah)"/>
+    <text class="wl" x="912" y="192" text-anchor="end">rules wake the VLM</text>
+    <rect class="box " x="1110" y="20" width="240" height="210" rx="6"/>
+    <text class="k" x="1124" y="42">DECIDE</text>
+    <text class="t" x="1124" y="66">Fusion</text>
+    <text class="s" x="1124" y="88">VLM label and violence</text>
+    <text class="s" x="1124" y="107">score vote</text>
+    <text class="s" x="1124" y="126"></text>
+    <text class="s" x="1124" y="145">2 agreeing windows</text>
+    <text class="s" x="1124" y="164">→ confirmed event</text>
+    <path class="wire " d="M1044,88 H1108" marker-end="url(#ah)"/>
+    <text class="wl" x="1077" y="80" text-anchor="middle">label</text>
+    <path class="wire " d="M651,282 V318 H1080 V190 H1108" marker-end="url(#ah)"/>
+    <text class="wl" x="820" y="336" text-anchor="start">violence score, every window</text>
+    <path class="box" d="M1110,330 V520 A120,16 0 0 0 1350,520 V330"/>
+    <ellipse class="box" cx="1230" cy="330" rx="120" ry="16"/>
+    <text class="t" x="1126" y="376">Evidence store</text>
+    <text class="s" x="1126" y="401">SQLite · every window</text>
+    <text class="s" x="1126" y="422">every stage's time</text>
+    <text class="s" x="1126" y="443">audit log</text>
+    <text class="s" x="1126" y="464">key frame + SHA-256</text>
+    <path class="wire " d="M1230,230 V312" marker-end="url(#ah)"/>
+    <text class="wl" x="1240" y="278" text-anchor="start">event</text>
+    <rect class="lane" x="225" y="350" width="835" height="210" rx="8"/>
+    <text class="k" x="241" y="372">REACT APP · FASTAPI</text>
+    <path class="wire" d="M1110,400 H366"/>
+    <path class="wire " d="M366,400 V428" marker-end="url(#ah)" marker-start="url(#ah-s)"/>
+    <path class="wire " d="M665,400 V428" marker-end="url(#ah)" marker-start="url(#ah-s)"/>
+    <path class="wire " d="M941,400 V428" marker-end="url(#ah)"/>
+    <rect class="box human" x="241" y="430" width="250" height="116" rx="6"/>
+    <text class="t" x="255" y="456">Officer's queue</text>
+    <text class="s" x="255" y="478">confirm or dismiss</text>
+    <text class="s" x="255" y="497">every decision audited</text>
+    <rect class="box stg" x="515" y="430" width="300" height="116" rx="6"/>
+    <text class="k cy" x="529" y="452">STAGE 3</text>
+    <text class="t" x="529" y="476">Chat</text>
+    <text class="s" x="529" y="498">question → filter → SQL</text>
+    <text class="s" x="529" y="517">answer cites event IDs</text>
+    <text class="ms" x="801" y="476" text-anchor="end">0.45 s · streamed</text>
+    <rect class="box " x="839" y="430" width="205" height="116" rx="6"/>
+    <text class="t" x="853" y="456">Latency panel</text>
+    <text class="s" x="853" y="478">every stage timed</text>
+    <text class="s" x="853" y="497">total per upload</text>
+    </g></svg>
   </div>
 </section>
 
