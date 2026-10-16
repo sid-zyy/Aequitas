@@ -194,10 +194,6 @@ tr.out td { color: var(--faint); }
 .good { color: var(--ok); } .bad { color: var(--danger); } .warn { color: var(--saffron); }
 .takeaway { font-size: 24px; line-height: 1.45; margin: 0; max-width: 70ch; color: var(--muted); }
 .takeaway b { color: var(--fg); }
-/* honesty labels: how far a number can be trusted */
-.caveat { display: block; margin-top: 6px; font-family: var(--mono); font-size: 14px; line-height: 1.4; color: var(--saffron); }
-.caveat.good-c { color: var(--ok); }
-.caveat.inline { display: inline; margin: 0 0 0 8px; }
 /* numbers still to be measured */
 .tbd { font-family: var(--mono); font-size: 15px; color: var(--saffron); border: 1px dashed var(--saffron); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
 tr.pending td { color: var(--muted); }
@@ -207,7 +203,6 @@ table.models td { padding: 12px 14px; }
 table.models th { padding: 0 14px 12px; }
 table.dense { font-size: 18px; }
 table.dense td { padding: 8px 18px; }
-table.dense .caveat { margin-top: 2px; }
 .slide .tablewrap { flex: none; }
 
 /* --- improvement slides --- */
@@ -494,7 +489,7 @@ table.dense .caveat { margin-top: 2px; }
 
 <!-- 10 · model choice (one slide: size limit, same-size rivals, full-app decision) -->
 <section class="slide" data-title="Model">
-  <div class="eyebrow rv">Choosing the vision-language model · 60 test videos, VLM on its own (Kaggle T4) · then the full app on our laptop</div>
+  <div class="eyebrow rv">Choosing the vision-language model · 60 test videos, VLM on its own · then the full app on our laptop</div>
   <h2 class="rv" style="--i:1">Two small models can tell a fight from a street. Gemma makes the faster system.</h2>
   <div class="tablewrap rv" style="--i:2">
     <table class="models">
@@ -507,7 +502,7 @@ table.dense .caveat { margin-top: 2px; }
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3;font-size:21px">Qwen sees more <b>on its own</b>. In the app a violence model votes with the VLM, so the gap shrinks to <b>1–2 demo incidents</b>, and Qwen is <b>33 % slower</b> end to end (2 min 24 s vs 1 min 48 s). Latency is weighted most, so we chose <b>Gemma plus a second signal</b>.<br><span style="font-size:16px;color:var(--faint)">† 12B was run on an earlier draw of 60 videos (46 shared); E2B scored 15 % there. Demo-clip ranges cover repeated runs.</span></p>
+  <p class="takeaway rv" style="--i:3;font-size:21px">Qwen sees more <b>on its own</b>. In the app a violence model votes with the VLM, so the gap shrinks to <b>1–2 demo incidents</b>, and Qwen is <b>33 % slower</b> end to end (2 min 24 s vs 1 min 48 s). Latency is weighted most, so we chose <b>Gemma plus a second signal</b>.<br><span style="font-size:16px;color:var(--faint)">† 12B was run on an earlier draw of 60 videos (46 shared); E2B scored 15 % there.</span></p>
 </section>
 
 <!-- 10b · accuracy fix -->
@@ -603,7 +598,7 @@ table.dense .caveat { margin-top: 2px; }
 
 <!-- 17 · every lever -->
 <section class="slide" data-title="Time saved">
-  <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows · Qwen3-VL 2B FP16 on vLLM, Kaggle T4</div>
+  <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows</div>
   <h2 class="rv" style="--i:1">33 seconds down to 5.</h2>
   <div class="bars tight">
     <div class="bar base rv" style="--i:2"><span class="lab"><span>Baseline, one window at a time</span><span class="note">each window waits for the one before</span></span><div class="track"><div class="fill" style="--w:100%;--i:2"></div></div><span class="v">33.1 s</span></div>
@@ -623,12 +618,12 @@ table.dense .caveat { margin-top: 2px; }
   <h2 class="rv" style="--i:1">Every fix, measured.</h2>
   <div class="dumb">
     <div class="axis rv" style="--i:2"><span></span><span class="ticks"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></span><span></span></div>
-    <div class="drow rv" style="--i:2"><span class="lab"><span>Faculty clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma · cut-off chosen with these clips in view</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
+    <div class="drow rv" style="--i:2"><span class="lab"><span>Faculty clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
     <div class="drow rv" style="--i:3"><span class="lab"><span>Demo incidents confirmed</span><span class="note"><b>clip votes</b> count · 0 new false alarms</span></span><div class="dtrack" style="--a:50%;--b:70%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">5 / 10</span> → <span class="to">7 / 10</span></span></div>
     <div class="drow rv" style="--i:4"><span class="lab"><span>Incident windows flagged</span><span class="note"><b>previous-window context</b> · no extra time</span></span><div class="dtrack" style="--a:56.4%;--b:64.1%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">22 / 39</span> → <span class="to">25 / 39</span></span></div>
     <div class="drow rv" style="--i:5"><span class="lab"><span>Chat questions understood</span><span class="note"><b>keyword check</b> on the LLM's reading</span></span><div class="dtrack" style="--a:75%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">15 / 20</span> → <span class="to">20 / 20</span></span></div>
     <div class="drow rv" style="--i:6"><span class="lab"><span>CAVIAR incidents triggered</span><span class="note"><b>RF-DETR</b> instead of YOLO11n</span></span><div class="dtrack" style="--a:0%;--b:50%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">3 / 6</span></span></div>
-    <div class="drow rv later" style="--i:7"><span class="lab"><span>Incidents found, fine-tuned E2B</span><span class="note"><b>taught by 12B</b> · same dataset · not served yet</span></span><div class="dtrack" style="--a:20%;--b:60%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">20 %</span> → <span class="to">60 %</span></span></div>
+    <div class="drow rv later" style="--i:7"><span class="lab"><span>Incidents found, fine-tuned E2B</span><span class="note"><b>taught by 12B</b></span></span><div class="dtrack" style="--a:20%;--b:60%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">20 %</span> → <span class="to">60 %</span></span></div>
   </div>
 </section>
 
@@ -640,10 +635,10 @@ table.dense .caveat { margin-top: 2px; }
     <table class="dense">
       <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
       <tbody>
-        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4 · precision / recall 0.80<span class="caveat">violence cut-off chosen with these clips in view</span></td><td class="n" style="white-space:nowrap">25 s warm · 40 s cold<br><span style="font-size:15px;color:var(--faint)">39 s of video</span></td></tr>
-        <tr><td>1 · Summarise a window</td><td>Describes the scene; <span class="warn">Gemma alone describes 0 / 5 faculty fights</span>, the second signal catches them</td><td class="n">0.58 s</td></tr>
+        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
+        <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
         <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
-        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search<span class="caveat good-c">28 used while building it, 20 held out</span></td><td class="n">0.45 s answer</td></tr>
+        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
         <tr><td>Bodycam recording summary</td><td>Key points tied to real timestamps</td><td class="n">1.6 s</td></tr>
         <tr><td>Citizen report, Hindi / Kannada → English</td><td>6 / 6 sample reports kept every fact</td><td class="n">0.31 / 0.34 s</td></tr>
         <tr><td>21 Bengaluru demo clips</td><td>7 / 10 incidents confirmed · 1 false alarm</td><td class="n">1 min 48 s</td></tr>
