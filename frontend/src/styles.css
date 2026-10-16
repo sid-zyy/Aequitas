@@ -66,6 +66,8 @@ a { color: var(--accent); }
   border: 1px solid var(--line-2); color: var(--muted); font-size: 12px; white-space: nowrap; background: var(--panel);
 }
 .pill.alert { color: #ffd5d9; border-color: rgba(255,77,94,.5); background: var(--danger-bg); }
+.pill-switch { font: inherit; font-size: 12px; cursor: default; }
+.pill-switch:focus-visible { outline: 1px solid var(--line-2); outline-offset: 2px; }
 .pill.ok { color: #c6f2d1; border-color: rgba(55,194,91,.45); background: rgba(55,194,91,.1); }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); display: inline-block; }
 .dot.live { background: var(--ok); box-shadow: 0 0 0 3px rgba(55,194,91,.18); animation: pulse 1.6s infinite; }

@@ -61,6 +61,7 @@ class LiveManager:
         self.pipeline = None
         self.error: str | None = None
         self.started_at: float | None = None
+        self.paused = False  # the hidden switch on the dashboard: no live model calls until resumed
         for loc in localities:  # register the camera points so events and chat know their names
             for c in loc.cameras:
                 store.upsert_camera(CameraCfg(camera_id=c.id, name=c.name, aliases=[f"{loc.name} {c.name}"],
@@ -84,6 +85,8 @@ class LiveManager:
                               loop=not c.is_live, view=c.view, window_s=c.window_s)
                     for c in loc.cameras if self.has_footage(c.id)]
             self.active, self.error, self.started_at = locality_id, None, time.time()
+            if self.paused:
+                return
             if not cams:
                 self.error = f"No footage found for {loc.name} (expected files under data/footage/)"
                 return
@@ -97,14 +100,30 @@ class LiveManager:
                 self.error = str(e)[:300]
                 self.pipeline = None
                 return
+            if self.paused:  # paused while the models were loading
+                self.pipeline = None
+                return
             threading.Thread(target=self.pipeline.run, name=f"live-{locality_id}", daemon=True).start()
             log.info("live analysis started for %s (%d cameras)", loc.name, len(cams))
 
-    def _stop_locked(self) -> None:
+    def _stop_locked(self, keep_active: bool = False) -> None:
         if self.pipeline is not None:
             self.pipeline.stop()
         self.pipeline = None
-        self.active = None
+        if not keep_active:
+            self.active = None
+
+    def set_paused(self, paused: bool) -> None:
+        """Pausing stops the running locality's analysis (queued windows still finish) and keeps new ones from
+        starting; resuming restarts the locality the dashboard has open."""
+        self.paused = paused  # set before the lock, so a start that is still loading models sees it
+        with self._lock:
+            if paused:
+                self._stop_locked(keep_active=True)
+                return
+            resume = self.active
+        if resume is not None:
+            self.start(resume)
 
     def stop(self) -> None:
         with self._lock:
@@ -136,6 +155,7 @@ class LiveManager:
         return {
             "locality": {"id": loc.id, "name": loc.name},
             "running": self.active == locality_id and self.pipeline is not None,
+            "paused": self.paused,
             "error": self.error if self.active == locality_id else None,
             "cameras": cams, "concerns": concerns,
             "model": {"backend": self.settings.vlm.backend, "name": self.settings.vlm.model,

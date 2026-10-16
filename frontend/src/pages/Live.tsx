@@ -68,7 +68,7 @@ export default function Live() {
           {state && (
             <span className={"pill " + (state.running ? "ok" : "")}>
               <span className={"dot " + (state.running ? "live" : "")} />
-              {state.running ? `AI running · ${state.model.name}` : "AI not running"}
+              {state.running ? `AI running · ${state.model.name}` : state.paused ? "AI paused" : "AI not running"}
             </span>
           )}
           {stats.alerts > 0 && <span className="pill alert">⚠ {stats.alerts} active {stats.alerts === 1 ? "alert" : "alerts"}</span>}

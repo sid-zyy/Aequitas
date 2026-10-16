@@ -96,6 +96,33 @@ def test_selecting_a_locality_stops_the_previous_one(tmp_path, localities, monke
     assert stopped == ["live-kor"] and live.active == "wf"
 
 
+def test_pausing_the_ai_stops_live_analysis_until_resumed(tmp_path, localities, monkeypatch):
+    started, stopped = [], []
+
+    class FakePipeline:
+        def __init__(self, s, cams, store, run_id=None):
+            self.run_id = run_id
+
+        def run(self):
+            started.append(self.run_id)
+
+        def stop(self):
+            stopped.append(self.run_id)
+
+    import aequitas.pipeline
+
+    monkeypatch.setattr(aequitas.pipeline, "Pipeline", FakePipeline)
+    live = LiveManager(Settings(data_dir=tmp_path), EventStore(tmp_path / "t.db"), localities)
+    live.start("kor")
+    live.set_paused(True)
+    assert stopped == ["live-kor"] and live.pipeline is None and live.active == "kor"
+    live.start("kor")  # the dashboard re-opening while paused starts nothing
+    st = live.state("kor")
+    assert st["paused"] and not st["running"] and st["error"] is None
+    live.set_paused(False)  # resuming restarts the open locality
+    assert live.pipeline is not None and not live.state("kor")["paused"]
+
+
 def test_live_api_needs_sign_in_and_serves_only_configured_footage(tmp_path, localities, monkeypatch):
     import yaml
 
@@ -116,6 +143,9 @@ def test_live_api_needs_sign_in_and_serves_only_configured_footage(tmp_path, loc
     assert c.get("/api/live/cameras/..%2F..%2Fsecrets/video").status_code == 404
     assert c.get("/api/live/kor").json()["locality"]["name"] == "Koramangala"
     assert c.get("/api/live/nowhere").status_code == 404
+    assert c.get("/api/live/ai").json() == {"paused": False}
+    assert c.post("/api/live/ai", json={"paused": True}).json() == {"paused": True}
+    assert c.get("/api/live/kor").json()["paused"] is True
 
     s2 = Settings(data_dir=tmp_path / "data2", live={"localities_file": cfg})  # auth on (default)
     c2 = TestClient(web.create_app(s2, ChatService(EventStore(s2.db_path), QuestionParser(None)), []))
