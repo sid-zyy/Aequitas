@@ -216,7 +216,8 @@ its paper (56.0 COCO AP), so the port is probably wrong. Treat both as **not tes
 - **How to turn it on:** `pip install -e .[rfdetr]`, then set `detector: {family: rfdetr, rfdetr_size: small}`.
   - `vision/detector.Detector` returns the same `sv.Detections` with COCO-80 ids for either family.
   - RF-DETR's COCO category ids are mapped: person 1 → 0, backpack 27 → 24, handbag 31 → 26, suitcase 33 → 28.
-- **Defaults are unchanged** (`family: yolo`), so an install without `rfdetr` still runs.
+- **In use:** `config/settings.yaml` sets `family: rfdetr` since 2026-10-16. The code default stays
+  `yolo`, and without the `rfdetr` package the detector falls back to YOLO with a warning.
 - **What it affects:** the version tag stored with events becomes `rfdetr-small`. Only triggered mode uses a
   detector, so periodic mode is unaffected.
 - **Tests:** `tests/test_detector.py`, with a fake model.
@@ -262,8 +263,7 @@ truth locally.
 
 ## Next steps (in order)
 
-1. **Decide the default for triggered mode.** `config/settings.yaml` stays `family: yolo` until a decision(
-   )is made.
+1. ~~Decide the default for triggered mode~~: done, `config/settings.yaml` uses RF-DETR-Small.
 2. **Retune on data we don't report:**
    - `tracker.activation_threshold` and `fuse_score`, and the detector / person confidences, for RF-DETR's
      calibration.

@@ -18,7 +18,7 @@ models:                 # trained on Kaggle (see kaggle/README.md); leave null u
   hazard_dir: null      # e.g. models/hazard_detector
 
 detector:
-  family: yolo          # 'rfdetr' (pip install -e .[rfdetr]): far better on small/fighting people, ~15 ms more per frame (docs/DETECTION.md)
+  family: rfdetr        # needs pip install -e .[rfdetr], else falls back to YOLO (weights below); 'yolo' = YOLO11n, ~15 ms faster per frame but far worse on small/fighting people (docs/DETECTION.md)
   rfdetr_size: small
   weights: yolo11n.pt
   pose_weights: yolo11n-pose.pt

@@ -43,3 +43,13 @@ def test_rfdetr_gets_rgb_and_the_configured_confidence():
 def test_detector_name_for_versions():
     assert DetectorCfg().name() == "yolo11n.pt"
     assert DetectorCfg(family="rfdetr", rfdetr_size="medium").name() == "rfdetr-medium"
+
+
+def test_rfdetr_family_falls_back_to_yolo_when_not_installed(monkeypatch):
+    import sys
+
+    from aequitas.vision import detector as mod
+
+    monkeypatch.setitem(sys.modules, "rfdetr", None)  # import rfdetr -> ImportError
+    monkeypatch.setattr(mod, "YoloDetector", lambda cfg, device: ("yolo", cfg.weights))
+    assert mod.Detector(DetectorCfg(family="rfdetr"), "cpu") == ("yolo", "yolo11n.pt")

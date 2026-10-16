@@ -35,12 +35,18 @@ def load_yolo(weights: str, backend: str, device: str):
 
 def Detector(cfg: DetectorCfg, device: str):
     """People and bags in a BGR frame -> sv.Detections with COCO-80 class ids (COCO_NAMES)."""
-    return RFDetrDetector(cfg, device) if cfg.family == "rfdetr" else YoloDetector(cfg, device)
+    if cfg.family == "rfdetr":
+        try:
+            return RFDetrDetector(cfg, device)
+        except ImportError as e:  # a fresh clone without the extra still runs, on YOLO
+            log.warning("RF-DETR not installed (%s); falling back to %s. pip install -e .[rfdetr]", e, cfg.weights)
+    return YoloDetector(cfg, device)
 
 
 class YoloDetector:
     def __init__(self, cfg: DetectorCfg, device: str):
         self.cfg = cfg
+        self.name = cfg.weights
         self.device = device
         self.model = load_yolo(cfg.weights, cfg.backend, device)
         self.half = device.startswith("cuda")
@@ -72,6 +78,7 @@ class RFDetrDetector:
             cls = {"nano": "RFDETRNano", "small": "RFDETRSmall", "medium": "RFDETRMedium", "large": "RFDETRLarge"}
             model = getattr(rfdetr, cls[cfg.rfdetr_size])(device="cuda" if device.startswith("cuda") else device)
         self.model = model
+        self.name = cfg.name()
 
     def __call__(self, image: np.ndarray) -> sv.Detections:
         d = self.model.predict(image[:, :, ::-1].copy(), threshold=self.cfg.conf)  # BGR -> RGB
