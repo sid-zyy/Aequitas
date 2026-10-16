@@ -9,6 +9,9 @@ analysis:
   mode: triggered       # triggered = YOLO + rules gate the VLM; periodic = no YOLO, VLM reviews every window
   window_s: 4           # periodic mode only
   confirm_votes: 2      # periodic mode: consecutive agreeing windows needed for 'confirmed'
+  # Previous-window context in the label step: helped gemma4:e2b (22 -> 25 of 39 incident windows) but hurts
+  # qwen3-vl:2b-instruct (fire 6/10 -> 1/10, 33 -> 29 of 39 flagged, false alarms 2 -> 4 of 33) on the 72 saved windows.
+  label_context: false
   # Coarse stage: skip Gemma on windows that clearly look normal (results/improvements/README.md).
   # Downloads google/siglip-base-patch16-224 (~0.8 GB) on first start; null = off.
   gate_model: google/siglip-base-patch16-224
@@ -34,10 +37,11 @@ tracker:
 vlm:
   backend: ollama         # ollama | openai (any local OpenAI-compatible server: llama.cpp, vLLM, LM Studio)
   host: http://127.0.0.1:11434
-  model: gemma4:e2b       # M0: ~16 s/call on CPU vs ~44 s for qwen2.5vl:3b; also gemma4:e4b
+  model: qwen3-vl:2b-instruct  # 2026-10-17: Qwen over gemma4:e2b (results/model_compare_small/README.md); 4-bit over 8-bit/16-bit (results/qwen/README.md)
   think: false
+  repeat_penalty: 1.1     # stops Qwen repeating a sentence to the token cap (chat: 3/6 -> 0/6 answers; results/qwen/README.md)
   num_ctx: 4096
-  draft_num_predict: 3     # MTP drafter tokens per step (0 = off): window 1.28 -> 1.16 s, chat 0.58 -> 0.45 s (docs/SPECULATIVE.md)
+  draft_num_predict: null  # MTP drafter tokens per step; only gemma4 ships a drafter in Ollama (3: window 1.28 -> 1.16 s, chat 0.58 -> 0.45 s, docs/SPECULATIVE.md). Qwen3-VL has none
   timeout_s: 300          # CPU-only machines can take a minute or more per event
   tile_px: 448
   max_queue_per_camera: 8

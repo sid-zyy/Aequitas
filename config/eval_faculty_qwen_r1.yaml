@@ -1,0 +1,12 @@
+# Faculty clips through the current setup with qwen3-vl:2b-instruct (run r1).
+data_dir: data/eval/faculty_qwen_r1
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct
+  tile_px: 448

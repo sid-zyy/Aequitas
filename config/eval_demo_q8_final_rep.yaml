@@ -1,0 +1,13 @@
+# Demo set, Qwen final setup: scene gate on, clip votes, previous-window context OFF (demo_qwen_final_rep). 8-bit.
+data_dir: data/eval/demo_q8_final_rep
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  label_context: false
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct-q8_0
+  tile_px: 448

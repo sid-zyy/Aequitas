@@ -1,0 +1,13 @@
+# Demo set with qwen3-vl:2b-instruct, scene gate OFF (to measure what the gate saves). 4-bit, context off. Shipped setup: repeat_penalty 1.1.
+data_dir: data/eval/demo_q4_nogate_rp
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  label_context: false
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct
+  tile_px: 448
+  repeat_penalty: 1.1

@@ -1,0 +1,14 @@
+# Faculty clips through the current setup with qwen3-vl:2b-instruct (run r2, final: context off, clean timing). Shipped setup: repeat_penalty 1.1.
+data_dir: data/eval/faculty_q4c_r2_rp
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  label_context: false
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct
+  tile_px: 448
+  repeat_penalty: 1.1
