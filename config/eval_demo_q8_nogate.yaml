@@ -1,0 +1,12 @@
+# Demo set with qwen3-vl:2b-instruct, scene gate OFF (to measure what the gate saves). 8-bit.
+data_dir: data/eval/demo_q8_nogate
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  label_context: false
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct-q8_0
+  tile_px: 448

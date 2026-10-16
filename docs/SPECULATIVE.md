@@ -1,5 +1,10 @@
 # Speculative decoding with MTP, measured without vLLM (2026-10-16)
 
+> **2026-10-17:** the demo model is now `qwen3-vl:2b-instruct` (results/qwen/README.md). In Ollama, speculative
+> decoding only works through an MTP drafter shipped with the model; Qwen3-VL has none, and llama.cpp refuses a
+> draft model when an image projector is loaded. So the Qwen demo runs without speculation, and this page remains
+> the measurement of speculative decoding, made on Gemma 4 E2B.
+
 vLLM can't hold Gemma 4 E2B on the laptop's 6 GB GPU (HANDOVER.md §7), so speculative decoding was measured in
 **Ollama**, which the live demo actually uses. Ollama's `gemma4:e2b` ships Gemma 4's **MTP drafter** as a separate
 98 MB layer (`application/vnd.ollama.image.draft`, the `-assistant` checkpoint) next to the 3.5 GB Q4_K_M model.

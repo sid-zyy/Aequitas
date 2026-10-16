@@ -1,0 +1,14 @@
+# Candidate incident clips for the Live CCTV cameras: Qwen final setup (4-bit, context off).
+data_dir: data/eval/incident_candidates_qwen_rp
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  label_context: false
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: qwen3-vl:2b-instruct
+  tile_px: 448
+  repeat_penalty: 1.1

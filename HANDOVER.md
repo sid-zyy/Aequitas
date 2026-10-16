@@ -36,10 +36,19 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 | R6 | Owner + design | Guardrails: no face recognition or identification; no profiling by religion, caste, party or attire; peaceful gatherings are not incidents; a human confirms incidents (docs/POLICE_EDITION.md §8). |
 
 ### Decisions made
-- **The model is Gemma 4 E2B** (`gemma4:e2b`). It's the default since 2026-10-15, it fits the 6 GB GPU, and the
-  fine-tune distils 12B into it. The Kaggle ablation's automatic pick (Qwen3-VL-2B) only reflects that Gemma
-  can't start on a T4 (docs/ARCHITECTURE.md §10). **The ablation is re-run at the end only, for the
-  quantisation and speculation tables in the presentation.**
+- **The model is Qwen3-VL 2B, 4-bit** (`qwen3-vl:2b-instruct`, owner's decision 2026-10-17). Before that it
+  was Gemma 4 E2B (2026-10-15 to 2026-10-17).
+  - **Why:** Qwen confirmed 9–10 of 10 demo incidents against Gemma's 6–8, for about 0.15 s more per window.
+    Every presentation number was re-measured with it (results/qwen/README.md). The same-size comparison is
+    in results/model_compare_small/README.md.
+  - **Settings that come with it:** `label_context: false` (context hurt Qwen) and `repeat_penalty: 1.1`
+    (stops it repeating a sentence to the token cap).
+  - **Costs:**
+    - no speculative decoding: Qwen3-VL ships no MTP drafter, so the Gemma MTP numbers stay as the
+      requirement-3 evidence;
+    - weaker Hindi/Kannada translation (1 of 6 sample reports kept every fact, Gemma 6 of 6);
+    - right label on fewer faculty fights (it says "person_down" for "a man is pushed to the ground").
+  - **The fine-tune (12B → E2B)** applies to Gemma only.
 - **Periodic mode is the main mode** (live CCTV, uploads, bodycam). On low-res CCTV the rules found 0 of 6
   CAVIAR incidents, because YOLO11n misses small people.
 - **Second signal:** the violence clip model (5/5 faculty fights; Gemma alone 0/5) plus agreement across
@@ -102,7 +111,8 @@ not fit unquantised.
 
 1. Clone, then `python -m venv .venv`. Install the CUDA build of PyTorch, then
    `.venv\Scripts\python -m pip install -e .[dev,detector,rfdetr]`.
-2. `ollama pull gemma4:e2b` (~4.6 GB). Warm it before a demo: the first call loads the model, ~107 s.
+2. `ollama pull qwen3-vl:2b-instruct` (~1.9 GB; the demo model). `gemma4:e2b` (~4.6 GB) is only needed for
+   the MTP benchmark. Warm the model before a demo: the first call loads it.
 3. Violence model: unzip `violence_clip.zip` into `models/violence_clip/` (127 MB, not in git).
 4. `python scripts/get_footage.py` (demo clips), `bash scripts/get_caviar.sh` (CAVIAR evaluation).
 5. Frontend: the built app is committed (`aequitas/web/frontend_dist/`). After UI changes:
@@ -128,8 +138,9 @@ numbers in the docs.
   can't fit Gemma 4 E2B in 6 GB; the vLLM scripts stay for a bigger GPU
 - [x] **MTP measured in Ollama** (docs/SPECULATIVE.md, `scripts/bench_spec.py`): gemma4:e2b's drafter at 3 tokens,
   window 1.28 → 1.16 s, chat 0.58 → 0.45 s, labels unchanged. n-gram needs vLLM: not measured
-- [ ] **Quantisation study:** W8A8 and W4A16 checkpoints (`scripts/quantize`) + FP8, latency × accuracy
-  (stage-2 eval, demo set, SCVD subset). Write `docs/QUANTIZATION.md`.
+- [x] **Quantisation study, measured on the laptop** (Qwen3-VL 2B, results/qwen/README.md): 4-bit 1.9 GB and
+  1.60 s/window; 8-bit 2.5 GB and 1.74 s/window, and no more accurate end to end; 16-bit doesn't fit (4.7 GB,
+  23/29 layers on the GPU, 9.6 s/window). 4-bit is used.
 - [ ] **Ablation re-run at the end** (Kaggle, re-import `kaggle/ablation.ipynb`; the torchvision fix is in
   the repo) → tables and charts for the presentation
 - [x] Faculty dataset: none is coming (owner, 2026-10-16). The 6 sample clips are the faculty test, spread one per
