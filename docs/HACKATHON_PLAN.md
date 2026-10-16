@@ -1,15 +1,19 @@
-# Hackathon plan: faculty requirements (2026-10-15)
+# Hackathon plan: faculty requirements (2026-10-15, status updated 2026-10-16)
 
 ## What the faculty asked for
 
-| Requirement | How Aequitas meets it |
-|---|---|
-| Three tasks: **summarization → classification of the summary → chatbot** | Three explicit stages with their own models, prompts, timings and metrics (below). |
-| **vLLM** server | All LLM/VLM calls go through vLLM's OpenAI-compatible API. Ollama stays as the CPU dev fallback. vLLM runs in **WSL2 Ubuntu** (already installed) once the GPU arrives. |
-| **Speculative decoding** and **multi-token prediction (MTP)** | Gemma 4 has native MTP drafters, which vLLM supports (`--speculative-config '{"method":"mtp",...}'`). **n-gram** speculation is used for chatbot answers, which copy text from retrieved summaries. |
-| **4-bit and 8-bit quantization**, studied and implemented | Checkpoints in BF16 (baseline), **W8A8-INT8**, **FP8** (if the GPU supports it) and **W4A16** (GPTQ/AWQ), made with `llm-compressor` (vLLM project). Each is benchmarked for latency **and** accuracy on the faculty dataset. |
-| **React** frontend, **FastAPI** backend, no Jupyter | React (Vite + TypeScript) served by the existing FastAPI app. Training scripts are plain `.py`. |
-| Judged on **approach**, **end-to-end demo**, **latency (total execution time)** | Every stage is timed and shown live in the UI. `aequitas bench` produces the latency report across quantization × speculation settings. |
+| Requirement | How Aequitas meets it | Status (2026-10-16) |
+|---|---|---|
+| Three tasks: **summarization → classification of the summary → chatbot** | Three explicit stages with their own prompts, model endpoints, timings and metrics (below; docs/ARCHITECTURE.md §2). | **Done** |
+| **vLLM** server | Every LLM/VLM call can go through vLLM's OpenAI-compatible API (`vlm.backend: openai`). Ollama is the dev fallback and what the laptop runs today. vLLM runs in **WSL2 Ubuntu**. | Scripts done, run on Kaggle; **WSL not installed on the laptop yet** |
+| **Speculative decoding** and **multi-token prediction (MTP)** | Gemma 4's MTP drafter (`-assistant` checkpoint) through vLLM's `--speculative-config`; **n-gram** speculation for chat answers, which copy retrieved summaries. | `serve.sh` profiles done; **speed-up not measured yet** |
+| **4-bit and 8-bit quantization**, studied and implemented | BF16 baseline, **W8A8-INT8**, **FP8** and **W4A16** made with `llm-compressor` (`scripts/quantize/`). Each benchmarked for latency **and** accuracy. | Script done; **no successful run yet** (Kaggle environment issues, fixed) |
+| **React** frontend, **FastAPI** backend, no Jupyter | React (Vite + TypeScript) served by FastAPI. Training and study code are `.py`; the `.ipynb` files are generated from them only for Kaggle. | **Done** |
+| Judged on **approach**, **end-to-end demo**, **latency (total execution time)** | Every stage is timed and stored; camera tiles, bodycam and report pages show summary and label time and the total. `aequitas bench` produces the latency report across quantization × speculation. | Timing in the UI done; **latency report pending the vLLM runs** |
+| The faculty dataset | `aequitas eval-dataset` (folder-per-label or a manifest; categories configurable). | Adapter done; **dataset not arrived** |
+
+**Model:** Gemma 4 E2B (decided). The ablation is re-run at the end for the presentation's quantization and
+speculation tables.
 
 The dataset arrives soon. Everything below is built so the dataset only needs an adapter and labels.
 
@@ -103,10 +107,13 @@ per scheme. Latency is measured with `aequitas bench`.
 
 ## Build order
 
-1. **Pipeline v2:** separate summarize and classify stages, concurrent VLM workers, per-stage timings. *(now; runs on Ollama)*
-2. **`aequitas bench`:** latency harness for any OpenAI-compatible server (Ollama now, vLLM later). *(now)*
-3. **vLLM scripts:** WSL install, `serve.sh` with quantization and speculation profiles. *(now; runs when the GPU arrives)*
-4. **Quantization scripts:** llm-compressor recipes for FP8, W8A8 and W4A16. *(now; run on the GPU or Kaggle)*
-5. **React frontend:** upload, live per-stage latency, summaries and labels, streamed chat. *(now)*
-6. **Dataset adapter + evaluation** when the faculty dataset arrives.
-7. **GPU day:** install vLLM in WSL, run the benchmark matrix, choose the fastest config that keeps accuracy.
+1. ~~**Pipeline v2:** separate summarize and classify stages, concurrent VLM workers, per-stage timings.~~ Done.
+2. ~~**`aequitas bench`:** latency harness for any OpenAI-compatible server.~~ Done.
+3. ~~**vLLM scripts:** WSL install, `serve.sh` with quantization and speculation profiles.~~ Written (`scripts/vllm/`).
+4. ~~**Quantization scripts:** llm-compressor recipes for FP8, W8A8 and W4A16.~~ Written (`scripts/quantize/`).
+5. ~~**React frontend:** upload, live per-stage latency, summaries and labels, streamed chat.~~ Done.
+6. ~~**Dataset adapter + evaluation.**~~ Done (`eval-dataset`); runs when the dataset arrives.
+7. **GPU day (next):** install WSL + vLLM on the laptop, run the benchmark matrix (FP8 / W8A8 / W4A16 × none /
+   MTP / n-gram × concurrency 1/4/16), write `docs/QUANTIZATION.md`.
+8. **At the end:** re-run the Kaggle ablation for the presentation; demo script with total time on screen; final
+   report.

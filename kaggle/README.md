@@ -22,6 +22,13 @@ combinations (fast model + bigger re-checker) from the saved results without ext
 
 ## Fine-tune Gemma 4 E2B on 12B's summaries: `finetune_gemma.ipynb`
 
+> **Run 1 (2026-10-16) failed** at stage 5: `ollama pull` returned a 503 after 3.5 h of teacher work.
+> Its teacher stage kept only 96 of 1,654 summaries, because 12B's self-check rejected 84 %, mostly over
+> people counts and clothing. Run 2's changes:
+> - pulls retry, and happen before the teacher stage
+> - the self-check fails only on invented actions or things (re-scoring run 1 that way: ~300 kept)
+> - UCF is trimmed to arrest and fire
+
 12B caught 70 % of SCVD incidents, E2B 15 % (`model_compare`). 12B summarises the training clips with our real
 prompts; summaries whose label agrees with the dataset label teach E2B (QLoRA, Unsloth). Stage 2 is unchanged.
 Tested on the same 60 held-out SCVD clips as `model_compare`, against base E2B in the same run.
@@ -29,8 +36,15 @@ Half of the training summaries use the close-range instructions (bodycam / live 
 are run with both instruction sets, so the gain is reported for CCTV and for close range separately.
 
 1. Import `finetune_gemma.ipynb`; **GPU T4 x2**, Internet **On**.
-2. **Add Input**: SCVD (needed, it is the test set), RWF-2000, Real Life Violence Situations; optionally a
-   UCF-Crime video dataset with class folders (adds arrest, fire, accident, theft).
+2. **Add Input** (labels come from folder names):
+   - https://www.kaggle.com/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd (needed: the test set)
+   - https://www.kaggle.com/datasets/vulamnguyen/rwf2000
+   - https://www.kaggle.com/datasets/mohamedmustafa/real-life-violence-situations-dataset
+   - optional: https://www.kaggle.com/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse. Only its arrest
+     and fire classes are used: theft, vandalism and accident are skipped (`SKIP`), because 12B's label matched
+     on only 0–19 % of their grids in run 1.
+   - optional, riots: XD-Violence (https://roc-ng.github.io/XD-Violence/, not on Kaggle) riot and normal
+     videos, and a `peaceful` folder of peaceful crowds, uploaded as your own private datasets.
 3. **Save Version → Save & Run All**. About 3-4 h.
 4. Output tab → download `finetune_gemma.zip` (FINETUNE.md, chart, LoRA adapter) → `results/finetune/`, and
    `aequitas-e2b-ollama.tar` (~3-4 GB, the model already in Ollama's format).
