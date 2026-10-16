@@ -16,3 +16,4 @@ results/detector_labels/overview/
 results/finetune/lora/
 results/finetune/ollama.log
 results/finetune/review.html
+kaggle/bench_windows.zip

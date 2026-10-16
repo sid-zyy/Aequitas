@@ -8,6 +8,13 @@ memory, and outputs `ablation.zip` with `ABLATION.md` (table) and `ablation.png`
 **Steps, budget and decision rule: [docs/ABLATION_PLAN.md](../docs/ABLATION_PLAN.md) §7.** About 3–4 GPU hours on
 GPU T4 x2.
 
+## Gemma 4 E2B quantization: `quant_gemma.ipynb`
+
+16-bit vs 8-bit vs 4-bit (Q4_K_M, the demo's) vs Google's QAT 4-bit, on the same 72 saved windows as the laptop
+Qwen study. Upload `kaggle/bench_windows.zip` (made from `data/bench_windows`, not in git) as a private dataset,
+add it as input, GPU T4 x2, Internet on, Save & Run All (~25 GB of pulls, one model at a time). Download
+`quant_gemma.zip` → `results/quant_gemma/`.
+
 ## Which model is most accurate: `model_compare.ipynb` (runs in the background)
 
 Runs our real two-stage pipeline with **gemma4:e2b, gemma4:e4b-it-qat, gemma4:12b-it-qat, qwen3-vl:4b and
