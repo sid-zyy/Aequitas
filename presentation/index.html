@@ -539,30 +539,6 @@ table.dense td { padding: 8px 18px; }
   </div>
 </section>
 
-<!-- 8 · pipeline -->
-<section class="slide" data-title="Pipeline">
-  <div class="eyebrow rv">The pipeline · times from the six faculty clips, warm run</div>
-  <h2 class="rv" style="--i:1">Three stages, each timed on its own.</h2>
-  <div class="pipe rv" style="--i:2">
-    <div class="node"><span class="k">Input</span><h4>4-second window</h4><p>4 frames as a 2×2 grid, from any camera or upload</p><span class="ms">4 fps</span></div>
-    <div class="arrow">→</div>
-    <div class="node"><span class="k">Gate</span><h4>Scene check</h4><p>SigLIP skips calm street scenes</p><span class="ms">44 ms</span></div>
-    <div class="arrow">→</div>
-    <div class="node stage-n"><span class="k">Stage 1</span><h4>Summarise</h4><p>Gemma 4 E2B, 4-bit, with speculative decoding</p><span class="ms">0.58 s</span></div>
-    <div class="arrow">→</div>
-    <div class="node stage-n"><span class="k">Stage 2</span><h4>Classify</h4><p>One label from the summary text only</p><span class="ms">0.32 s</span></div>
-    <div class="arrow">→</div>
-    <div class="node"><span class="k">Check</span><h4>Second signal</h4><p>Violence model votes; two windows must agree</p><span class="ms">90 ms</span></div>
-    <div class="arrow">→</div>
-    <div class="node stage-n"><span class="k">Stage 3</span><h4>Chat</h4><p>Answers cite event IDs, streamed</p><span class="ms">0.45 s</span></div>
-  </div>
-  <div class="totals">
-    <div class="stat rv" style="--i:3"><span class="v num" data-to="25" data-suf=" s">25 s</span><span class="l">to analyse all six faculty clips, 39 s of footage in total</span></div>
-    <div class="stat rv" style="--i:4"><span class="v num" data-to="0.91" data-dec="2" data-suf=" s">0.91 s</span><span class="l">per window for summarise and classify together (p50)</span></div>
-    <div class="stat rv" style="--i:5"><span class="v num">6 GB</span><span class="l">laptop GPU (RTX 4050). Everything runs locally.</span></div>
-  </div>
-</section>
-
 <!-- 9 · filler -->
 <section class="slide center" data-title="Options">
   <h1 class="split" style="max-width:none">Production-ready means no guesswork.<br>So we <span class="sa">tested</span> before we built.</h1>
@@ -596,7 +572,7 @@ table.dense td { padding: 8px 18px; }
     <div class="whycard rv" style="--i:4"><span class="k">Fewest false alarms</span><span class="v num good">10 %</span><p>of normal clips flagged, the lowest of every model that fits (Qwen 25 %). Officers only trust a queue that isn't full of noise.</p></div>
     <div class="whycard rv" style="--i:5"><span class="k">Built-in speculative decoding</span><span class="v num">−22 %</span><p>chat answer time with Gemma's own 98 MB MTP drafter. Qwen has no drafter, so it can't get this speed-up.</p></div>
     <div class="whycard rv" style="--i:6"><span class="k">One model, every task</span><span class="v num good">6 / 6</span><p>Hindi and Kannada reports translated with every fact kept (Qwen 2 / 6). The same model summarises, classifies, chats and translates, so only <b>one language model</b> sits on the GPU.</p></div>
-    <div class="whycard rv" style="--i:7"><span class="k">Accuracy from a second signal</span><span class="v num good">6 / 6</span><p>faculty clips flagged. The violence model catches the fights Gemma misses, which shrinks Qwen's lead to <b>1–2 demo incidents</b>.</p></div>
+    <div class="whycard rv" style="--i:7"><span class="k">Accuracy from a second signal</span><span class="v num good">6 / 6</span><p>test clips flagged. The violence model catches the fights Gemma misses, which shrinks Qwen's lead to <b>1–2 demo incidents</b>.</p></div>
   </div>
 </section>
 
@@ -605,9 +581,9 @@ table.dense td { padding: 8px 18px; }
   <div class="eyebrow rv">Fixing accuracy · a second signal</div>
   <h2 class="rv" style="--i:1">Gemma misses fights. So it never decides alone.</h2>
   <div class="stackcol">
-    <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches <b>motion</b> instead. It votes with Gemma, and on its own it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, beside the GPU, so it adds almost nothing to the wait.</p>
+    <p class="what rv" style="--i:2">Gemma described the fights in our test clips as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches <b>motion</b> instead. It votes with Gemma, and on its own it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, beside the GPU, so it adds almost nothing to the wait.</p>
     <div class="statrow">
-      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent: Gemma's own labels vs the violence model (every clip scored 0.96 or more).</span></div>
+      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">test clips flagged as violent: Gemma's own labels vs the violence model (every clip scored 0.96 or more).</span></div>
       <div class="stat rv" style="--i:4"><span class="v num" data-to="77" data-suf=" %">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
       <div class="stat rv" style="--i:5"><span class="v num">20 → 60 %</span><span class="l">incidents found after fine-tuning E2B on 12B's answers</span></div>
     </div>
@@ -713,7 +689,7 @@ table.dense td { padding: 8px 18px; }
   <h2 class="rv" style="--i:1">Every fix, measured.</h2>
   <div class="dumb">
     <div class="axis rv" style="--i:2"><span></span><span class="ticks"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></span><span></span></div>
-    <div class="drow rv" style="--i:2"><span class="lab"><span>Faculty clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
+    <div class="drow rv" style="--i:2"><span class="lab"><span>Test clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
     <div class="drow rv" style="--i:3"><span class="lab"><span>Demo incidents confirmed</span><span class="note"><b>clip votes</b> count · 0 new false alarms</span></span><div class="dtrack" style="--a:50%;--b:70%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">5 / 10</span> → <span class="to">7 / 10</span></span></div>
     <div class="drow rv" style="--i:4"><span class="lab"><span>Incident windows flagged</span><span class="note"><b>previous-window context</b> · no extra time</span></span><div class="dtrack" style="--a:56.4%;--b:64.1%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">22 / 39</span> → <span class="to">25 / 39</span></span></div>
     <div class="drow rv" style="--i:5"><span class="lab"><span>Chat questions understood</span><span class="note"><b>keyword check</b> on the LLM's reading</span></span><div class="dtrack" style="--a:75%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">15 / 20</span> → <span class="to">20 / 20</span></span></div>
@@ -730,7 +706,7 @@ table.dense td { padding: 8px 18px; }
     <table class="dense">
       <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
       <tbody>
-        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
+        <tr class="pick"><td>Test clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
         <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
         <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
         <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
