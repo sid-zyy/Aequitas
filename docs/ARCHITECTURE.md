@@ -280,7 +280,7 @@ COLUMN` if missing).
 | `uploads` | uploaded videos and bodycam recordings: status, mode, `started_at`, total time, recording summary |
 | `dropped_candidates` | jobs dropped by backpressure |
 | `users`, `sessions`, `audit_log` | police accounts (scrypt), hashed session tokens, who did what |
-| `reports` | citizen reports: tracking-code hash, sha256 of the file, authenticity result, police notes, language (`en`/`hi`/`kn`), urgent flag, cached English translation |
+| `reports` | citizen reports: sha256 of the file, authenticity result, police notes, language (`en`/`hi`/`kn`), urgent flag, cached English translation |
 
 Key frames are JPEGs under `data/keyframes/<camera>/<day>/`.
 
@@ -311,7 +311,7 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
 | Active requests | open citizen reports, urgent first, then longest waiting, with video, AI findings, AI-generated likelihood |
 | Bodycam review | upload → timeline of 4 s summaries, key moments to Confirm/Dismiss (audited), whole-recording overview, printable report marked as an AI draft, **total and per-stage time** |
 | All reports | the citizen-report archive with each analysis's total time |
-| Citizen portal (`/report`) | public upload, report ID + one-time tracking code; English / हिन्दी / ಕನ್ನಡ switch; emergency assistant |
+| Citizen portal (`/report`) | public upload and a separate "Track a report" tab (report ID only, shows status and dates); English / हिन्दी / ಕನ್ನಡ switch; emergency assistant |
 | Analyst chat | streamed, grounded answers with `[#id]` links |
 
 ## 13. Products on the same core

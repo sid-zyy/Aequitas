@@ -133,7 +133,7 @@ CREATE INDEX IF NOT EXISTS ix_audit_target ON audit_log(target);
 -- Citizen reports (public portal) and their review by the police.
 CREATE TABLE IF NOT EXISTS reports (
   report_id      TEXT PRIMARY KEY,
-  tracking_hash  TEXT NOT NULL,             -- sha256 of the citizen's tracking code
+  tracking_hash  TEXT NOT NULL,             -- unused (was a tracking-code hash); kept so old databases load
   upload_id      TEXT NOT NULL REFERENCES uploads(upload_id),
   camera_id      TEXT NOT NULL,
   description    TEXT NOT NULL,

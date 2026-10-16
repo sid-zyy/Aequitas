@@ -12,7 +12,11 @@ function initialLang(): Lang {
   return "en";
 }
 
-type Done = { report_id: string; tracking_code: string; status: string };
+type Done = { report_id: string; status: string };
+type Status = { report_id: string; status: string; submitted_at: number; updated_at: number };
+type View = "report" | "track";
+
+const viewFromHash = (): View => (window.location.hash === "#track" ? "track" : "report");
 
 export default function CitizenReport() {
   const [lang, setLang] = useState<Lang>(initialLang);
@@ -27,9 +31,23 @@ export default function CitizenReport() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Done | null>(null);
+  // Reporting and tracking are separate tabs (#track opens tracking directly).
+  const [view, setView] = useState<View>(viewFromHash);
   const [checkId, setCheckId] = useState("");
-  const [checkCode, setCheckCode] = useState("");
-  const [checkResult, setCheckResult] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<Status | null>(null);
+  const [checkError, setCheckError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onHash = () => setView(viewFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  function go(v: View) {
+    setView(v);
+    history.replaceState(null, "", v === "track" ? "#track" : window.location.pathname);
+  }
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -61,13 +79,27 @@ export default function CitizenReport() {
 
   async function check(e: FormEvent) {
     e.preventDefault();
+    setChecking(true);
+    setCheckError(null);
+    setCheckResult(null);
     try {
-      const r = await api.reportStatus(checkId.trim(), checkCode.trim());
-      setCheckResult(`${r.report_id}: ${r.status}`);
+      setCheckResult(await api.reportStatus(checkId.trim()));
     } catch {
-      setCheckResult(t.notFound);
+      setCheckError(t.notFound);
+    } finally {
+      setChecking(false);
     }
   }
+
+  function trackThis(id: string) {
+    setCheckId(id);
+    setCheckResult(null);
+    setCheckError(null);
+    go("track");
+  }
+
+  const fmt = (ms: number) => new Date(ms).toLocaleString(lang === "en" ? "en-IN" : `${lang}-IN`,
+    { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
   const second = lang === "en" ? STRINGS.kn : STRINGS.en; // masthead shows the name in two languages
   return (
@@ -98,21 +130,43 @@ export default function CitizenReport() {
       </header>
       <nav className="gov-nav" aria-label={t.site}>
         <div className="gov-wrap">
-          <a href="#main">{t.navReport}</a>
-          <a href="#track">{t.navTrack}</a>
+          <button type="button" className={view === "report" ? "on" : ""} aria-current={view === "report" ? "page" : undefined}
+            onClick={() => go("report")}>{t.navReport}</button>
+          <button type="button" className={view === "track" ? "on" : ""} aria-current={view === "track" ? "page" : undefined}
+            onClick={() => go("track")}>{t.navTrack}</button>
         </div>
       </nav>
       <main className="portal" id="main">
-        {!done && <EmergencyChat lang={lang} onUrgent={setUrgent} />}
+        {view === "report" && !done && <EmergencyChat lang={lang} onUrgent={setUrgent} />}
 
-        {done ? (
+        {view === "track" ? (
+          <form className="card card-body" onSubmit={check}>
+            <h1>{t.checkTitle}</h1>
+            <p className="page-sub" style={{ marginBottom: 14 }}>{t.trackIntro}</p>
+            <div className="track-row">
+              <input className="input mono" placeholder={t.reportId} aria-label={t.reportId} value={checkId}
+                autoCapitalize="characters" spellCheck={false} onChange={(e) => setCheckId(e.target.value)} />
+              <button className="btn navy" disabled={!checkId.trim() || checking}>{t.check}</button>
+            </div>
+            {checkError && <p className="error" style={{ marginBottom: 0 }}>{checkError}</p>}
+            {checkResult && (
+              <dl className="track-result">
+                <div><dt>{t.reportId}</dt><dd className="mono">{checkResult.report_id}</dd></div>
+                <div><dt>{t.statusLabel}</dt><dd><span className="track-status">{checkResult.status}</span></dd></div>
+                <div><dt>{t.submittedAt}</dt><dd>{fmt(checkResult.submitted_at)}</dd></div>
+                <div><dt>{t.updatedAt}</dt><dd>{fmt(checkResult.updated_at)}</dd></div>
+              </dl>
+            )}
+            <p className="note" style={{ marginBottom: 0 }}>{t.notMonitored}</p>
+          </form>
+        ) : done ? (
           <section className="card card-body">
             <h1>{t.thanks}</h1>
             <p className="page-sub">{t.keep}</p>
             <div style={{ display: "flex", gap: 18, flexWrap: "wrap", margin: "16px 0" }}>
               <div><div className="label">{t.reportId}</div><div className="code-box mono">{done.report_id}</div></div>
-              <div><div className="label">{t.trackingCode}</div><div className="code-box mono">{done.tracking_code}</div></div>
             </div>
+            <button type="button" className="btn navy" onClick={() => trackThis(done.report_id)}>{t.trackThis}</button>
             <p className="note">{t.notMonitored}</p>
           </section>
         ) : (
@@ -164,16 +218,6 @@ export default function CitizenReport() {
             </button>
           </form>
         )}
-
-        <form className="card card-body" id="track" style={{ marginTop: 16 }} onSubmit={check}>
-          <div className="card-title" style={{ marginBottom: 10 }}>{t.checkTitle}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10 }}>
-            <input className="input" placeholder={t.reportId} value={checkId} onChange={(e) => setCheckId(e.target.value)} />
-            <input className="input" placeholder={t.trackingCode} value={checkCode} onChange={(e) => setCheckCode(e.target.value)} />
-            <button className="btn navy" disabled={!checkId || !checkCode}>{t.check}</button>
-          </div>
-          {checkResult && <p style={{ marginBottom: 0 }}>{checkResult}</p>}
-        </form>
       </main>
       <footer className="gov-foot">
         <div className="gov-wrap">

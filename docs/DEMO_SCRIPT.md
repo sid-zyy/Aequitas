@@ -31,7 +31,7 @@ caught by the violence model, and the summary and chat now say so explicitly.
 - What happened: *Late at night a fight broke out inside a restaurant near our hostel. Men were punching and
   pushing each other between the tables.*
 - Where: *Outer Ring Road, Marathahalli*
-- Tick consent → Submit. Read out the report ID; the tracking code is shown once.
+- Tick consent → Submit. Read out the report ID, then "Track this report" opens the tracking tab with it filled in.
 - Optional: open the red **Help** button first and answer **Yes** to show the 112 / 100 / 1091 numbers.
 
 ## Officer side (`/requests`)
