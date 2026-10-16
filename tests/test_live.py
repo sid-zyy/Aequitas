@@ -142,6 +142,9 @@ def test_live_api_needs_sign_in_and_serves_only_configured_footage(tmp_path, loc
     assert c.get("/api/live/cameras/kor-2/video").status_code == 404
     assert c.get("/api/live/cameras/..%2F..%2Fsecrets/video").status_code == 404
     assert c.get("/api/live/kor").json()["locality"]["name"] == "Koramangala"
+    url = c.get("/api/live/kor").json()["cameras"][0]["video_url"]
+    assert url.startswith("/api/live/cameras/kor-1/video?v=")  # versioned, so a swapped clip isn't served from cache
+    assert c.get(url).headers["content-type"] == "video/mp4"
     assert c.get("/api/live/nowhere").status_code == 404
     assert c.get("/api/live/ai").json() == {"paused": False}
     assert c.post("/api/live/ai", json={"paused": True}).json() == {"paused": True}
