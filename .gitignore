@@ -8,3 +8,8 @@ models/
 *.pt
 *_openvino_model/
 frontend/node_modules/
+
+# frames from third-party footage (labelling views); labels and boxes are kept
+results/detector_labels/full/
+results/detector_labels/sheets/
+results/detector_labels/overview/

@@ -18,7 +18,22 @@ calibrated on this same validation set, so these figures are slightly optimistic
 | v026 | 1.00 | 4 of 4 | violent ✓ |
 | w001 | 1.00 | 2 of 2 | violent ✓ |
 
-**5 of 5** (n = 5, indicative only). Gemma 4 E2B on its own: 0 of 5.
+**5 of 5** (n = 5, indicative only). Gemma 4 E2B on its own: 0 of 5. A sixth faculty clip added later (v003, a street
+fight) scores 0.98.
+
+## Unseen real CCTV: Surveillance Camera Fight Dataset (2026-10-16)
+
+300 YouTube CCTV clips (Akti et al. 2019, MIT; 150 fight / 150 noFight, ~2 s each), not in any training set.
+`scripts/violence_survfight.py`: 4 fps, 2 s windows, the clip's max. Neither threshold was tuned on this data.
+
+| Threshold | Fight recall | False alarms (noFight) | Precision | Accuracy |
+|---|---|---|---|---|
+| 0.51 (calibrated) | 0.93 | 67/150 (45 %) | 0.68 | 0.74 |
+| 0.9 (clip model alone) | 0.77 | 21/150 (14 %) | 0.85 | 0.81 |
+
+ROC AUC 0.89. **Out of distribution it's far weaker than the 0.95 validation accuracy.** At the calibrated
+threshold it flags almost half of the normal clips, many of which show people moving close together. This is why it
+must stay a second signal: it votes with the VLM, and needs 0.9 to count on its own.
 
 ## False alarms on our street footage (17 normal Bengaluru street clips, 123 four-second windows)
 
