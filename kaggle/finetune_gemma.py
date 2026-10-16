@@ -159,6 +159,20 @@ def sh(cmd: str, check: bool = True) -> str:
     return out
 
 
+def pull(model: str, tries: int = 6) -> None:
+    """`ollama pull` with retries: run 1 lost 3.5 h of teacher work to one 503 from the registry at stage 5."""
+    for k in range(tries):
+        try:
+            sh(f"ollama pull {model}")
+            return
+        except RuntimeError as e:
+            if k == tries - 1:
+                raise
+            wait = 30 * (k + 1)
+            print(f"ollama pull {model} failed (try {k + 1}/{tries}), retrying in {wait} s: {str(e)[-200:]}", flush=True)
+            time.sleep(wait)
+
+
 # %% [markdown]
 # ## Install Aequitas, Ollama and Unsloth
 
@@ -395,7 +409,8 @@ CHECK_PROMPT = ("Here is a 2x2 grid of four frames from a camera and a descripti
 stage("teacher (12B)")
 TEACH = OUT / "teacher.jsonl"
 if not SMOKE:
-    sh(f"ollama pull {TEACHER}")
+    pull(TEACHER)
+    pull(BASE_OLLAMA)  # now, not at stage 5: a registry failure should stop the run before hours of teacher work
     teacher = ollama_client(TEACHER)
     done = {json.loads(x)["grid"] for x in TEACH.read_text().splitlines()} if TEACH.exists() else set()
     prog = Progress("teacher", len(samples))
@@ -511,7 +526,7 @@ def evaluate(name: str, vlm, clf, label: str) -> None:
 
 
 if not SMOKE:
-    sh(f"ollama pull {BASE_OLLAMA}")
+    pull(BASE_OLLAMA)  # already there since the teacher stage; a no-op unless it was removed
     base = ollama_client(BASE_OLLAMA)
     run_dataset_eval(base, base, TEST[:5], CATS, label="warmup", out_dir=OUT / "reports")  # load before timing
     evaluate("gemma4:e2b (base)", base, base, "base_e2b")
