@@ -36,18 +36,19 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 | R6 | Owner + design | Guardrails: no face recognition or identification; no profiling by religion, caste, party or attire; peaceful gatherings are not incidents; a human confirms incidents (docs/POLICE_EDITION.md §8). |
 
 ### Decisions made
-- **The model is Qwen3-VL 2B, 4-bit** (`qwen3-vl:2b-instruct`, owner's decision 2026-10-17). Before that it
-  was Gemma 4 E2B (2026-10-15 to 2026-10-17).
-  - **Why:** Qwen confirmed 9–10 of 10 demo incidents against Gemma's 6–8, for about 0.15 s more per window.
-    Every presentation number was re-measured with it (results/qwen/README.md). The same-size comparison is
-    in results/model_compare_small/README.md.
-  - **Settings that come with it:** `label_context: false` (context hurt Qwen) and `repeat_penalty: 1.1`
-    (stops it repeating a sentence to the token cap).
-  - **Costs:**
-    - no speculative decoding: Qwen3-VL ships no MTP drafter, so the Gemma MTP numbers stay as the
-      requirement-3 evidence;
-    - weaker Hindi/Kannada translation (1 of 6 sample reports kept every fact, Gemma 6 of 6);
-    - right label on fewer faculty fights (it says "person_down" for "a man is pushed to the ground").
+- **The model is Gemma 4 E2B, 4-bit, with MTP** (`gemma4:e2b`, back from Qwen on 2026-10-17). Qwen3-VL 2B
+  (`qwen3-vl:2b-instruct`) was the demo model for one day; every deck number was measured with both
+  (results/qwen/README.md), and the deck shows the head-to-head ("Why Gemma" slide).
+  - **Why Gemma:** faster end to end (21 demo clips 1 min 48 s vs 2 min 24 s; 0.91 vs 1.01 s per window),
+    speculative decoding works (MTP drafter; Qwen has none), Hindi/Kannada translation 6/6 vs 2/6, fewer false
+    alarms. The violence model covers Gemma's weak recall.
+  - **Cost:** Qwen confirms 1–2 more of the 10 demo incidents (8–9 vs 6–8), and alone it finds far more on
+    SCVD (70 % vs 25 %).
+  - **To switch to Qwen:** `vlm.model: qwen3-vl:2b-instruct`, `analysis.label_context: false`,
+    `vlm.repeat_penalty: 1.1`, `vlm.draft_num_predict: null`.
+  - **Quantization evidence** is measured on Qwen (all three precisions load on 6 GB); for E2B only 4-bit fits.
+  - **Qwen3-VL 4B/8B in results/model_compare** returned 60/60 empty summaries: Ollama's default tags are the
+    thinking builds. That run is not a verdict on those models.
   - **The fine-tune (12B → E2B)** applies to Gemma only.
 - **Periodic mode is the main mode** (live CCTV, uploads, bodycam). On low-res CCTV the rules found 0 of 6
   CAVIAR incidents, because YOLO11n misses small people.
@@ -111,8 +112,7 @@ not fit unquantised.
 
 1. Clone, then `python -m venv .venv`. Install the CUDA build of PyTorch, then
    `.venv\Scripts\python -m pip install -e .[dev,detector,rfdetr]`.
-2. `ollama pull qwen3-vl:2b-instruct` (~1.9 GB; the demo model). `gemma4:e2b` (~4.6 GB) is only needed for
-   the MTP benchmark. Warm the model before a demo: the first call loads it.
+2. `ollama pull gemma4:e2b` (~4.6 GB; the demo model). `qwen3-vl:2b-instruct` (~1.9 GB) is the alternative. Warm the model before a demo: the first call loads it.
 3. Violence model: unzip `violence_clip.zip` into `models/violence_clip/` (127 MB, not in git).
 4. `python scripts/get_footage.py` (demo clips), `bash scripts/get_caviar.sh` (CAVIAR evaluation).
 5. Frontend: the built app is committed (`aequitas/web/frontend_dist/`). After UI changes:

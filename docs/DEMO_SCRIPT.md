@@ -5,14 +5,14 @@
 A man is attacked outdoors, under a flyover, with a calm stretch first, so the timeline shows both "nothing found"
 and the incident. It is staged stock footage: two Pexels clips from the same shoot (same place, same actors)
 joined by `scripts/make_demo_clip.py`: 12 s of a man walking up to a group by a car, then the fight (33.7 s).
-Checked end to end on 2026-10-17 with the shipped settings (scratch database, RTX 4050, qwen3-vl:2b-instruct 4-bit):
+Checked end to end on 2026-10-16 (scratch database, RTX 4050, gemma4:e2b):
 
 | Screen | What it shows (measured) |
 |---|---|
 | Queue | AI found **FIGHTING**; AI-generated **Real** (see below) |
-| Analysis | 00:00–00:08 **nothing found**; 00:12 harassment (unconfirmed: it calls the setting "a gym"); 00:16–00:32 fighting (violence model 0.95–1.00, Qwen agrees on every window), event **confirmed**, analysed in **23 s** |
-| Timeline bar | green, then red from 00:12 |
-| Summary | Headline "Nothing found from 00:00 to 00:12. Fighting flagged from 00:12 to 00:34 (also harassment) (not yet confirmed by an officer)." Windows read "Two men are wrestling under a bridge…" |
+| Analysis | 00:00–00:12 **nothing found** (4 windows), 00:16–00:32 fighting (violence model 0.95–1.00, Gemma agrees on 3), event **confirmed**, analysed in **16 s** |
+| Timeline bar | green, then red from 00:16 |
+| Summary | "Several people in an outdoor parking lot area. At 00:16 physical movements… a physical struggle or grappling between two individuals from 00:20 to 00:24…" |
 
 **The AI-generated check.** With no C2PA or metadata evidence only the frame detector speaks, and the screens
 show words, not a percentage. The demo clip scores 0.03 on it, so the queue reads **Real** (the detail view says
@@ -22,8 +22,8 @@ citizen's video: a false "AI-generated" label would discredit a genuine report. 
 (results/authenticity/README.md). Until 2026-10-16 the old detector showed "100 % ?" on every stock clip.
 
 **Backup clip:** `data/footage/demo/citizen-upload.mp4`, faculty clip **v011** (night-time restaurant brawl, 8.7 s,
-2/2 windows fighting, AI-generated Real, 10 s). With Qwen its summary is good: "A group of men are fighting in a
-restaurant, with one man pushing another and both falling to the ground." Gemma E2B never saw that fight.
+2/2 windows fighting, AI-generated Real, 7.5 s). Its summary is weak ("people are present in a room…"): Gemma E2B
+never sees the fight on that low-detail CCTV, only the violence model does.
 
 Clips rejected, and why:
 - **The teenagers' fight (Pexels 10505848)**: fighting confirmed, but no calm part, and the people are teenagers.
@@ -48,10 +48,9 @@ Clips rejected, and why:
 2. **▶ Analyse** opens the summary, player, timeline, key moment and chat. The analysis takes about 16 s, so talk
    over it.
 3. On the key moment, click **Confirm**. It shows "confirmed by <officer>" and goes to the audit trail.
-4. In the chat, ask **"What happens in this video?"** (~1 s, with seek buttons) and **"Who is the attacker?"**.
-   The second answers that the analysis doesn't identify the attacker; that's the guardrail, so it's worth
-   showing. "What happens before the fight?" works but with Qwen often skips the calm 00:00–00:12, so it's optional.
-   Rehearse once: Qwen's chat wording varies more than Gemma's did.
+4. In the chat, ask **"What happens in this video?"** (~1 s, with seek buttons) and **"What happens before the
+   fight?"** (walks through the calm 00:00–00:12). Optionally ask **"Who is the attacker?"**: it answers that it
+   can't determine that from the analysis. That's the guardrail, so worth showing.
 5. Click **Action taken**, then **Close**.
 
 Don't ask "Does the video match the report?" on stage. The honest answer is mixed: it gives the flags, then says

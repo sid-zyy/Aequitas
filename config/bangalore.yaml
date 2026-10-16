@@ -1,7 +1,7 @@
 # Bengaluru localities and their camera points for the Live CCTV dashboard.
 # DEMO: real CCTV is not available, so each camera plays free-licence street footage from data/footage/
 # (see data/footage/SOURCES.md for where each clip came from). Incident cameras play staged clips (an arrest,
-# a fire, a crashed car, graffiti vandalism, a car break-in) that were checked to be caught by the model (4 s windows, Qwen3-VL 2B): only clips the
+# fires, a crashed car, graffiti vandalism) that were checked to be caught by the model (4 s windows, Gemma 4 E2B): only clips the
 # pipeline actually labels correctly are used. Camera names are real landmarks so the
 # demo reads naturally; the footage is not from those places.
 # One camera per locality plays one of the six faculty sample clips (real CCTV fights, w001 a weapon; data/footage/
@@ -51,7 +51,7 @@ localities:
     cameras:
       - {id: ec-flyover, name: Electronic City Flyover, file: data/footage/electronic-city/flyover.mp4}
       - {id: ec-phase1, name: Phase 1 Main Gate, file: data/footage/electronic-city/phase1.mp4}
-      - {id: ec-neeladri, name: Neeladri Road Parking, file: data/footage/incidents/theft-breakin.mp4}
+      - {id: ec-neeladri, name: Neeladri Road, file: data/footage/incidents/fire-rescue.mp4}
       - {id: ec-hosur-service, name: Hosur Road Service Lane, file: data/footage/faculty/v003.mp4}
   # Live demo: the laptop's own webcam. Close-range view (gestures, objects held) and 2 s windows so a
   # judge's action shows up quickly. Not a real Bengaluru camera.
