@@ -105,7 +105,7 @@ def run_spike(settings: Settings, models: list[str], video: str | None = None,
     frames = _sample_frames(video, max(det_iters, 4))
 
     # ---- detector ----
-    log.info("detector: %s on %s", settings.detector.weights, device)
+    log.info("detector: %s on %s", settings.detector.name(), device)
     det = Detector(settings.detector, device)
     det(frames[0])  # warm-up
     times, persons = [], 0

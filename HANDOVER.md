@@ -139,9 +139,12 @@ numbers in the docs.
   bodycam clips arrest-1 and fire-rescue)
 - [ ] Webcam: record a test clip (`scripts/skeleton_check.py --record 20`: wave, thumbs up, sit still, a staged
   push with a second person). Wire the skeleton model in as a webcam second signal only if it separates these.
-- [ ] **Detector for triggered mode** (docs/DETECTION.md): RF-DETR-Small is recommended (CAVIAR AP50 0.425 vs 0.102
-  for YOLO11n, small-person recall 16×, ~27 ms/frame eager). Owner decides; then integrate (`detector.family`),
-  re-run `eval-report` on CAVIAR, check bags, export to ONNX/TensorRT for latency
+- [x] RF-DETR integrated behind `detector.family: rfdetr` (`pip install -e .[rfdetr]`). CAVIAR rules: YOLO11n 0/6 →
+  RF-DETR-S 3/6 triggered, 2/6 confirmed, 0 confirmed false alarms (same YOLO-tuned thresholds; docs/DETECTION.md)
+- [ ] **Owner decides** whether `config/settings.yaml` switches to `family: rfdetr`; then retune tracker/confidence
+  thresholds on non-test data, and export to ONNX/TensorRT for latency
+- [ ] Abandoned object on CAVIAR: RF-DETR sees the 16×22 px bag (YOLO never does) but at 0.10–0.25 confidence, which
+  `fuse_score` drops; the bag is also present only ~16 s against `unattended_s: 30`
 - [ ] Riot data (XD-Violence riot + peaceful crowds) for a later fine-tune; the owner downloads and uploads it
 - [ ] Hazard detector training (fire/smoke/weapons; D-Fire class order still to verify)
 

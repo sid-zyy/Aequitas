@@ -15,6 +15,10 @@ Point = tuple[float, float]  # normalised [0, 1] image coordinates
 
 
 class DetectorCfg(BaseModel):
+    # yolo: Ultralytics `weights` at `imgsz`. rfdetr: RF-DETR (pip install rfdetr) at its own resolution; finds far more
+    # small and fighting people than YOLO11n (docs/DETECTION.md). `weights`/`imgsz`/`backend` apply to yolo only.
+    family: Literal["yolo", "rfdetr"] = "yolo"
+    rfdetr_size: Literal["nano", "small", "medium", "large"] = "small"
     weights: str = "yolo11n.pt"
     pose_weights: str = "yolo11n-pose.pt"
     backend: Literal["torch", "openvino"] = "torch"
@@ -22,6 +26,9 @@ class DetectorCfg(BaseModel):
     conf: float = 0.25
     min_person_conf: float = 0.4
     min_person_height_px: float = 40
+
+    def name(self) -> str:
+        return f"rfdetr-{self.rfdetr_size}" if self.family == "rfdetr" else self.weights
 
 
 class TrackerCfg(BaseModel):

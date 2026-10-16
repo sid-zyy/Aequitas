@@ -18,6 +18,8 @@ models:                 # trained on Kaggle (see kaggle/README.md); leave null u
   hazard_dir: null      # e.g. models/hazard_detector
 
 detector:
+  family: yolo          # 'rfdetr' (pip install -e .[rfdetr]): far better on small/fighting people, ~15 ms more per frame (docs/DETECTION.md)
+  rfdetr_size: small
   weights: yolo11n.pt
   pose_weights: yolo11n-pose.pt
   backend: torch        # 'openvino' is usually 2-3x faster on Intel CPUs/iGPUs

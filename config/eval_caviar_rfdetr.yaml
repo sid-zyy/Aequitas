@@ -1,0 +1,11 @@
+# CAVIAR with RF-DETR-Small instead of YOLO11n (docs/DETECTION.md); otherwise identical to eval_caviar_v2.yaml,
+# whose thresholds were tuned on these clips for YOLO11n (exploratory).
+data_dir: data/eval/caviar_rfdetr
+detector:
+  family: rfdetr
+  rfdetr_size: small
+  conf: 0.10
+  min_person_conf: 0.15
+  min_person_height_px: 20
+tracker:
+  activation_threshold: 0.15
