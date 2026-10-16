@@ -282,6 +282,15 @@ table.dense td { padding: 8px 18px; }
 .dg .wire { fill: none; stroke: var(--muted); stroke-width: 1.8; }
 .dg .wire.dash { stroke-dasharray: 6 5; }
 .dg .ahp, .dg .dot { fill: var(--muted); }
+/* --- why gemma --- */
+.whygrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 48px; }
+.whygrid > * { min-width: 0; }
+.whycard { border-top: 2px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.whycard .k { font-family: var(--mono); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.whycard .v { font-family: var(--display); font-weight: 800; font-stretch: 75%; font-size: 68px; line-height: .95; }
+.whycard p { margin: 0; font-size: 18px; line-height: 1.45; color: var(--muted); }
+.whycard p b { color: var(--fg); font-weight: 600; }
+
 /* --- end --- */
 .slide.active .end img { animation: kbs 14s ease-out both; }
 @keyframes kbs { from { transform: scale(1.15); } to { transform: scale(1); } }
@@ -575,7 +584,21 @@ table.dense td { padding: 8px 18px; }
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3;font-size:21px">Qwen sees more <b>on its own</b>. In the app a violence model votes with the VLM, so the gap shrinks to <b>1–2 demo incidents</b>, and Qwen is <b>33 % slower</b> end to end (2 min 24 s vs 1 min 48 s). Latency is weighted most, so we chose <b>Gemma plus a second signal</b>.<br><span style="font-size:16px;color:var(--faint)">† 12B was run on an earlier draw of 60 videos (46 shared); E2B scored 15 % there.</span></p>
+  <p class="takeaway rv" style="--i:3;font-size:21px">Qwen sees more <b>on its own</b>; Gemma is <b>faster</b> and raises <b>fewer false alarms</b>. We prioritise speed along with accuracy, so we chose <b>Gemma plus a second signal</b>.<br><span style="font-size:16px;color:var(--faint)">† 12B was run on an earlier draw of 60 videos (46 shared); E2B scored 15 % there.</span></p>
+</section>
+
+<!-- 10c · why gemma -->
+<section class="slide" data-title="Why Gemma">
+  <div class="eyebrow rv">Why Gemma 4 E2B · speed and accuracy, together</div>
+  <h2 class="rv" style="--i:1;max-width:22ch">We prioritise speed, without giving up accuracy.</h2>
+  <div class="whygrid">
+    <div class="whycard rv" style="--i:2"><span class="k">Fastest end to end</span><span class="v num good">0.91 s</span><p>per window on our laptop, against 1.01 s for Qwen. All 21 demo clips in <b>1 min 48 s</b> instead of 2 min 24 s.</p></div>
+    <div class="whycard rv" style="--i:3"><span class="k">Fits with room to spare</span><span class="v num">3.5 GB</span><p>at 4-bit on a 6 GB laptop GPU, leaving space for the scene gate beside it. No layers spill onto the CPU.</p></div>
+    <div class="whycard rv" style="--i:4"><span class="k">Fewest false alarms</span><span class="v num good">10 %</span><p>of normal clips flagged, the lowest of every model that fits (Qwen 25 %). Officers only trust a queue that isn't full of noise.</p></div>
+    <div class="whycard rv" style="--i:5"><span class="k">Built-in speculative decoding</span><span class="v num">−22 %</span><p>chat answer time with Gemma's own 98 MB MTP drafter. Qwen has no drafter, so it can't get this speed-up.</p></div>
+    <div class="whycard rv" style="--i:6"><span class="k">One model, every task</span><span class="v num good">6 / 6</span><p>Hindi and Kannada reports translated with every fact kept (Qwen 2 / 6). The same model summarises, classifies, chats and translates, so only <b>one language model</b> sits on the GPU.</p></div>
+    <div class="whycard rv" style="--i:7"><span class="k">Accuracy from a second signal</span><span class="v num good">6 / 6</span><p>faculty clips flagged. The violence model catches the fights Gemma misses, which shrinks Qwen's lead to <b>1–2 demo incidents</b>.</p></div>
+  </div>
 </section>
 
 <!-- 10b · accuracy fix -->
