@@ -1,0 +1,7 @@
+# Expected incidents per faculty clip. v003 is a street fight. w001: weapon clip, weapon or fighting both fine.
+fac-v001: {required: [fighting]}
+fac-v003: {required: [fighting]}
+fac-v006: {required: [fighting]}
+fac-v011: {required: [fighting]}
+fac-v026: {required: [fighting]}
+fac-w001: {optional: [fighting, weapon]}
