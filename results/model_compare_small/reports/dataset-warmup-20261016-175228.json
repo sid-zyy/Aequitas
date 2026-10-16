@@ -1,0 +1,111 @@
+{
+  "label": "warmup",
+  "view": "cctv",
+  "run": "2026-10-16T17:52:28",
+  "n_videos": 5,
+  "total_execution_s": 47.16,
+  "per_video_s": {
+    "p50": 2.402,
+    "p95": 30.552,
+    "mean": 9.431
+  },
+  "classification": {
+    "n": 5,
+    "accuracy": 0.0,
+    "macro_f1": 0.0,
+    "valid": 5,
+    "per_class_f1": {
+      "fighting": 0.0
+    },
+    "incident_precision": 1.0,
+    "incident_recall": 0.8,
+    "confusion": {
+      "arrest": {},
+      "crowd_incident": {},
+      "fighting": {
+        "crowd_incident": 1,
+        "none": 1,
+        "harassment": 1,
+        "arrest": 1,
+        "person_down": 1
+      },
+      "harassment": {},
+      "none": {},
+      "person_down": {}
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building, also while firefighters or police work at it (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held. Officers who only stand, talk, work or direct traffic are not an arrest",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence858.avi",
+      "gold": "fighting",
+      "pred": "crowd_incident",
+      "summary": "A group of people are gathered around a car at night. One man is standing on the car's hood, and others are near the car. The man on the hood appears to be pushing or pulling the car, and the others are standing or moving around the car. The scene is chaotic, with people interacting and the car being moved.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 37.003,
+      "classify_s": 0.496,
+      "video_total_s": 37.587
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence712.avi",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A woman stands at a table in a meeting room, reaching for a laptop. A man is seated at the table, and another person is standing nearby. The woman reaches for the laptop, and the man remains seated.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.787,
+      "classify_s": 0.509,
+      "video_total_s": 2.384
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence904.avi",
+      "gold": "fighting",
+      "pred": "harassment",
+      "summary": "A man lifts a woman over his shoulder, then she is thrown to the ground. The man holds her, and they are both on the ground. A person in the background watches.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.765,
+      "classify_s": 0.528,
+      "video_total_s": 2.372
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence630.avi",
+      "gold": "fighting",
+      "pred": "arrest",
+      "summary": "A man in an orange jumpsuit walks toward a door in a hallway. A police officer approaches and the man turns to face him. The officer reaches out and the man steps back.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.806,
+      "classify_s": 0.508,
+      "video_total_s": 2.412
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence913.avi",
+      "gold": "fighting",
+      "pred": "person_down",
+      "summary": "A group of people are in a hallway, with one man in a striped shirt standing and others moving around. The scene shows a person being pushed and another person falling to the ground.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.76,
+      "classify_s": 0.553,
+      "video_total_s": 2.402
+    }
+  ]
+}

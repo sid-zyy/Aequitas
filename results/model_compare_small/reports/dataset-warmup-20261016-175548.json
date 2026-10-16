@@ -1,0 +1,105 @@
+{
+  "label": "warmup",
+  "view": "cctv",
+  "run": "2026-10-16T17:55:48",
+  "n_videos": 5,
+  "total_execution_s": 26.06,
+  "per_video_s": {
+    "p50": 3.023,
+    "p95": 11.817,
+    "mean": 5.212
+  },
+  "classification": {
+    "n": 5,
+    "accuracy": 0.0,
+    "macro_f1": 0.0,
+    "valid": 5,
+    "per_class_f1": {
+      "fighting": 0.0
+    },
+    "incident_precision": 1.0,
+    "incident_recall": 1.0,
+    "confusion": {
+      "chase": {},
+      "fighting": {
+        "harassment": 3,
+        "chase": 2
+      },
+      "harassment": {}
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building, also while firefighters or police work at it (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held. Officers who only stand, talk, work or direct traffic are not an arrest",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence858.avi",
+      "gold": "fighting",
+      "pred": "harassment",
+      "summary": "A group of people are gathered around a car. One person is being restrained by others, while another person is being pushed towards the car. The person being restrained is being held by multiple people, and the person being pushed is being held by one person.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 13.319,
+      "classify_s": 0.521,
+      "video_total_s": 13.929
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence712.avi",
+      "gold": "fighting",
+      "pred": "harassment",
+      "summary": "A woman in a white shirt and beige pants is seen walking across a conference room, passing by a man in a white shirt and black pants who is sitting at a desk. The woman then turns and walks back towards the camera, passing by the man who is now standing up and looking at her.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.733,
+      "classify_s": 0.546,
+      "video_total_s": 3.37
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence904.avi",
+      "gold": "fighting",
+      "pred": "harassment",
+      "summary": "A person is being restrained by two others, who then drop to the ground. The person is lying on the ground, while the others stand nearby.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.318,
+      "classify_s": 0.518,
+      "video_total_s": 2.921
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence630.avi",
+      "gold": "fighting",
+      "pred": "chase",
+      "summary": "A person in an orange jumpsuit is running towards the camera, while another person in a white shirt is standing still.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.229,
+      "classify_s": 0.505,
+      "video_total_s": 2.818
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence913.avi",
+      "gold": "fighting",
+      "pred": "chase",
+      "summary": "A person in a striped shirt runs past a group of people, then a man in a black shirt walks towards them.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.414,
+      "classify_s": 0.515,
+      "video_total_s": 3.023
+    }
+  ]
+}

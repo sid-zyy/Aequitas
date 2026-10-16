@@ -1,0 +1,6 @@
+setup,accuracy,macro_f1,incident_detected_acc,incident_recall,incident_precision,time_per_video_p50_s,time_per_video_mean_s
+gemma3:4b,0.0667,0.1147,0.733,1.0,0.678,3.76,3.67
+llava-phi3:3.8b,0.2167,0.2496,0.683,0.975,0.661,2.88,2.92
+qwen3-vl:2b-instruct,0.35,0.3623,0.633,0.7,0.8485,2.47,2.46
+qwen2.5vl:3b,0.1167,0.1917,0.367,0.75,0.6383,2.92,2.74
+gemma4:e2b,0.3,0.1765,0.333,0.25,0.8333,1.82,1.98

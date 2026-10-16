@@ -88,6 +88,7 @@ All on the RTX 4050 laptop with Ollama unless noted. Details are in the linked f
 | Chat parsing | 28/28 dev, 20/20 held out; Gemma ~0.7 s/question | same |
 | Webcam false alarms (stage 2, saved windows) | 57/120 → 6/120 labels | commit e0c2791 |
 | SCVD incident recall (Kaggle T4) | E2B 0.15 (1.8 s/clip), E4B 0.175, 12B 0.70 (5.1 s/clip) | kaggle/model_compare |
+| Same-size VLMs on SCVD (Kaggle T4, VLM alone) | balanced acc.: qwen3-vl:2b-instruct 0.72 (recall 0.70, 25 % false alarms, 2.5 s), E2B 0.57 (0.25, 10 %, 1.8 s); gemma3:4b, llava-phi3, qwen2.5vl:3b flag almost everything; granite3.2-vision no valid output. E2B kept | results/model_compare_small/README.md |
 | Time-saved ladder, 80 s video (Kaggle T4, vLLM, Qwen FP16) | 33.1 s → 5.4 s (6.1×) | results/ablation/README.md |
 | Trackers on CAVIAR | tracker choice ≤ 0.02 IDF1; YOLO11n → 11m@960 3×; DeepSORT 4–5× ID switches, 30–46 ms/frame | docs/TRACKING.md |
 | YOLO11n / pose crop | 12.7 ms / 17.6 ms per frame | docs/DESIGN.md §4.4 |
