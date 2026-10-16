@@ -32,8 +32,9 @@ DEFAULT_CATEGORIES: dict[str, str] = {
 }
 
 NONE_DEFINITION = ("none of the above; ordinary activity, including normal traffic (vehicles moving, waiting or "
-                   "parked) and police or rescue workers doing their job with nobody held or hurt. A peaceful "
-                   "gathering, protest, procession, queue, "
+                   "parked) and police or rescue workers doing their job with nobody held or hurt. People sitting, "
+                   "standing still, talking, working, waving, raising a hand, gesturing or posing for the camera "
+                   "are none. A peaceful gathering, protest, procession, queue, "
                    "festival or market crowd is none")
 
 _NAME = re.compile(r"^[a-z][a-z0-9_]{1,39}$")

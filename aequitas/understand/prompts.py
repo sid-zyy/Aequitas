@@ -50,7 +50,8 @@ _GRID = (
     "You are reviewing footage from a security camera.\n"
     "The image is a 2x2 grid of four frames from the same camera in time order: "
     "top-left, top-right, bottom-left, bottom-right. Each frame shows its time in seconds "
-    "relative to the last frame. "
+    "relative to the last frame. The same person usually appears in several frames: count people within one "
+    "frame, not across frames. "
 )
 _HIGHLIGHT = (
     "Red boxes (labelled P = person, B = bag) mark the people or objects to focus on. "
