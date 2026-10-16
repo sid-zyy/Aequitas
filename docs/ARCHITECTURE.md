@@ -108,7 +108,8 @@ time order (`understand/keyframes.py`, 448 px tiles), which goes to stage 1, the
 
 Per frame:
 1. YOLO11n detects people and bags (`vision/detector.py`, 12.7 ms/frame on the 4050).
-2. ByteTrack (supervision) keeps IDs per camera, with people and bags tracked separately.
+2. ByteTrack (Ultralytics' `BYTETracker`; OC-SORT via `tracker.algorithm`) keeps IDs per camera, with people
+   and bags tracked separately.
 3. Motion energy is measured on the person boxes.
 4. Optional: the violence clip model, and the hazard detector (fire, smoke, weapons).
 5. The rule engine (`triggers/`, one rule per category, a cooldown and episodes) emits **candidates**:
@@ -427,5 +428,5 @@ tests/                 unit tests on synthetic data (no model downloads)
 - **Small sets:** several thresholds were chosen on the demo clips themselves (the clip-model 0.9, the gate
   0.3). They're demo settings, not measured accuracy.
 - **Faculty dataset:** not arrived. The adapter exists (`eval-dataset`).
-- **Tracker:** supervision's `ByteTrack` is removed in supervision 0.31; a migration to Ultralytics' tracker
-  is in progress.
+- **supervision is capped below 0.31,** where its `ByteTrack` was removed. Tracking now uses Ultralytics,
+  and only `sv.Detections` is still used. Lift the cap once 0.31 is tested.

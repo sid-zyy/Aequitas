@@ -5,7 +5,7 @@ description = "Open-source live video event summarization, classification and co
 requires-python = ">=3.11"
 dependencies = [
     "ultralytics>=8.3",
-    "supervision>=0.25,<0.31",  # sv.ByteTrack is removed in 0.31
+    "supervision>=0.25,<0.31",  # only sv.Detections is used now (tracking is Ultralytics); lift the cap once 0.31 is tested
     "opencv-python>=4.9",
     "numpy>=1.26",
     "pydantic>=2.6",
