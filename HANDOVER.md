@@ -124,8 +124,8 @@ numbers in the docs.
 - [x] Faculty dataset adapter (`aequitas eval-dataset`)
 - [ ] **vLLM on the laptop** (needs WSL, above): Gemma 4 E2B FP8, then `aequitas bench` at concurrency
   1/4/16 and the demo set end to end
-- [ ] **MTP and n-gram speculation measured** on the laptop: speed-up and acceptance rate (`serve.sh SPEC=mtp`,
-  `NSPEC` sweep)
+- [x] **MTP measured in Ollama** (docs/SPECULATIVE.md, `scripts/bench_spec.py`): gemma4:e2b's drafter at 3 tokens,
+  window 1.28 → 1.16 s, chat 0.58 → 0.45 s, labels unchanged. n-gram needs vLLM: not measured
 - [ ] **Quantisation study:** W8A8 and W4A16 checkpoints (`scripts/quantize`) + FP8, latency × accuracy
   (stage-2 eval, demo set, SCVD subset). Write `docs/QUANTIZATION.md`.
 - [ ] **Ablation re-run at the end** (Kaggle, re-import `kaggle/ablation.ipynb`; the torchvision fix is in

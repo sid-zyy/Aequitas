@@ -127,6 +127,13 @@ class OllamaClient(LlmClient):
         import ollama
 
         self.client = ollama.Client(host=cfg.host, timeout=cfg.timeout_s)
+        self.last_stats: dict = {}  # token counts and durations of the last call (benchmarks read these)
+
+    def _options(self, num_predict: int) -> dict:
+        opts = {"temperature": 0, "num_ctx": self.cfg.num_ctx, "num_predict": num_predict}
+        if self.cfg.draft_num_predict is not None:
+            opts["draft_num_predict"] = self.cfg.draft_num_predict
+        return opts
 
     def _chat(self, messages: list[dict], schema: dict, name: str, max_tokens: int | None = None) -> str:
         msgs = [{k: v for k, v in m.items() if k != "images" or v} for m in messages]
@@ -135,10 +142,12 @@ class OllamaClient(LlmClient):
             model=self.model,
             messages=msgs,
             format=schema,
-            options={"temperature": 0, "num_ctx": self.cfg.num_ctx, "num_predict": max_tokens or self.cfg.max_tokens},
+            options=self._options(max_tokens or self.cfg.max_tokens),
             keep_alive=self.cfg.keep_alive,
             **kwargs,
         )
+        self.last_stats = {k: resp.get(k) for k in ("prompt_eval_count", "prompt_eval_duration", "eval_count",
+                                                    "eval_duration", "total_duration")}
         return resp["message"]["content"]
 
     def stream_text(self, messages: list[dict], max_tokens: int = 256) -> Iterator[str]:
@@ -146,8 +155,11 @@ class OllamaClient(LlmClient):
         kwargs = {"think": self.cfg.think} if self.cfg.think is not None else {}
         for chunk in self.client.chat(
             model=self.model, messages=messages, stream=True, keep_alive=self.cfg.keep_alive,
-            options={"temperature": 0, "num_ctx": self.cfg.num_ctx, "num_predict": max_tokens}, **kwargs,
+            options=self._options(max_tokens), **kwargs,
         ):
+            if chunk.get("done"):
+                self.last_stats = {k: chunk.get(k) for k in ("prompt_eval_count", "prompt_eval_duration",
+                                                             "eval_count", "eval_duration", "total_duration")}
             delta = chunk["message"]["content"]
             if delta:
                 yield delta
