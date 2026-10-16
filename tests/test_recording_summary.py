@@ -66,6 +66,9 @@ def test_motion_flags_name_what_only_the_violence_model_saw():
     ws = [{"t": 0, "label": "fighting", "source": "clip_model"}, {"t": 4, "label": "fighting", "source": "clip_model"},
           {"t": 8, "label": "suspicious_activity", "source": "vlm+clip"},  # Gemma's label: the clip model only agreed
           {"t": 12, "label": "none", "source": "clip_model"}]
-    assert motion_flags(ws).startswith("The violence model, which watches motion, flagged fighting at 00:00, 00:04.")
+    assert motion_flags(ws).startswith("The violence model, which watches motion, flagged fighting from 00:00 to 00:08;")
     assert "suspicious" not in motion_flags(ws)
+    gap = [{"t": 0, "end": 4, "label": "fighting", "source": "clip_model"},
+           {"t": 12, "end": 16, "label": "fighting", "source": "clip_model"}]
+    assert "fighting at 00:00, at 00:12;" in motion_flags(gap)
     assert motion_flags([{"t": 0, "label": "arrest", "source": "vlm"}]) == ""

@@ -86,11 +86,11 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
     else:
         focus = "\nDescribe what happens in the scene.\n"
     if concise:
-        length = ("- summary: one or two short sentences (at most 35 words) describing what happens across the "
-                  "four frames.\n"
+        length = ("- summary: one or two short sentences (at most 35 words) describing what the people do over "
+                  "these seconds.\n"
                   "- visible_evidence: at most 8 words naming the most important thing you saw.\n")
     else:
-        length = ("- summary: one or two plain sentences describing what happens across the four frames.\n"
+        length = ("- summary: one or two plain sentences describing what the people do over these seconds.\n"
                   "- visible_evidence: a short phrase naming the most important thing you saw.\n")
     if guided:
         length += ("- checks: a few words for every check question answered yes (for example 'punching; "
@@ -111,7 +111,10 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
         "- If anyone hits, kicks, pushes, grabs, chokes, restrains or attacks another person, say so plainly.\n"
         "- Name the main action with a specific verb (walking, running, punching, pushing, handcuffing, "
         "falling, crashing, burning). Never write vague phrases such as 'some action', 'interacting' or "
-        "'engaged in an activity'. Do not start with 'Four frames show'; describe the scene directly.\n"
+        "'engaged in an activity' or 'in various poses'.\n"
+        "- Write as if describing a short video: never mention frames, the grid, tiles or time points.\n"
+        "- When two people touch (grabbing, holding, grappling, wrestling, one on top of the other on the "
+        "ground), say what one does to the other, for example 'one man grabs the other around the neck'.\n"
         "- Mention police or other uniforms, handcuffs, knives, guns or raised sticks, flames, smoke, and "
         "crashed or damaged vehicles whenever they are visible.\n"
         "- If anyone throws stones, bricks, bottles or other objects, or smashes property, say so plainly.\n"

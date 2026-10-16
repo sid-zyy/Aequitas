@@ -1,0 +1,12 @@
+# Demo-clip run F: run E with the clearer window prompt (no "frames"/"poses" wording, contact described).
+data_dir: data/eval/demo_prompt
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: gemma4:e2b
+  tile_px: 448
