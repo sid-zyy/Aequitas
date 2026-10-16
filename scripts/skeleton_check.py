@@ -5,7 +5,7 @@ periodic pipeline sees a camera, and print the top NTU actions and the incident 
 
     .venv/Scripts/python scripts/skeleton_check.py --record 20     # film 20 s from camera 0 first, then check it
 
---record saves the clip to data/eval/webcam_<time>.mp4 (a 3 s countdown first). Close the browser tab that uses
+--record saves the clip to data/eval/webcam_<time>.mp4 (a countdown first: --countdown, default 3 s). Close the browser tab that uses
 the webcam before recording; Windows lets one program use the camera at a time.
 """
 
@@ -40,14 +40,14 @@ def windows(path: str, fps: float, window_s: float):
         yield buf
 
 
-def record(seconds: float, camera: int) -> str:
+def record(seconds: float, camera: int, countdown: int = 3) -> str:
     out = Path("data/eval") / f"webcam_{time.strftime('%Y%m%d_%H%M%S')}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
     cap = cv2.VideoCapture(camera, cv2.CAP_DSHOW) if sys.platform == "win32" else cv2.VideoCapture(camera)
     ok, frame = cap.read()
     if not ok:
         raise SystemExit(f"camera {camera} gave no picture (privacy switch, or another program has it)")
-    for k in (3, 2, 1):
+    for k in range(countdown, 0, -1):
         print(f"recording in {k}...", flush=True)
         time.sleep(1)
     h, w = frame.shape[:2]
@@ -71,13 +71,14 @@ def main() -> None:
     ap.add_argument("videos", nargs="*")
     ap.add_argument("--record", type=float, default=0, help="seconds to film from the local camera first")
     ap.add_argument("--camera", type=int, default=0)
+    ap.add_argument("--countdown", type=int, default=3, help="seconds before recording starts")
     ap.add_argument("--fps", type=float, default=4)
     ap.add_argument("--window", type=float, default=4)
     ap.add_argument("--models", default="models/skeleton")
     ap.add_argument("--device", default="cuda")
     a = ap.parse_args()
     if a.record:
-        a.videos.append(record(a.record, a.camera))
+        a.videos.append(record(a.record, a.camera, a.countdown))
     if not a.videos:
         ap.error("give video files or --record SECONDS")
     model = SkeletonActionModel(a.models, a.device)
