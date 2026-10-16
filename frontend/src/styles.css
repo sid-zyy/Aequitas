@@ -296,3 +296,6 @@ table.queue tr.review-row td { background: var(--panel-2); padding: 4px 12px 16p
 .bc-summary p { margin: 6px 0 8px; color: var(--text); }
 .bc-summary ol { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 4px; }
 .bc-summary li .btn { padding: 2px 6px; margin-right: 4px; }
+
+.webcam-drawer { display: grid; gap: 12px; margin-top: 16px; justify-items: start; }
+.webcam-drawer .cam-grid { width: 100%; }
