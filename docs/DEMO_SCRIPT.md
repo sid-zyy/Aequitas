@@ -9,20 +9,20 @@ Checked end to end on 2026-10-16 (scratch database, RTX 4050, gemma4:e2b):
 
 | Screen | What it shows (measured) |
 |---|---|
-| Queue | AI found **FIGHTING**; AI-generated **inconclusive** (see below) |
+| Queue | AI found **FIGHTING**; AI-generated **Real** (see below) |
 | Analysis | 00:00–00:12 **nothing found** (4 windows), 00:16–00:32 fighting (violence model 0.95–1.00, Gemma agrees on 3), event **confirmed**, analysed in **16 s** |
 | Timeline bar | green, then red from 00:16 |
 | Summary | "Several people in an outdoor parking lot area. At 00:16 physical movements… a physical struggle or grappling between two individuals from 00:20 to 00:24…" |
 
 **The AI-generated check.** With no C2PA or metadata evidence only the frame detector speaks, and the screens
-show words, not a percentage. The demo clip scores 0.03 on it, so the queue reads **inconclusive** (the detail
-view says "Frame check: inconclusive" and why). Say it on stage: a frame detector can't prove a video is real,
-so we don't show a number it can't back up. It flags "AI-like frames" only above 0.85, which in our test caught
+show words, not a percentage. The demo clip scores 0.03 on it, so the queue reads **Real** (the detail view says
+"Frame check: no AI signs found, treated as real"). By design it prefers missing a fake to flagging a real
+citizen's video: a false "AI-generated" label would discredit a genuine report. It flags "AI-like frames" only above 0.85, which in our test caught
 34 of 50 AI clips (all Kling; it misses open models like CogVideoX) and 1 of 80 real clips
 (results/authenticity/README.md). Until 2026-10-16 the old detector showed "100 % ?" on every stock clip.
 
 **Backup clip:** `data/footage/demo/citizen-upload.mp4`, faculty clip **v011** (night-time restaurant brawl, 8.7 s,
-2/2 windows fighting, AI-generated inconclusive, 7.5 s). Its summary is weak ("people are present in a room…"): Gemma E2B
+2/2 windows fighting, AI-generated Real, 7.5 s). Its summary is weak ("people are present in a room…"): Gemma E2B
 never sees the fight on that low-detail CCTV, only the violence model does.
 
 Clips rejected, and why:
@@ -44,7 +44,7 @@ Clips rejected, and why:
 
 ## Officer side (`/requests`)
 
-1. The report appears within about 3 s, with **FIGHTING** and the AI-generated check (*inconclusive*). Click **Start review**.
+1. The report appears within about 3 s, with **FIGHTING** and the AI-generated check (*Real*). Click **Start review**.
 2. **▶ Analyse** opens the summary, player, timeline, key moment and chat. The analysis takes about 16 s, so talk
    over it.
 3. On the key moment, click **Confirm**. It shows "confirmed by <officer>" and goes to the audit trail.

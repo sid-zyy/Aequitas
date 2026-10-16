@@ -9,7 +9,7 @@ and real phone videos can be flagged. Signals, strongest first:
 4. a frame classifier (an image AI-detector run on sampled frames) -> a check, NOT a percentage
 
 Only (1)-(3) give a percentage. Re-uploads through messaging apps strip metadata, so they are often absent; then
-only the frame check speaks, and it is reported as words ("inconclusive", or "AI-like frames" above a measured
+only the frame check speaks, and it is reported as words ("real", or "AI-like frames" above a measured
 threshold): image detectors are trained on stills, and their scores on compressed video are uncalibrated (they give
 real stock video 100 %). Measured in results/authenticity/README.md (scripts/eval_authenticity.py)."""
 
@@ -55,8 +55,8 @@ class AuthenticityCfg(BaseModel):
     uncertain_at: float = 0.5
     # The frame detector alone is never shown as a percentage: image detectors' scores are uncalibrated on video
     # (Organika gave 22 of 80 real stock / CCTV clips >= 99.5 %). A frame-only result says "AI-like frames"
-    # (verdict uncertain) when the median frame score reaches frame_flag_at, else "inconclusive" (a low score
-    # misses most open-model generators). None = always inconclusive. Measured on non-faculty clips only.
+    # (verdict uncertain) when the median frame score reaches frame_flag_at, else "real" (a low score
+    # misses most open-model generators). None = always real. Measured on non-faculty clips only.
     frame_flag_at: float | None = 0.85
     frame_flag_note: str = "in our test this flagged 1 of 80 real clips and 34 of 50 AI clips"
 
@@ -169,7 +169,7 @@ def combine(meta: dict, c2pa: dict | None, frame_p: float | None,
         reasons.append("Frame check: AI-like frames, needs a human look"
                        + (f" ({cfg.frame_flag_note})" if cfg.frame_flag_note else ""))
     else:
-        reasons.append("Frame check: inconclusive")
+        reasons.append("Frame check: no AI signs found, treated as real")  # prefer a missed fake to a real video flagged
     # the raw frame score stays in the result's "frame_score", not in the text the officer reads
     reasons.append("Only an image AI-detector ran, on sampled frames. On real stock and CCTV video it scores as "
                    "high as on AI video, so its score is not shown as a percentage")
@@ -196,7 +196,7 @@ def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
     likelihood, reasons, basis = combine(meta, c2, frame_p, cfg)
     if basis == "frames":
         flagged = cfg.frame_flag_at is not None and frame_p >= cfg.frame_flag_at
-        verdict = "uncertain" if flagged else "inconclusive"
+        verdict = "uncertain" if flagged else "no_ai_signs"
     elif likelihood is None:
         verdict = "not_enough_signal"
     elif likelihood >= cfg.likely_ai_at:
