@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, label, openCitizenPortal, Report, timeOf } from "../api";
+import { aiCheck } from "../aiCheck";
 import ReportText from "../components/ReportText";
 import { LANG_NAME } from "../i18n";
 
 const STATUSES = ["received", "under_review", "action_taken", "closed", "rejected"];
 
-function AiMeter({ pct, verdict }: { pct: number | null; verdict: string }) {
-  if (pct == null) return <span className="note">not enough signal</span>;
-  const color = verdict === "likely_ai" ? "var(--danger)" : verdict === "uncertain" ? "var(--warn)" : "var(--ok)";
+function AiMeter({ a }: { a: NonNullable<Report["authenticity"]> }) {
+  const ai = aiCheck(a);
+  if (ai.pct == null) return <b style={{ color: ai.color }}>{ai.title}</b>;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div className="meter" style={{ width: 120 }}><i style={{ width: `${pct}%`, background: color }} /></div>
-      <b className="mono" style={{ color }}>{pct}%</b>
-      <span className="badge status">{verdict.replace(/_/g, " ")}</span>
+      <div className="meter" style={{ width: 120 }}><i style={{ width: `${ai.pct}%`, background: ai.color }} /></div>
+      <b className="mono" style={{ color: ai.color }}>{ai.text}</b>
+      <span className="badge status">{a.verdict.replace(/_/g, " ")}</span>
     </div>
   );
 }
@@ -102,9 +103,12 @@ export default function Reports() {
                     <span className="note">Check failed: {detail.authenticity.error}</span>
                   ) : (
                     <>
-                      <AiMeter pct={detail.authenticity.ai_likelihood_pct} verdict={detail.authenticity.verdict} />
+                      <AiMeter a={detail.authenticity} />
                       <ul style={{ margin: "8px 0", paddingLeft: 18, color: "#cfdbe3" }}>
-                        {detail.authenticity.reasons.map((r) => <li key={r}>{r}</li>)}
+                        {detail.authenticity.reasons
+                          // frame-only: the headline is shown above; results stored before v2 carry the raw score
+                          .slice(aiCheck(detail.authenticity).frameOnly ? 1 : 0)
+                          .map((r) => <li key={r}>{r}</li>)}
                       </ul>
                       <p className="note">{detail.authenticity.disclaimer}</p>
                     </>
