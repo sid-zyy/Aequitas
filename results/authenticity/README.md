@@ -66,7 +66,10 @@ some faculty clips 98–100 %.
   percentage** (`ai_likelihood_pct: null`, `basis: "frames"`):
   - median ≥ 0.85 (`frame_flag_at`, the old `likely_ai_at`, not tuned): verdict `uncertain`, "Frame check:
     AI-like frames, needs a human look (in our test this flagged 1 of 80 real clips and 34 of 50 AI clips)";
-  - otherwise verdict `inconclusive`, "Frame check: inconclusive".
+  - otherwise verdict `inconclusive`, "Frame check: inconclusive". **Changed the same day at the owner's request:**
+    this case now reads verdict `no_ai_signs`, "Frame check: no AI signs found, treated as real", shown as
+    **Real**. The owner prefers missed fakes to real videos flagged. Given the limits below (0/10 open-model clips
+    caught), "Real" here means "no AI signs found", not "verified real".
   The raw score is kept in `frame_score` and `frames.per_frame` for audit, not shown as a likelihood.
 - Percentages remain only for real evidence: C2PA declares AI (99 %), AI-tool metadata (90 %), phone camera
   metadata (10 %).

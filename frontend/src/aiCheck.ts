@@ -11,8 +11,11 @@ export function aiCheck(a: Authenticity): { pct: number | null; text: string; co
   if (frameOnly) {
     const flagged = !!a.basis && a.verdict === "uncertain";
     return {
-      pct: null, text: flagged ? "AI-like frames ?" : "inconclusive", color: flagged ? "var(--warn)" : "var(--muted)",
-      title: a.headline ?? (flagged ? "Frame check: AI-like frames, needs a human look" : "Frame check: inconclusive"),
+      // not flagged reads "Real" (owner's call: prefer a missed fake to a real video flagged); older results
+      // stored "Frame check: inconclusive" as their headline, so the title is set here, not taken from them
+      pct: null, text: flagged ? "AI-like frames ?" : "Real", color: flagged ? "var(--warn)" : "var(--ok)",
+      title: flagged ? (a.headline ?? "Frame check: AI-like frames, needs a human look")
+        : "Frame check: no AI signs found, treated as real",
       frameOnly,
     };
   }

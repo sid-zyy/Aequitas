@@ -203,12 +203,12 @@ def test_frame_detector_alone_never_gives_a_percentage():
     # real stock video scores 100 % on the image detector: a frame-only result is a check, not a likelihood
     none = {"ai_source_type": [], "generators": [], "camera_metadata": []}
     p, reasons, basis = auth_mod.combine(none, None, 1.0, auth_mod.AuthenticityCfg(frame_flag_at=None))
-    assert p is None and basis == "frames" and reasons[0] == "Frame check: inconclusive"
+    assert p is None and basis == "frames" and reasons[0] == "Frame check: no AI signs found, treated as real"
     assert not any("%" in r for r in reasons)  # no raw score in what the officer reads
     cfg = auth_mod.AuthenticityCfg(frame_flag_at=0.9, frame_flag_note="flags 5 % of real test clips")
     assert auth_mod.combine(none, None, 0.95, cfg)[1][0] == ("Frame check: AI-like frames, needs a human look "
                                                               "(flags 5 % of real test clips)")
-    assert auth_mod.combine(none, None, 0.5, cfg)[1][0].startswith("Frame check: inconclusive")
+    assert auth_mod.combine(none, None, 0.5, cfg)[1][0] == "Frame check: no AI signs found, treated as real"
 
 
 def test_frame_detector_leaves_the_gpu_to_the_vlm_when_memory_is_short(monkeypatch):
@@ -234,9 +234,9 @@ def test_analyze_video_end_to_end_with_a_fake_frame_detector(tmp_path, monkeypat
     r = auth_mod.analyze_video(_video(tmp_path / "ai.mp4"),
                                auth_mod.AuthenticityCfg(frame_model="fake/model", frame_flag_at=None))
     # the frame detector alone gives no percentage (image detectors score real compressed video 100 % too)
-    assert r["ai_likelihood_pct"] is None and r["verdict"] == "inconclusive" and r["basis"] == "frames"
+    assert r["ai_likelihood_pct"] is None and r["verdict"] == "no_ai_signs" and r["basis"] == "frames"
     assert r["frame_score"] == 0.92 and len(r["frames"]["per_frame"]) == 8
-    assert r["headline"] == "Frame check: inconclusive"
+    assert r["headline"] == "Frame check: no AI signs found, treated as real"
     flagged = auth_mod.analyze_video(_video(tmp_path / "ai2.mp4"), auth_mod.AuthenticityCfg(frame_model="fake/model"))
     assert flagged["verdict"] == "uncertain" and flagged["ai_likelihood_pct"] is None  # default flag at 0.85
     assert flagged["headline"].startswith("Frame check: AI-like frames")

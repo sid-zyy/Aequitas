@@ -330,7 +330,7 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
   - An **AI-generated check**: a percentage only from real evidence (C2PA provenance, AI-tool or camera
     metadata). When only the frame detector (haywoodsloan/ai-image-detector-deploy on 8 frames) speaks, the
     officer sees words, never a percentage: "AI-like frames" at a median ≥ 0.85 (1 of 80 real test clips, 34 of
-    50 AI clips), else "inconclusive". Measured in results/authenticity/README.md. It's evidence for a human,
+    50 AI clips), else "Real" (no AI signs found; the owner prefers missed fakes to false flags). Measured in results/authenticity/README.md. It's evidence for a human,
     not proof.
   - **Languages** (`translate.py`): the portal UI is in English, Hindi or Kannada (`frontend/src/i18n.ts`). The
     report text is stored as written; its language comes from the script (Devanagari → hi, Kannada → kn), else
