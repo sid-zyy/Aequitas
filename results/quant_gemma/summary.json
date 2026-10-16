@@ -1,0 +1,30 @@
+[
+ {
+  "model": "gemma4:e2b-it-q4_K_M",
+  "pull_s": 42,
+  "bench_s": 134,
+  "ollama_ps": "NAME                    ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL               \ngemma4:e2b-it-q4_K_M    b37049369adf    330 MB    100% GPU     4096       llamacpp    29 minutes from now    \n",
+  "table": "| variant | right fight | right arrest | right fire | flagged incidents | false alarms (normal) | time / window (median) |\n|---|---|---|---|---|---|---|\n| context | 2/17 | 8/12 | 7/10 | 20/39 | 0/33 | 1.84 s |\n"
+ },
+ {
+  "model": "gemma4:e2b-it-q8_0",
+  "pull_s": 43,
+  "bench_s": 148,
+  "ollama_ps": "NAME                  ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL               \ngemma4:e2b-it-q8_0    8cb19ff6df84    2.7 GB    100% GPU     4096       llamacpp    29 minutes from now    \n",
+  "table": "| variant | right fight | right arrest | right fire | flagged incidents | false alarms (normal) | time / window (median) |\n|---|---|---|---|---|---|---|\n| context | 0/17 | 8/12 | 5/10 | 20/39 | 0/33 | 2.06 s |\n"
+ },
+ {
+  "model": "gemma4:e2b-it-bf16",
+  "pull_s": 92,
+  "bench_s": 296,
+  "ollama_ps": "NAME                  ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL               \ngemma4:e2b-it-bf16    5b971d662d97    4.8 GB    100% GPU     4096       llamacpp    29 minutes from now    \n",
+  "table": "| variant | right fight | right arrest | right fire | flagged incidents | false alarms (normal) | time / window (median) |\n|---|---|---|---|---|---|---|\n| context | 0/17 | 9/12 | 5/10 | 20/39 | 0/33 | 4.11 s |\n"
+ },
+ {
+  "model": "gemma4:e2b-it-qat",
+  "pull_s": 33,
+  "bench_s": 139,
+  "ollama_ps": "NAME                 ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL               \ngemma4:e2b-it-qat    07ea59a47401    1.7 GB    100% GPU     4096       llamacpp    29 minutes from now    \n",
+  "table": "| variant | right fight | right arrest | right fire | flagged incidents | false alarms (normal) | time / window (median) |\n|---|---|---|---|---|---|---|\n| context | 0/17 | 6/12 | 6/10 | 18/39 | 0/33 | 1.89 s |\n"
+ }
+]
