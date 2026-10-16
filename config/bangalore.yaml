@@ -62,3 +62,5 @@ localities:
     cameras:
       # source "browser": the page asks for camera permission and sends frames; "0" = the server opens it
       - {id: demo-webcam, name: Laptop webcam, source: browser, view: close, window_s: 2.0}
+      # A phone running the IP Webcam app (Android), mounted high like CCTV; the address changes with the network
+      - {id: demo-phone, name: Phone camera, source: "http://10.158.149.251:8080/video", window_s: 2.0}
