@@ -425,11 +425,10 @@ tr.out td { color: var(--faint); }
         <tr><td>Gemma 4 E4B</td><td class="n">18 %</td><td class="n">0.88</td><td class="n">2.7 s</td><td>1.5× slower for one more hit</td></tr>
         <tr><td>Gemma 4 12B</td><td class="n">70 %</td><td class="n">0.82</td><td class="n">5.1 s</td><td class="warn">Best eyes, 3× slower, too big for 6 GB</td></tr>
         <tr><td>Qwen3-VL 2B instruct<sup>†</sup></td><td class="n">70 %</td><td class="n">0.85</td><td class="n">2.5 s</td><td>Sees far more than E2B, 1.4× slower</td></tr>
-        <tr class="out"><td>Qwen3-VL 4B · 8B</td><td class="n">–</td><td class="n">–</td><td class="n">6.6 · 12.5 s</td><td>No answers: see below</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3;font-size:21px;line-height:1.45">Qwen 4B and 8B are <b>not a verdict on the model</b>: Ollama's default tag is the "thinking" build, which spent its output reasoning, so all 60 summaries came back empty. We re-ran Qwen as the instruct build.<br><sup>†</sup> Instruct build, run on a second draw of 60 videos (46 shared). E2B scored 25 % at 0.83 precision on that draw.</p>
+  <p class="takeaway rv" style="--i:3;font-size:21px"><sup>†</sup> Run on a second draw of 60 videos (46 shared). E2B scored 25 % at 0.83 precision on that draw.</p>
 </section>
 
 <!-- 10a · same-size rivals -->
