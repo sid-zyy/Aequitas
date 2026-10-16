@@ -140,6 +140,7 @@ def test_bodycam_upload_timeline_review_and_report(client):
     # an officer confirms; the AI's own status is kept
     ok = client.post(f"/api/bodycam/{rec['id']}/events/{eid}/review", json={"decision": "confirmed"}).json()
     assert ok["review"] == "confirmed" and ok["status"] == "unverified"
+    assert "(confirmed by an officer)" in ok["headline"]  # the headline follows the decision
     assert client.post(f"/api/bodycam/{rec['id']}/events/999/review", json={"decision": "confirmed"}).status_code == 404
     assert client.post(f"/api/bodycam/{rec['id']}/events/{eid}/review", json={"decision": "maybe"}).status_code == 422
 

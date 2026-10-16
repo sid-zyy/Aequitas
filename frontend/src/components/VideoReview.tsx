@@ -156,7 +156,7 @@ export default function VideoReview({ d, setD, api, extra }: {
   };
   async function review(ev: BodyEvent, decision: "confirmed" | "dismissed" | null) {
     const upd = await api.review(ev.id, decision);
-    setD({ ...d, events: d.events.map((e) => (e.id === upd.id ? upd : e)) });
+    setD({ ...d, events: d.events.map((e) => (e.id === upd.id ? upd : e)), headline: upd.headline ?? d.headline });
   }
   async function resummarise() {
     setSummarising(true);
@@ -182,6 +182,7 @@ export default function VideoReview({ d, setD, api, extra }: {
         {d.summary ? (
           <div className="bc-summary">
             <div className="section-label">Summary of the video · AI draft</div>
+            {d.headline && <p className="bc-headline">{d.headline}</p>}
             <p>{d.summary.overview}</p>
             {d.summary.key_points.length > 0 && (
               <ol>

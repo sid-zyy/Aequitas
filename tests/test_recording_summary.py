@@ -60,15 +60,37 @@ def test_violence_model_labels_are_marked_so_the_text_can_say_where_they_came_fr
                                   "00:04 [fighting] Two people push each other.", "00:08 [arrest] A room."]
 
 
-def test_motion_flags_name_what_only_the_violence_model_saw():
-    from aequitas.understand.recording_summary import motion_flags
+def test_headline_states_flags_review_state_and_quiet_stretches():
+    from aequitas.understand.recording_summary import headline
 
-    ws = [{"t": 0, "label": "fighting", "source": "clip_model"}, {"t": 4, "label": "fighting", "source": "clip_model"},
-          {"t": 8, "label": "suspicious_activity", "source": "vlm+clip"},  # Gemma's label: the clip model only agreed
-          {"t": 12, "label": "none", "source": "clip_model"}]
-    assert motion_flags(ws).startswith("The violence model, which watches motion, flagged fighting from 00:00 to 00:08;")
-    assert "suspicious" not in motion_flags(ws)
-    gap = [{"t": 0, "end": 4, "label": "fighting", "source": "clip_model"},
-           {"t": 12, "end": 16, "label": "fighting", "source": "clip_model"}]
-    assert "fighting at 00:00, at 00:12;" in motion_flags(gap)
-    assert motion_flags([{"t": 0, "label": "arrest", "source": "vlm"}]) == ""
+    ws = [{"t": 0, "end": 4, "label": "none", "summary": "A man walks to a car.", "source": "vlm"},
+          {"t": 4, "end": 8, "label": "none", "summary": "People stand by a car.", "source": "vlm"},
+          {"t": 8, "end": 12, "label": "fighting", "summary": "Movement.", "source": "clip_model"},
+          {"t": 12, "end": 16, "label": "fighting", "summary": "Two men grapple.", "source": "both"},
+          {"t": 16, "end": 18, "label": "harassment", "summary": "One leans on the other.", "source": "both"}]
+    ev = [{"t": 8, "review": None}]
+    h = headline(ws, ev)
+    assert h == ("Nothing found from 00:00 to 00:08. Fighting flagged from 00:08 to 00:18 (also harassment) "
+                 "(not yet confirmed by an officer).")
+    assert "confirmed by an officer)" in headline(ws, [{"t": 8, "review": "confirmed"}])
+    assert "(dismissed by an officer)" in headline(ws, [{"t": 8, "review": "dismissed"}])
+    only_motion = [{"t": 0, "end": 4, "label": "fighting", "summary": "People in a room.", "source": "clip_model"}]
+    assert headline(only_motion, []).startswith("Fighting flagged at 00:00 (not yet confirmed by an officer; seen by "
+                                                "the violence model")
+    assert headline([{"t": 0, "end": 4, "label": "none", "summary": "A road."},
+                     {"t": 4, "end": 8, "label": "none", "summary": "A road."}], []) == "No incident found in the 00:08 analysed."
+    assert headline([], []) == ""
+
+
+
+
+def test_filler_descriptions_of_incidents_are_not_shown_to_the_summary_model():
+    from aequitas.understand.recording_summary import plain_incidents
+
+    ws = [{"t": 0, "label": "fighting", "summary": "A person is performing physical movements in a confined space."},
+          {"t": 4, "label": "fighting", "summary": "Two men grapple on the ground."},
+          {"t": 8, "label": "none", "summary": "A person is seen in various poses."}]
+    out = plain_incidents(ws)
+    assert out[0]["summary"] == "The AI flagged fighting here."
+    assert out[1]["summary"] == "Two men grapple on the ground." and out[2]["summary"] == ws[2]["summary"]
+    assert ws[0]["summary"].startswith("A person is performing")  # the stored windows are not changed

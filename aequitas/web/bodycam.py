@@ -35,8 +35,10 @@ def mmss(seconds: float) -> str:
 
 def timeline(upload: dict, windows: list[dict], events: list[dict]) -> dict:
     """Window and event times relative to the start of the recording, in seconds."""
+    from aequitas.understand.recording_summary import headline
+
     t0 = upload["start_ts"]
-    return {
+    tl = {
         "windows": [{"t": round((w["start_ts"] - t0) / 1000, 2), "end": round((w["end_ts"] - t0) / 1000, 2),
                      "label": w["label"], "summary": w["summary"], "source": w["source"],
                      "violence": w["violence"]} for w in windows],
@@ -46,6 +48,16 @@ def timeline(upload: dict, windows: list[dict], events: list[dict]) -> dict:
                     "reviewed_by": e.get("reviewed_by"), "keyframe_url": f"/api/events/{e['event_id']}/keyframe"}
                    for e in events],
     }
+    tl["headline"] = headline(tl["windows"], tl["events"])
+    return tl
+
+
+def reviewed(upload: dict, event_id: int, store: EventStore) -> dict:
+    """The reviewed moment, plus the headline recomputed with the new decision (the page swaps both in)."""
+    cam = upload["camera_id"]
+    tl = timeline(upload, store.windows_for(cam), store.events_for(cam))
+    ev = next(e for e in tl["events"] if e["id"] == event_id)
+    return {**ev, "headline": tl["headline"]}
 
 
 def overview_html(upload: dict) -> str:
@@ -89,6 +101,7 @@ th{{background:#eee}}.warn{{border:1px solid #c80;background:#fff6e0;padding:8px
 <dt>Analysed in</dt><dd>{f'{total_s:.1f} s' if total_s is not None else '-'} (model {e(upload['vlm_model'] or '')})</dd></dl>
 <p class="warn">AI-generated draft. The AI describes what is visible and never identifies people. Every moment must
 be checked against the video by an officer; {unreviewed} of {len(tl['events'])} are not reviewed yet.</p>
+{f'<p><b>{e(tl["headline"])}</b></p>' if tl.get('headline') else ''}
 {overview_html(upload)}
 <h2>Key moments (AI-detected incidents)</h2><table>{head}{rows(moments)}</table>
 <h2>Dismissed by an officer</h2><table>{head}{rows(dismissed)}</table>
@@ -201,7 +214,7 @@ def register(app: FastAPI, settings: Settings, store: EventStore, jobs, auth, up
         by = (user["username"] if user else "officer") if body.decision else None
         store.review_event(event_id, body.decision, by)
         _audit(request, "bodycam_event_reviewed", f"{upload_id}/{event_id}", {"decision": body.decision})
-        return timeline(u, [], [store.event(event_id)])["events"][0]
+        return reviewed(u, event_id, store)
 
     @app.post("/api/bodycam/{upload_id}/summary")
     def bodycam_summary(upload_id: str, request: Request):

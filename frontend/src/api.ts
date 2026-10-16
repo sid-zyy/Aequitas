@@ -94,9 +94,9 @@ export type Recording = {
 export type BodyWindow = { t: number; end: number; label: string | null; summary: string | null; source: string | null; violence: number | null };
 export type BodyEvent = {
   id: number; t: number; end: number; category: string; status: string; confidence: number; summary: string | null;
-  review: "confirmed" | "dismissed" | null; reviewed_by: string | null; keyframe_url: string;
+  review: "confirmed" | "dismissed" | null; reviewed_by: string | null; keyframe_url: string; headline?: string;
 };
-export type RecordingDetail = Recording & { windows: BodyWindow[]; events: BodyEvent[]; video_url: string };
+export type RecordingDetail = Recording & { windows: BodyWindow[]; events: BodyEvent[]; video_url: string; headline?: string };
 export type VideoAnswer = { answer: string; cited_s: number[]; ms: number; model: string };
 type History = { q: string; a: string }[];
 
