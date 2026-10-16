@@ -285,15 +285,6 @@ table.dense .caveat { margin-top: 2px; }
 .aarrow { display: grid; place-items: center; color: var(--faint); font-size: 22px; }
 
 
-/* --- limits --- */
-.limits { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 56px; }
-.limits > * { min-width: 0; }
-.limit { border-top: 2px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
-.limit h4 { margin: 0; font-family: var(--display); font-stretch: 85%; font-size: 27px; font-weight: 700; line-height: 1.1; }
-.limit p { margin: 0; font-size: 17px; line-height: 1.45; color: var(--muted); }
-.limit p b { color: var(--fg); font-weight: 600; }
-.limit .next { font-family: var(--mono); font-size: 14px; color: var(--accent); }
-
 /* --- end --- */
 .slide.active .end img { animation: kbs 14s ease-out both; }
 @keyframes kbs { from { transform: scale(1.15); } to { transform: scale(1); } }
@@ -657,20 +648,6 @@ table.dense .caveat { margin-top: 2px; }
         <tr><td>21 Bengaluru demo clips</td><td>7 / 10 incidents confirmed · 1 false alarm</td><td class="n">1 min 48 s</td></tr>
       </tbody>
     </table>
-  </div>
-</section>
-
-<!-- 18b · limitations -->
-<section class="slide" data-title="Limits">
-  <div class="eyebrow rv">What doesn't work yet · and what we'd do next</div>
-  <h2 class="rv" style="--i:1">Where it falls short.</h2>
-  <div class="limits">
-    <div class="limit rv" style="--i:2"><h4>Gemma doesn't see the faculty fights</h4><p>It summarised all five as people standing or sitting, so <b>stage 2 on that text finds no fight</b>. The fighting label comes from the violence model.</p><span class="next">Next: serve the fine-tuned E2B and test it on these clips</span></div>
-    <div class="limit rv" style="--i:3"><h4>Two faculty clips not right</h4><p><b>v003</b> is 3 s long: one window, labelled person down, never confirmed (it needs two agreeing windows). <b>w001</b> shows a weapon and we called it a chase: we have no trained weapon detector yet.</p><span class="next">Next: confirm short clips on one strong window; train the hazard detector</span></div>
-    <div class="limit rv" style="--i:4"><h4>Some cut-offs were set on the test clips</h4><p>The violence model's 0.9 and the scene gate's threshold were chosen with the faculty and demo clips in view. <b>Held out, the violence model catches 77 % of fights with 14 % false alarms.</b></p><span class="next">Next: re-pick both on held-out data only</span></div>
-    <div class="limit rv" style="--i:5"><h4>Small test sets</h4><p>6 faculty clips, 21 demo clips, 57 labelled summaries. One clip moves recall by 17 points on the faculty set, so read these numbers as a range.</p><span class="next">Next: <span class="tbd">ablation re-run · pending</span></span></div>
-    <div class="limit rv" style="--i:6"><h4>Cold start is slow</h4><p>The first run takes <b>40 s</b> for the six clips against 25 s warm, and the slowest summaries take 10.6 s while the model loads.</p><span class="next">Next: load and warm the model when the server starts</span></div>
-    <div class="limit rv" style="--i:7"><h4>Quantization measured on Qwen, not Gemma</h4><p>Gemma E2B only fits our GPU at 4-bit, so the 8- and 16-bit comparison ran on Qwen3-VL 2B. The Gemma run is on Kaggle.</p><span class="next">Next: <span class="tbd">Gemma bf16 / q8 / q4 / QAT · pending</span></span></div>
   </div>
 </section>
 
