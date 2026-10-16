@@ -18,7 +18,7 @@
 #    - https://www.kaggle.com/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd (needed: the test set)
 #    - https://www.kaggle.com/datasets/vulamnguyen/rwf2000
 #    - https://www.kaggle.com/datasets/mohamedmustafa/real-life-violence-situations-dataset
-#    - optional, for arrest / fire / accident / theft: a UCF-Crime *video* dataset with class folders
+#    - optional, for arrest / fire (its theft, vandalism and accident classes are skipped, see SKIP): a UCF-Crime *video* dataset with class folders
 #      (Arrest, Arson, Explosion, RoadAccidents, Robbery, Shooting, ..., Normal_Videos...).
 #    - optional, for **riots** (not on Kaggle; upload as your own private dataset):
 #      **XD-Violence** riot (`_label_B4`) and normal (`_label_A`) videos, https://roc-ng.github.io/XD-Violence/ ;
@@ -28,7 +28,8 @@
 #
 # **How labels stay accurate.** Each clip's label comes from the dataset's human annotators. A 12B summary is
 # trained on only if (1) 12B's label is one accepted for that human label (`ACCEPT`), (2) 12B's second look at
-# the frames finds nothing invented, (3) it has no guardrail words. `review.html` shows 120 random kept samples
+# the frames finds no invented action or thing (people counts and clothing are not checked), (3) it has no
+# guardrail words. `review.html` shows 120 random kept samples
 # for a human spot check; 20 % of every extra class is held out as a second test set.
 # 3. **Save Version → Save & Run All**. About 3-4 h. Then download from the Output tab:
 #    - `finetune_gemma.zip`: results (FINETUNE.md, chart, per-clip rows), the LoRA adapter, the training set list
@@ -62,10 +63,10 @@ STUDENT_HF = "unsloth/gemma-4-E2B-it"
 STUDENT_OLLAMA = "aequitas-e2b"
 TRAIN_PER_CLASS = 150   # clips per class from the training pool (fighting, weapon, none; UCF classes capped at 40)
 UCF_PER_CLASS = 40
-# Dataset families left out even when attached. UCF-Crime: run 1 kept ~21 of ~1128 teacher grids (~2 %, theft and
-# vandalism 0) for ~2.5 h of 12B time; its untrimmed videos rarely show the incident in a sampled window.
-# Leaving it out also drops arrest / fire / accident / theft / vandalism from training and from the extra test set.
-SKIP_FAMILIES = {"ucf"}
+# Left out even when attached: a family ("xd") or one family's class ("ucf:theft"), from training and the extra
+# test set. Run 1 (teacher.jsonl): 12B's label matched on 2/160 UCF theft, 1/160 vandalism and 30/157 accident
+# grids; the untrimmed videos rarely show the incident in a sampled window. UCF arrest (80/160) and fire stay.
+SKIP = {"ucf:theft", "ucf:vandalism", "ucf:accident"}
 GRIDS_PER_CLIP = 2      # the whole clip + one random 4 s window (what the live pipeline sends)
 EPOCHS = 2
 TEST_PER_CLASS = 20     # identical to model_compare (QUICK = True)
@@ -286,7 +287,7 @@ for p in sorted(INPUT.rglob("*")):
     if p.suffix.lower() not in VIDEO_EXTS or faculty(p) or str(p.resolve()) in test_paths:
         continue
     lab, fam = label_of(p.relative_to(INPUT))
-    if lab and fam not in SKIP_FAMILIES:
+    if lab and fam not in SKIP and f"{fam}:{lab}" not in SKIP:
         pool.setdefault(f"{fam}:{lab}", []).append(p)
 TRAIN: list[Item] = []
 TEST_EXTRA: list[Item] = []  # held out from the other datasets: riot, arrest, fire, peaceful crowds...
@@ -312,8 +313,8 @@ FAMILY = {str(p): k.split(":")[0] for k, ps in pool.items() for p in ps}
 print({k: len(v) for k, v in pool.items()}, "-> training clips:", len(TRAIN), "| extra test clips:", len(TEST_EXTRA))
 held = test_paths | {str(it.path.resolve()) for it in TEST_EXTRA}
 assert not held & {str(it.path.resolve()) for it in TRAIN}, "a test clip leaked into training"
-if SKIP_FAMILIES:
-    print("NOTE: left out even if attached:", ", ".join(sorted(SKIP_FAMILIES)), "(SKIP_FAMILIES)")
+if SKIP:
+    print("NOTE: left out even if attached:", ", ".join(sorted(SKIP)), "(SKIP)")
 if not any(it.label == "riot" for it in TRAIN):
     print("NOTE: no riot clips attached (XD-Violence or Violent Flows), riots are not trained in this run")
 (OUT / "test_clips.txt").write_text("\n".join(f"{it.label}\t{it.path}" for it in TEST))
@@ -401,10 +402,18 @@ class Check(BaseModel):
     wrong_part: str = ""
 
 
-CHECK_PROMPT = ("Here is a 2x2 grid of four frames from a camera and a description of it:\n\n\"{summary}\"\n\n"
-                "Look at the frames again. Is every statement in the description visible in the frames: the "
-                "number of people, what they do, objects, police, fire, vehicles? Answer false if anything is "
-                "invented or wrong, and name the wrong part in a few words. Respond with JSON only.")
+# Run 1's check (which also asked about the number of people) failed 1390 of 1654 grids, mostly on "number of
+# people" (250) and clothing ("person in a dark jacket"): the four frames show the same people at different
+# times, so counts differ by frame. Now only invented events and things fail it, which is what would teach E2B
+# to hallucinate incidents.
+CHECK_PROMPT = ("Here is a 2x2 grid of four frames from the same camera, in time order, and a description of "
+                "it:\n\n\"{summary}\"\n\n"
+                "Look at the frames again. Does the description invent an action or a thing that is not in any "
+                "frame: hitting, grabbing, restraining, handcuffing, falling, running, a weapon, fire or smoke, "
+                "police or uniforms, a vehicle, an object being taken or damaged? Ignore the exact number of people "
+                "(the same people appear in several frames) and the colours or kinds of clothing. Set "
+                "every_statement_visible to false only for an invented action or thing, and name it in a few "
+                "words. Respond with JSON only.")
 
 stage("teacher (12B)")
 TEACH = OUT / "teacher.jsonl"
