@@ -47,6 +47,10 @@ class AskBody(BaseModel):
     question: str = Field(min_length=1, max_length=500)
 
 
+class AiSwitch(BaseModel):
+    paused: bool
+
+
 class LoginBody(BaseModel):
     username: str = Field(min_length=1, max_length=40)
     password: str = Field(min_length=1, max_length=200)
@@ -428,6 +432,19 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     def live_stop():
         live.stop()
         return {"ok": True}
+
+    @app.get("/api/live/ai")
+    def live_ai():
+        return {"paused": live.paused}
+
+    @app.post("/api/live/ai")
+    def live_ai_set(body: AiSwitch, request: Request):
+        paused = body.paused
+        live.set_paused(paused)
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "live_ai_paused" if paused else "live_ai_resumed", None,
+                   ip=request.client.host if request.client else "")
+        return {"paused": live.paused}
 
     @app.get("/api/live/{locality_id}")
     def live_state(locality_id: str):

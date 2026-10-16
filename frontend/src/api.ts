@@ -46,7 +46,7 @@ export type EventItem = {
 };
 
 export type LiveState = {
-  locality: { id: string; name: string }; running: boolean; error: string | null;
+  locality: { id: string; name: string }; running: boolean; paused: boolean; error: string | null;
   cameras: LiveCamera[]; concerns: EventItem[];
   model: { backend: string; name: string; concurrency: number };
 };
@@ -112,6 +112,8 @@ export const api = {
   localities: () => request<Locality[]>("/api/live/localities"),
   startLive: (id: string) => request<LiveState>(`/api/live/${id}/start`, { method: "POST" }),
   liveState: (id: string) => request<LiveState>(`/api/live/${id}`),
+  liveAi: () => request<{ paused: boolean }>("/api/live/ai"),
+  setLiveAi: (paused: boolean) => request<{ paused: boolean }>("/api/live/ai", json({ paused })),
   reports: () => request<Report[]>("/api/reports"),
   activeReports: () => request<ActiveQueue>("/api/reports/active"),
   report: (id: string) => request<Report>(`/api/reports/${id}`),

@@ -64,6 +64,27 @@ function useOpenCount() {
   return n;
 }
 
+// The "On-premise AI" pill doubles as a hidden switch: clicking it pauses or resumes live CCTV analysis so the
+// model isn't busy when nobody is watching. Only the dot shows it (grey when paused).
+function AiSwitch() {
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const load = () => api.liveAi().then((r) => setPaused(r.paused)).catch(() => {});
+    load();
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, []);
+  const toggle = () => {
+    setPaused(!paused);
+    api.setLiveAi(!paused).then((r) => setPaused(r.paused)).catch(() => setPaused(paused));
+  };
+  return (
+    <button type="button" className="pill pill-switch" onClick={toggle} aria-pressed={paused}>
+      <span className={"dot " + (paused ? "" : "live")} /> On-premise AI · no cloud
+    </button>
+  );
+}
+
 export default function Header({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const fresh = useOpenCount();
   return (
@@ -86,7 +107,7 @@ export default function Header({ user, onSignOut }: { user: User; onSignOut: () 
           <NavLink to="/reports" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>All reports</NavLink>
         </nav>
         <div className="topbar-right">
-          <span className="pill"><span className="dot live" /> On-premise AI · no cloud</span>
+          <AiSwitch />
           <button className="btn ghost" onClick={openCitizenPortal} title="Opens the public citizen site in its own window">Citizen portal ↗</button>
           <Clock />
           <div className="user-chip">
