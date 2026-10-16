@@ -194,6 +194,21 @@ tr.out td { color: var(--faint); }
 .good { color: var(--ok); } .bad { color: var(--danger); } .warn { color: var(--saffron); }
 .takeaway { font-size: 24px; line-height: 1.45; margin: 0; max-width: 70ch; color: var(--muted); }
 .takeaway b { color: var(--fg); }
+/* honesty labels: how far a number can be trusted */
+.caveat { display: block; margin-top: 6px; font-family: var(--mono); font-size: 14px; line-height: 1.4; color: var(--saffron); }
+.caveat.good-c { color: var(--ok); }
+.caveat.inline { display: inline; margin: 0 0 0 8px; }
+/* numbers still to be measured */
+.tbd { font-family: var(--mono); font-size: 15px; color: var(--saffron); border: 1px dashed var(--saffron); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
+tr.pending td { color: var(--muted); }
+td.muted { color: var(--muted); }
+table.models { font-size: 19px; }
+table.models td { padding: 12px 14px; }
+table.models th { padding: 0 14px 12px; }
+table.dense { font-size: 18px; }
+table.dense td { padding: 8px 18px; }
+table.dense .caveat { margin-top: 2px; }
+.slide .tablewrap { flex: none; }
 
 /* --- improvement slides --- */
 .imp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center; flex: 1; }
@@ -252,6 +267,33 @@ tr.out td { color: var(--faint); }
 .drow .v .to { color: var(--fg); font-weight: 600; }
 .axis { display: grid; grid-template-columns: 430px 1fr 190px; gap: 20px; font-family: var(--mono); font-size: 13px; color: var(--faint); }
 .axis .ticks { display: flex; justify-content: space-between; }
+
+
+/* --- architecture --- */
+.arch { display: grid; grid-template-columns: 1fr 28px 1.05fr 28px 1.35fr 28px 1fr 28px 1.15fr; align-items: stretch; flex: 1; min-height: 0; }
+.arch > * { min-width: 0; }
+.acol { display: flex; flex-direction: column; gap: 12px; }
+.acol .h { font-family: var(--mono); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); padding-bottom: 4px; }
+.abox { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.abox b { font-size: 19px; font-weight: 600; line-height: 1.2; }
+.abox span { font-size: 14px; color: var(--muted); line-height: 1.35; }
+.abox i { font-style: normal; font-family: var(--mono); font-size: 14px; color: var(--saffron); }
+.abox.stage-n { border-color: var(--accent); }
+.abox.stage-n b::before { content: attr(data-k); display: block; font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .1em; color: var(--accent); margin-bottom: 2px; }
+.abox.cpu { border-style: dashed; }
+.abox.human { border-color: var(--ok); }
+.lane { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: var(--faint); text-transform: uppercase; margin-top: 4px; }
+.aarrow { display: grid; place-items: center; color: var(--faint); font-size: 22px; }
+
+
+/* --- limits --- */
+.limits { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 56px; }
+.limits > * { min-width: 0; }
+.limit { border-top: 2px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.limit h4 { margin: 0; font-family: var(--display); font-stretch: 85%; font-size: 27px; font-weight: 700; line-height: 1.1; }
+.limit p { margin: 0; font-size: 17px; line-height: 1.45; color: var(--muted); }
+.limit p b { color: var(--fg); font-weight: 600; }
+.limit .next { font-family: var(--mono); font-size: 14px; color: var(--accent); }
 
 /* --- end --- */
 .slide.active .end img { animation: kbs 14s ease-out both; }
@@ -385,6 +427,51 @@ tr.out td { color: var(--faint); }
   <h1 class="huge split">So what's actually <span class="cy">under the hood?</span></h1>
 </section>
 
+<!-- 7b · architecture -->
+<section class="slide" data-title="Architecture">
+  <div class="eyebrow rv">Architecture · one laptop, offline · React + FastAPI over one SQLite file</div>
+  <h2 class="rv" style="--i:1;font-size:60px">Cheap checks first. The big model only looks when it has to.</h2>
+  <div class="arch rv" style="--i:2">
+    <div class="acol">
+      <div class="h">Sources</div>
+      <div class="abox"><b>CCTV</b><span>RTSP or looping street footage</span></div>
+      <div class="abox"><b>Bodycam</b><span>whole recordings, uploaded</span></div>
+      <div class="abox"><b>Citizen portal</b><span>phone video + report in English, Hindi or Kannada</span></div>
+      <div class="abox"><b>Webcam</b><span>close range</span></div>
+    </div>
+    <div class="aarrow">→</div>
+    <div class="acol">
+      <div class="h">Ingest</div>
+      <div class="abox"><b>4-second windows</b><span>4 fps, one thread per camera, 4 frames as a 2×2 grid</span></div>
+      <div class="abox"><b>Skip blank / static</b><span>unchanged frames never reach a model</span><i>~0 ms</i></div>
+      <div class="abox"><b>SigLIP scene gate</b><span>calm street scenes skip Gemma</span><i>44 ms · GPU</i></div>
+    </div>
+    <div class="aarrow">→</div>
+    <div class="acol">
+      <div class="h">Understand</div>
+      <div class="lane">GPU · Ollama · Gemma 4 E2B, 4-bit, MTP</div>
+      <div class="abox stage-n"><b data-k="STAGE 1">Summarise</b><span>describes only what is visible; never sees the label list</span><i>0.58 s</i></div>
+      <div class="abox stage-n"><b data-k="STAGE 2">Classify</b><span>one label from the summary text alone</span><i>0.32 s</i></div>
+      <div class="lane">CPU · beside the GPU</div>
+      <div class="abox cpu"><b>Violence model</b><span>r3d-18 ONNX on motion, 2 s clips</span><i>90 ms</i></div>
+      <div class="abox cpu"><b>RF-DETR + tracker + rules</b><span>triggered mode: crowd, fight, person-down and tailgating rules</span><i>26 ms a frame</i></div>
+    </div>
+    <div class="aarrow">→</div>
+    <div class="acol">
+      <div class="h">Decide</div>
+      <div class="abox"><b>Fusion</b><span>VLM and violence model vote; two windows must agree to confirm</span></div>
+      <div class="abox"><b>Evidence store</b><span>SQLite: events, every window, every stage's time; key frame, camera, SHA-256 of the file</span></div>
+    </div>
+    <div class="aarrow">→</div>
+    <div class="acol">
+      <div class="h">People</div>
+      <div class="abox human"><b>Officer's queue</b><span>confirm or dismiss; every decision audited</span></div>
+      <div class="abox stage-n"><b data-k="STAGE 3">Chat</b><span>question → filter → SQL. The answer cites event IDs and is dropped if it cites one it wasn't given</span><i>0.45 s · streamed</i></div>
+      <div class="abox"><b>Latency panel</b><span>per-stage and total time for every upload</span></div>
+    </div>
+  </div>
+</section>
+
 <!-- 8 · pipeline -->
 <section class="slide" data-title="Pipeline">
   <div class="eyebrow rv">The pipeline · times from the six faculty clips, warm run</div>
@@ -414,60 +501,22 @@ tr.out td { color: var(--faint); }
   <h1 class="split" style="max-width:none">Production-ready means no guesswork.<br>So we <span class="sa">tested</span> before we built.</h1>
 </section>
 
-<!-- 10 · model choice -->
+<!-- 10 · model choice (one slide: size limit, same-size rivals, full-app decision) -->
 <section class="slide" data-title="Model">
-  <div class="eyebrow rv">Choosing the vision-language model · same 60 test videos</div>
-  <h2 class="rv" style="--i:1">Bigger models see more. They don't fit.</h2>
+  <div class="eyebrow rv">Choosing the vision-language model · 60 test videos, VLM on its own (Kaggle T4) · then the full app on our laptop</div>
+  <h2 class="rv" style="--i:1">Two small models can tell a fight from a street. Gemma makes the faster system.</h2>
   <div class="tablewrap rv" style="--i:2">
-    <table>
-      <thead><tr><th>Model</th><th class="n">Incidents found</th><th class="n">Precision</th><th class="n">Time per video</th><th>Verdict</th></tr></thead>
+    <table class="models">
+      <thead><tr><th>Model</th><th>Fits 6 GB?</th><th class="n">Incidents found</th><th class="n">False alarms</th><th class="n">Time per video</th><th>Full app, 21 demo clips, laptop</th></tr></thead>
       <tbody>
-        <tr><td>Gemma 4 E2B</td><td class="n">15 %</td><td class="n">0.86</td><td class="n">1.8 s</td><td>Fastest, and fits our 6 GB GPU</td></tr>
-        <tr><td>Gemma 4 E4B</td><td class="n">18 %</td><td class="n">0.88</td><td class="n">2.7 s</td><td>1.5× slower for one more hit</td></tr>
-        <tr><td>Gemma 4 12B</td><td class="n">70 %</td><td class="n">0.82</td><td class="n">5.1 s</td><td class="warn">Best eyes, 3× slower, too big for 6 GB</td></tr>
-        <tr><td>Qwen3-VL 2B instruct<sup>†</sup></td><td class="n">70 %</td><td class="n">0.85</td><td class="n">2.5 s</td><td>Sees far more than E2B, 1.4× slower</td></tr>
+        <tr><td>Gemma 4 12B<sup>†</sup></td><td class="bad">No</td><td class="n good">70 %</td><td class="n">–</td><td class="n bad">5.1 s</td><td class="muted">Best eyes, too big to run</td></tr>
+        <tr class="pick"><td>Gemma 4 E2B<span class="tag">chosen</span></td><td class="good">Yes</td><td class="n">25 %</td><td class="n good">10 %</td><td class="n good">1.8 s</td><td><b class="good">0.91 s</b> a window · 6–8 / 10 confirmed · MTP drafter · translation 6 / 6</td></tr>
+        <tr><td>Qwen3-VL 2B instruct</td><td class="good">Yes</td><td class="n good">70 %</td><td class="n">25 %</td><td class="n">2.5 s</td><td>1.01 s a window · <span class="good">8–9 / 10</span> confirmed · no drafter · translation 2 / 6</td></tr>
+        <tr class="out"><td>Qwen2.5-VL 3B · LLaVA-Phi3 3.8B · Gemma 3 4B</td><td>Yes</td><td class="n">75–100 %</td><td class="n bad">85–100 %</td><td class="n">2.9–3.8 s</td><td>Flag almost everything: not tried</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3;font-size:21px"><sup>†</sup> Run on a second draw of 60 videos (46 shared). E2B scored 25 % at 0.83 precision on that draw.</p>
-</section>
-
-<!-- 10a · same-size rivals -->
-<section class="slide" data-title="Same size">
-  <div class="eyebrow rv">Models that fit our 6 GB GPU · same 60 test videos · the VLM on its own</div>
-  <h2 class="rv" style="--i:1">Same size, so who's better?</h2>
-  <div class="tablewrap rv" style="--i:2">
-    <table>
-      <thead><tr><th>Model</th><th class="n">Incidents found</th><th class="n">False alarms on normal clips</th><th class="n">Time per video</th><th>Verdict</th></tr></thead>
-      <tbody>
-        <tr class="pick"><td>Gemma 4 E2B<span class="tag">chosen</span></td><td class="n">25 %</td><td class="n good">10 %</td><td class="n good">1.8 s</td><td>Fastest, fewest false alarms</td></tr>
-        <tr><td>Qwen3-VL 2B instruct</td><td class="n good">70 %</td><td class="n">25 %</td><td class="n">2.5 s</td><td class="warn">Best on its own, 36 % slower</td></tr>
-        <tr class="out"><td>Qwen2.5-VL 3B</td><td class="n">75 %</td><td class="n bad">85 %</td><td class="n">2.9 s</td><td>Flags almost everything</td></tr>
-        <tr class="out"><td>LLaVA-Phi3 3.8B</td><td class="n">97 %</td><td class="n bad">100 %</td><td class="n">2.9 s</td><td>Flags everything</td></tr>
-        <tr class="out"><td>Gemma 3 4B</td><td class="n">100 %</td><td class="n bad">95 %</td><td class="n">3.8 s</td><td>Flags everything</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="takeaway rv" style="--i:3">Only two models tell incidents apart from normal footage. So we ran <b>both in the full app</b>, on our laptop.</p>
-</section>
-
-<!-- 10a2 · the decision -->
-<section class="slide" data-title="Why Gemma">
-  <div class="eyebrow rv">Gemma 4 E2B vs Qwen3-VL 2B · full app on our laptop · 21 demo clips</div>
-  <h2 class="rv" style="--i:1">Qwen sees more alone. Gemma makes the faster system.</h2>
-  <div class="tablewrap rv" style="--i:2">
-    <table>
-      <thead><tr><th>Measured</th><th class="n">Gemma 4 E2B</th><th class="n">Qwen3-VL 2B</th></tr></thead>
-      <tbody>
-        <tr><td>Incidents found by the VLM on its own (60 test videos)</td><td class="n">25 %</td><td class="n good">70 %</td></tr>
-        <tr><td>Demo incidents confirmed, with the violence model · false alarms</td><td class="n">6–8 / 10 · <span class="good">1–2</span></td><td class="n"><span class="good">8–9 / 10</span> · 2–3</td></tr>
-        <tr><td>Time per window · all 21 demo clips, end to end</td><td class="n good">0.91 s · 1 min 48 s</td><td class="n">1.01 s · 2 min 24 s</td></tr>
-        <tr><td>Speculative decoding</td><td class="n good">MTP drafter, chat 22 % faster</td><td class="n bad">No drafter</td></tr>
-        <tr><td>Hindi / Kannada reports translated with every fact kept</td><td class="n good">6 / 6</td><td class="n bad">2 / 6</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="takeaway rv" style="--i:3">Qwen's lead is the VLM <b>on its own</b>. Ours never decides alone: a violence model catches what Gemma misses (next slide), so the gap shrinks to <b>1–2 demo incidents</b>. For those, Qwen is <b>33 % slower</b> end to end, with no speculative decoding and weaker translation. We chose <b>speed plus a second signal</b>.</p>
+  <p class="takeaway rv" style="--i:3;font-size:21px">Qwen sees more <b>on its own</b>. In the app a violence model votes with the VLM, so the gap shrinks to <b>1–2 demo incidents</b>, and Qwen is <b>33 % slower</b> end to end (2 min 24 s vs 1 min 48 s). Latency is weighted most, so we chose <b>Gemma plus a second signal</b>.<br><span style="font-size:16px;color:var(--faint)">† 12B was run on an earlier draw of 60 videos (46 shared); E2B scored 15 % there. Demo-clip ranges cover repeated runs.</span></p>
 </section>
 
 <!-- 10b · accuracy fix -->
@@ -477,28 +526,33 @@ tr.out td { color: var(--faint); }
   <div class="stackcol">
     <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches <b>motion</b> instead. It votes with Gemma, and on its own it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, beside the GPU, so it adds almost nothing to the wait.</p>
     <div class="statrow">
-      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent: Gemma's own labels vs the violence model (every clip scored 0.96 or more)</span></div>
-      <div class="stat rv" style="--i:4"><span class="v num" data-to="77" data-suf=" %">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
-      <div class="stat rv" style="--i:5"><span class="v num">20 → 60 %</span><span class="l">incidents found after fine-tuning E2B on 12B's answers (same dataset).</span></div>
+      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent: Gemma's own labels vs the violence model (every clip scored 0.96 or more). <span class="caveat">The 0.9 cut-off was picked with these clips in view.</span></span></div>
+      <div class="stat rv" style="--i:4"><span class="v num" data-to="77" data-suf=" %">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms. <span class="caveat good-c">Held out: our honest figure.</span></span></div>
+      <div class="stat rv" style="--i:5"><span class="v num">20 → 60 %</span><span class="l">incidents found after fine-tuning E2B on 12B's answers. <span class="caveat">Same dataset, not yet in the running app.</span></span></div>
     </div>
   </div>
 </section>
 
 <!-- 11 · quantization -->
 <section class="slide" data-title="Quantization">
-  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · measured on our laptop</div>
+  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · Qwen on our laptop, Gemma on Kaggle</div>
   <h2 class="rv" style="--i:1">Measured, not assumed: 4-bit wins.</h2>
   <div class="tablewrap rv" style="--i:2">
-    <table>
-      <thead><tr><th>Qwen3-VL 2B</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
+    <table class="dense">
+      <thead><tr><th>Qwen3-VL 2B · our laptop</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
       <tbody>
         <tr><td>16-bit (BF16)</td><td class="n">4.7 GB</td><td class="bad">No: a fifth runs on the CPU</td><td class="n">33 / 39</td><td class="n">0 / 33</td><td class="n bad">9.64 s</td></tr>
         <tr><td>8-bit (Q8_0)</td><td class="n">2.5 GB</td><td class="good">Yes</td><td class="n">34 / 39</td><td class="n">0 / 33</td><td class="n">1.74 s</td></tr>
         <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M)<span class="tag">best</span></td><td class="n">1.9 GB</td><td class="good">Yes</td><td class="n">33 / 39</td><td class="n">2 / 33</td><td class="n good">1.60 s</td></tr>
+        <tr><td colspan="6" class="group" style="padding:14px 18px 6px">Gemma 4 E2B · the model we use · same 72 windows · Kaggle T4</td></tr>
+        <tr class="pending"><td>16-bit (BF16)</td><td class="n"><span class="tbd">pending</span></td><td>~10 GB: no</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
+        <tr class="pending"><td>8-bit (Q8_0)</td><td class="n"><span class="tbd">pending</span></td><td>~5 GB: no</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
+        <tr class="pending"><td>4-bit (Q4_K_M)<span class="tag">used</span></td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
+        <tr class="pending"><td>4-bit QAT</td><td class="n"><span class="tbd">pending</span></td><td><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3">Same 72 windows, same settings. We measured on Qwen because it's small enough to try all three. 16-bit spills onto the CPU and is <b>6× slower</b>; 8-bit is a little cleaner but <b>9 % slower</b>, and confirmed fewer demo incidents end to end. For Gemma E2B it's starker: 16-bit needs ~10 GB, 8-bit ~5 GB before the image encoder, so <b>4-bit (3.5 GB) is what fits</b>.</p>
+  <p class="takeaway rv" style="--i:3">Same 72 windows, same settings. On Qwen, 16-bit spills onto the CPU and is <b>6× slower</b>; 8-bit is a little cleaner but <b>9 % slower</b>. Gemma E2B needs ~10 GB at 16-bit and ~5 GB at 8-bit, so on our laptop <b>only 4-bit fits</b>; its accuracy at each precision comes from the Kaggle run.</p>
 </section>
 
 <!-- 12 · detector -->
@@ -558,7 +612,7 @@ tr.out td { color: var(--faint); }
 
 <!-- 17 · every lever -->
 <section class="slide" data-title="Time saved">
-  <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows</div>
+  <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows · Qwen3-VL 2B FP16 on vLLM, Kaggle T4</div>
   <h2 class="rv" style="--i:1">33 seconds down to 5.</h2>
   <div class="bars tight">
     <div class="bar base rv" style="--i:2"><span class="lab"><span>Baseline, one window at a time</span><span class="note">each window waits for the one before</span></span><div class="track"><div class="fill" style="--w:100%;--i:2"></div></div><span class="v">33.1 s</span></div>
@@ -578,12 +632,12 @@ tr.out td { color: var(--faint); }
   <h2 class="rv" style="--i:1">Every fix, measured.</h2>
   <div class="dumb">
     <div class="axis rv" style="--i:2"><span></span><span class="ticks"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></span><span></span></div>
-    <div class="drow rv" style="--i:2"><span class="lab"><span>Faculty clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
+    <div class="drow rv" style="--i:2"><span class="lab"><span>Faculty clips flagged as violent</span><span class="note"><b>violence model</b> votes with Gemma · cut-off chosen with these clips in view</span></span><div class="dtrack" style="--a:0%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">6 / 6</span></span></div>
     <div class="drow rv" style="--i:3"><span class="lab"><span>Demo incidents confirmed</span><span class="note"><b>clip votes</b> count · 0 new false alarms</span></span><div class="dtrack" style="--a:50%;--b:70%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">5 / 10</span> → <span class="to">7 / 10</span></span></div>
     <div class="drow rv" style="--i:4"><span class="lab"><span>Incident windows flagged</span><span class="note"><b>previous-window context</b> · no extra time</span></span><div class="dtrack" style="--a:56.4%;--b:64.1%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">22 / 39</span> → <span class="to">25 / 39</span></span></div>
     <div class="drow rv" style="--i:5"><span class="lab"><span>Chat questions understood</span><span class="note"><b>keyword check</b> on the LLM's reading</span></span><div class="dtrack" style="--a:75%;--b:100%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">15 / 20</span> → <span class="to">20 / 20</span></span></div>
     <div class="drow rv" style="--i:6"><span class="lab"><span>CAVIAR incidents triggered</span><span class="note"><b>RF-DETR</b> instead of YOLO11n</span></span><div class="dtrack" style="--a:0%;--b:50%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">3 / 6</span></span></div>
-    <div class="drow rv later" style="--i:7"><span class="lab"><span>Incidents found, fine-tuned E2B</span><span class="note"><b>taught by 12B</b></span></span><div class="dtrack" style="--a:20%;--b:60%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">20 %</span> → <span class="to">60 %</span></span></div>
+    <div class="drow rv later" style="--i:7"><span class="lab"><span>Incidents found, fine-tuned E2B</span><span class="note"><b>taught by 12B</b> · same dataset · not served yet</span></span><div class="dtrack" style="--a:20%;--b:60%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">20 %</span> → <span class="to">60 %</span></span></div>
   </div>
 </section>
 
@@ -592,18 +646,32 @@ tr.out td { color: var(--faint); }
   <div class="eyebrow rv">Accuracy and latency, task by task · RTX 4050 laptop</div>
   <h2 class="rv" style="--i:1">What it gets right, and how fast.</h2>
   <div class="tablewrap rv" style="--i:2">
-    <table>
+    <table class="dense">
       <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
       <tbody>
-        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
-        <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
+        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4 · precision / recall 0.80<span class="caveat">violence cut-off chosen with these clips in view</span></td><td class="n" style="white-space:nowrap">25 s warm · 40 s cold<br><span style="font-size:15px;color:var(--faint)">39 s of video</span></td></tr>
+        <tr><td>1 · Summarise a window</td><td>Describes the scene; <span class="warn">Gemma alone describes 0 / 5 faculty fights</span>, the second signal catches them</td><td class="n">0.58 s</td></tr>
         <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
-        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
+        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search<span class="caveat good-c">28 used while building it, 20 held out</span></td><td class="n">0.45 s answer</td></tr>
         <tr><td>Bodycam recording summary</td><td>Key points tied to real timestamps</td><td class="n">1.6 s</td></tr>
         <tr><td>Citizen report, Hindi / Kannada → English</td><td>6 / 6 sample reports kept every fact</td><td class="n">0.31 / 0.34 s</td></tr>
         <tr><td>21 Bengaluru demo clips</td><td>7 / 10 incidents confirmed · 1 false alarm</td><td class="n">1 min 48 s</td></tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<!-- 18b · limitations -->
+<section class="slide" data-title="Limits">
+  <div class="eyebrow rv">What doesn't work yet · and what we'd do next</div>
+  <h2 class="rv" style="--i:1">Where it falls short.</h2>
+  <div class="limits">
+    <div class="limit rv" style="--i:2"><h4>Gemma doesn't see the faculty fights</h4><p>It summarised all five as people standing or sitting, so <b>stage 2 on that text finds no fight</b>. The fighting label comes from the violence model.</p><span class="next">Next: serve the fine-tuned E2B and test it on these clips</span></div>
+    <div class="limit rv" style="--i:3"><h4>Two faculty clips not right</h4><p><b>v003</b> is 3 s long: one window, labelled person down, never confirmed (it needs two agreeing windows). <b>w001</b> shows a weapon and we called it a chase: we have no trained weapon detector yet.</p><span class="next">Next: confirm short clips on one strong window; train the hazard detector</span></div>
+    <div class="limit rv" style="--i:4"><h4>Some cut-offs were set on the test clips</h4><p>The violence model's 0.9 and the scene gate's threshold were chosen with the faculty and demo clips in view. <b>Held out, the violence model catches 77 % of fights with 14 % false alarms.</b></p><span class="next">Next: re-pick both on held-out data only</span></div>
+    <div class="limit rv" style="--i:5"><h4>Small test sets</h4><p>6 faculty clips, 21 demo clips, 57 labelled summaries. One clip moves recall by 17 points on the faculty set, so read these numbers as a range.</p><span class="next">Next: <span class="tbd">ablation re-run · pending</span></span></div>
+    <div class="limit rv" style="--i:6"><h4>Cold start is slow</h4><p>The first run takes <b>40 s</b> for the six clips against 25 s warm, and the slowest summaries take 10.6 s while the model loads.</p><span class="next">Next: load and warm the model when the server starts</span></div>
+    <div class="limit rv" style="--i:7"><h4>Quantization measured on Qwen, not Gemma</h4><p>Gemma E2B only fits our GPU at 4-bit, so the 8- and 16-bit comparison ran on Qwen3-VL 2B. The Gemma run is on Kaggle.</p><span class="next">Next: <span class="tbd">Gemma bf16 / q8 / q4 / QAT · pending</span></span></div>
   </div>
 </section>
 
