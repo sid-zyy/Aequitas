@@ -48,8 +48,10 @@ Full text: docs/POLICE_EDITION.md §8.
 ## Technical facts that have caught us before
 - **Ollama caches identical prompts and images.** Benchmarks must send a different image on every call, or
   latency looks ~10× better than reality. `aequitas spike` already randomises per run.
-- **supervision's ByteTrack** starts tracks only above `track_activation_threshold + 0.1`. Aequitas subtracts
-  0.1 so the configured value is the real threshold (`aequitas/vision/detector.py`).
+- **Tracking uses Ultralytics' BYTETracker/OCSORT** (`aequitas/vision/detector.py`); `tracker.activation_threshold`
+  is the real track-start threshold. With `fuse_score` on (the default), a detection at confidence
+  ≤ 1 − `matching_threshold` (0.2) can't keep a track past one frame. supervision's old ByteTrack had the same limit,
+  and it also started tracks only above its threshold + 0.1. It's removed in supervision 0.31.
 - **Gemma 4 E2B on its own** labelled almost everything "person_down" on CAVIAR (docs/EVAL_CAVIAR.md). Never
   trust a VLM label without a second signal: a rule trigger, a classifier, or agreement checks.
 - vLLM's structured-output fields are `extra_body={"structured_outputs": {"choice": [...]}}`. The old

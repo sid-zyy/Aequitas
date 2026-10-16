@@ -4,7 +4,8 @@
     bash scripts/get_caviar.sh   # clips; ground truth: data/videos/caviar/<clip>.xml (see the CAVIAR page)
     .venv/Scripts/python scripts/tracker_compare.py --fps 4
 
-Trackers: supervision ByteTrack exactly as Aequitas configures it (aequitas/vision/detector.py), Ultralytics
+Trackers: Aequitas's CameraTracker (aequitas/vision/detector.py: Ultralytics ByteTrack or OC-SORT with our
+thresholds), supervision ByteTrack as Aequitas used it before (while supervision < 0.31 has it), Ultralytics
 ByteTrack, BoT-SORT (camera-motion compensation, no ReID), OC-SORT, and DeepSORT (deep-sort-realtime, MobileNetV2
 appearance embeddings). Metrics (py-motmetrics, IoU >= 0.5): IDF1 (identity kept over time: what loitering and
 tailgating need), MOTA, ID switches, recall, precision; tracker time per frame with detections (detection
@@ -22,7 +23,8 @@ import motmetrics as mm
 import numpy as np
 import supervision as sv
 
-from aequitas.config import TrackerCfg
+from aequitas.config import DetectorCfg, TrackerCfg
+from aequitas.vision.detector import Boxes, CameraTracker
 
 
 def load_gt(xml: Path) -> dict[int, list[tuple[int, tuple[float, float, float, float]]]]:
@@ -35,22 +37,6 @@ def load_gt(xml: Path) -> dict[int, list[tuple[int, tuple[float, float, float, f
             objs.append((int(o.attrib["id"]), (xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2)))
         gt[int(fr.attrib["number"])] = objs
     return gt
-
-
-class Boxes:  # the attributes Ultralytics trackers read from a Results.boxes object
-    def __init__(self, xyxy, conf):
-        self.xyxy, self.conf = xyxy, conf
-        self.cls = np.zeros(len(conf))
-        xywh = xyxy.copy()
-        xywh[:, 2:] = xyxy[:, 2:] - xyxy[:, :2]
-        xywh[:, :2] = xyxy[:, :2] + xywh[:, 2:] / 2
-        self.xywh = xywh
-
-    def __len__(self):
-        return len(self.conf)
-
-    def __getitem__(self, idx):
-        return Boxes(self.xyxy[idx], self.conf[idx])
 
 
 def make_trackers(fps: float, cfg: TrackerCfg, device: str):
@@ -71,11 +57,23 @@ def make_trackers(fps: float, cfg: TrackerCfg, device: str):
                     track_buffer=int(buffer_s * rate), match_thresh=cfg.matching_threshold, **over)
         return cls(SimpleNamespace(**args))  # track_buffer is in frames (max_frames_lost)
 
-    sv_bt = sv.ByteTrack(track_activation_threshold=max(0.05, cfg.activation_threshold - 0.1),
-                         lost_track_buffer=int(buffer_s * rate), minimum_matching_threshold=cfg.matching_threshold,
-                         frame_rate=rate)
+    frames_cfg = cfg.model_copy(update={"lost_track_buffer": int(buffer_s * rate)})
+    no_filter = DetectorCfg(min_person_conf=0, min_person_height_px=0)  # tracker only, like the other rows
+
+    def aequitas(**over):
+        tr = CameraTracker(frames_cfg.model_copy(update=over), no_filter, fps)
+        return ("aq", tr)
+
+    old = {}
+    if hasattr(sv, "ByteTrack"):  # removed in supervision 0.31; Aequitas used it (with activation - 0.1) until 2026-10
+        old["ByteTrack (supervision, old Aequitas)"] = ("sv", sv.ByteTrack(
+            track_activation_threshold=max(0.05, cfg.activation_threshold - 0.1), lost_track_buffer=int(buffer_s * rate),
+            minimum_matching_threshold=cfg.matching_threshold, frame_rate=rate))
     return {
-        "ByteTrack (supervision, Aequitas)": ("sv", sv_bt),
+        **old,
+        "CameraTracker bytetrack (Aequitas)": aequitas(algorithm="bytetrack"),
+        "CameraTracker bytetrack, fuse_score off": aequitas(algorithm="bytetrack", fuse_score=False),
+        "CameraTracker ocsort": aequitas(algorithm="ocsort"),
         "ByteTrack (Ultralytics)": ("ul", ul(BYTETracker, "bytetrack.yaml")),
         "BoT-SORT (GMC, no ReID)": ("ul", ul(BOTSORT, "botsort.yaml", with_reid=False)),
         "OC-SORT": ("ul", ul(OCSORT, "ocsort.yaml")),
@@ -92,8 +90,12 @@ def run_tracker(kind, tr, frame, xyxy, conf):
                           class_id=np.zeros(len(conf), int))
         out = tr.update_with_detections(d)
         return [] if out.tracker_id is None else [(int(t), tuple(b)) for b, t in zip(out.xyxy, out.tracker_id)]
+    if kind == "aq":
+        d = sv.Detections(xyxy=xyxy.astype(np.float32), confidence=conf.astype(np.float32),
+                          class_id=np.zeros(len(conf), int))
+        return [(t.track_id, t.box) for t in tr.update(d)[0]]
     if kind == "ul":
-        out = tr.update(Boxes(xyxy, conf), frame)
+        out = tr.update(Boxes(xyxy, conf, np.zeros(len(conf))), frame)
         return [(int(r[4]), tuple(r[:4])) for r in out]
     raw = [([float(b[0]), float(b[1]), float(b[2] - b[0]), float(b[3] - b[1])], float(c), 0) for b, c in zip(xyxy, conf)]
     tracks = tr.update_tracks(raw, frame=frame)

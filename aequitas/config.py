@@ -25,9 +25,13 @@ class DetectorCfg(BaseModel):
 
 
 class TrackerCfg(BaseModel):
-    activation_threshold: float = 0.25
+    algorithm: Literal["bytetrack", "ocsort"] = "bytetrack"  # Ultralytics trackers; docs/TRACKING.md
+    activation_threshold: float = 0.25  # detections at or above this start and first-match tracks
     lost_track_buffer: int = 60  # frames; 15 s at 4 fps
     matching_threshold: float = 0.8
+    # First-pass matching cost is 1 - IoU * confidence when on, so a detection at confidence <= 1 - matching_threshold
+    # can never match its own track and is dropped after one frame (ByteTrack's default, supervision did the same).
+    fuse_score: bool = True
 
 
 Backend = Literal["ollama", "openai"]  # openai = any OpenAI-compatible LOCAL server (llama.cpp, vLLM, LM Studio)

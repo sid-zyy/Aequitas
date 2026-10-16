@@ -48,7 +48,7 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 
 ## 3. What exists today
 
-Repo: https://github.com/sid-zyy/Aequitas. **177 tests pass** (`pytest`; synthetic data, no model downloads).
+Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthetic data, no model downloads).
 
 | Area | Status | Where |
 |---|---|---|
@@ -157,8 +157,8 @@ numbers in the docs.
   - UCF-Crime keeps arrest and fire, and drops theft, vandalism and accident
 
   Re-import `kaggle/finetune_gemma.ipynb`. Inputs are listed in kaggle/README.md.
-- **Tracker migration:** supervision's `ByteTrack` is removed in supervision 0.31. A separate session is moving
-  `vision/detector.py` to Ultralytics' tracker.
+- **Tracker migration: done** (merged 2026-10-16). Tracking runs on Ultralytics' `BYTETracker` (OC-SORT via
+  `tracker.algorithm`). CAVIAR scores match the old supervision tracker (docs/TRACKING.md).
 - **Faculty dataset:** format and categories still unknown.
 - **Open question for the owner:** test events #149–151 (demo-webcam, 03:38–03:39 on 2026-10-16) were created
   by Claude in the real `data/aequitas.db` while testing. Delete them?

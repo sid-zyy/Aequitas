@@ -204,7 +204,7 @@ trigger score and log it in `dropped_candidates`. Dropped counts go in the laten
 | Simulated live stream | **MediaMTX** + `ffmpeg -re -stream_loop -1` | Turns any test video into a real RTSP feed for demos. |
 | Detection | Ultralytics **YOLO11n** (COCO) | Classes used: person, backpack, handbag, suitcase. AGPL-3.0, fine for an open-source project. |
 | Pose (crops only) | Ultralytics **YOLO11n-pose** | Person-down only. |
-| Tracking | `supervision` ByteTrack, one tracker per camera and class group (people, bags) | Lets one detector serve all cameras. Pinned `<0.31`, where `sv.ByteTrack` is removed. |
+| Tracking | Ultralytics BYTETracker (or OC-SORT, `tracker.algorithm`), one tracker per camera and class group (people, bags) | Lets one detector serve all cameras. Replaced `sv.ByteTrack` (removed in supervision 0.31) with the same CAVIAR scores: docs/TRACKING.md. |
 | Zones and lines | Own geometry in `triggers/base.py` | Small, dependency-free, and unit-tested. |
 | VLM runtime | **Ollama** | Open-source local server. Supports JSON-schema structured output, runs on Windows, keeps the VLM in a separate process. |
 | VLM model | **`qwen2.5vl:3b`** (Q4) | Named in the plan, good at structured output. **Challenger:** `qwen3-vl:4b` or `qwen3-vl:2b`; whichever wins the M0 spike becomes the default. **Fallback:** SmolVLM2-2.2B. |
