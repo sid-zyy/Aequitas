@@ -10,7 +10,7 @@
 | **4-bit and 8-bit quantization**, studied and implemented | BF16 baseline, **W8A8-INT8**, **FP8** and **W4A16** made with `llm-compressor` (`scripts/quantize/`). Each benchmarked for latency **and** accuracy. | Script done; **no successful run yet** (Kaggle environment issues, fixed) |
 | **React** frontend, **FastAPI** backend, no Jupyter | React (Vite + TypeScript) served by FastAPI. Training and study code are `.py`; the `.ipynb` files are generated from them only for Kaggle. | **Done** |
 | Judged on **approach**, **end-to-end demo**, **latency (total execution time)** | Every stage is timed and stored; camera tiles, bodycam and report pages show summary and label time and the total. `aequitas bench` produces the latency report across quantization × speculation. | Timing in the UI done; **latency report pending the vLLM runs** |
-| The faculty dataset | `aequitas eval-dataset` (folder-per-label or a manifest; categories configurable). | Adapter done; **dataset not arrived** |
+| The faculty dataset | `aequitas eval-dataset` (folder-per-label or a manifest; categories configurable). | Adapter done; **no dataset is coming** (2026-10-16): the 6 sample clips are the faculty test |
 
 **Model:** Gemma 4 E2B (decided). The ablation is re-run at the end for the presentation's quantization and
 speculation tables.
