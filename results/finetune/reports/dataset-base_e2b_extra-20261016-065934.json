@@ -1,0 +1,392 @@
+{
+  "label": "base_e2b_extra",
+  "view": "cctv",
+  "run": "2026-10-16T06:59:34",
+  "n_videos": 30,
+  "total_execution_s": 58.43,
+  "per_video_s": {
+    "p50": 1.942,
+    "p95": 2.089,
+    "mean": 1.947
+  },
+  "classification": {
+    "n": 30,
+    "accuracy": 0.0333,
+    "macro_f1": 0.0606,
+    "valid": 30,
+    "per_class_f1": {
+      "arrest": 0.0,
+      "fighting": 0.0,
+      "fire": 0.1818
+    },
+    "incident_precision": 1.0,
+    "incident_recall": 0.1667,
+    "confusion": {
+      "arrest": {
+        "none": 9,
+        "person_down": 1
+      },
+      "crowd_incident": {},
+      "fighting": {
+        "none": 8,
+        "person_down": 2
+      },
+      "fire": {
+        "none": 8,
+        "fire": 1,
+        "crowd_incident": 1
+      },
+      "none": {},
+      "person_down": {}
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building, also while firefighters or police work at it (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held. Officers who only stand, talk, work or direct traffic are not an arrest",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest044_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A person is visible in the top-left frame, and a person is visible in the bottom-right frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.206,
+      "classify_s": 0.56,
+      "video_total_s": 1.952
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest002_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A person is visible in several frames, appearing to be standing in an indoor area. Another person is visible in the bottom-right frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.412,
+      "classify_s": 0.495,
+      "video_total_s": 2.088
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest029_x264.mp4",
+      "gold": "arrest",
+      "pred": "person_down",
+      "summary": "People are moving in a room across the four frames. One frame shows a person on the ground.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.257,
+      "classify_s": 0.415,
+      "video_total_s": 1.861
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest015_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A white van is visible in the left frames, and police vehicles are present in the right frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.198,
+      "classify_s": 0.505,
+      "video_total_s": 1.915
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest037_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "People are visible near vehicles in a fenced area across four time points.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.271,
+      "classify_s": 0.532,
+      "video_total_s": 1.946
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest013_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "Vehicles are visible on a wet road in four sequential frames. No people are clearly visible in any frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.289,
+      "classify_s": 0.577,
+      "video_total_s": 2.09
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest001_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "People are present in a room with desks and partitions across the four frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.195,
+      "classify_s": 0.496,
+      "video_total_s": 1.858
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest028_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "People are moving through a corridor in a facility. One person is visible in the bottom-right frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.305,
+      "classify_s": 0.494,
+      "video_total_s": 1.987
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest049_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "Two individuals are visible near a stone wall, followed by two police vehicles.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.245,
+      "classify_s": 0.534,
+      "video_total_s": 1.959
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest008_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "Four frames show vehicles parked in a lot. No people are visible in any frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.248,
+      "classify_s": 0.495,
+      "video_total_s": 1.957
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault009_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "People are seated at tables in a room. The scene shows a group of individuals gathered.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.234,
+      "classify_s": 0.506,
+      "video_total_s": 1.991
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault008_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "Several people are visible in an outdoor area near a structure. Some individuals are standing or walking.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.244,
+      "classify_s": 0.497,
+      "video_total_s": 1.956
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault003_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A person is moving down stairs in multiple frames. Another person is visible in the top-left frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.2,
+      "classify_s": 0.499,
+      "video_total_s": 1.861
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault049_x264.mp4",
+      "gold": "fighting",
+      "pred": "person_down",
+      "summary": "A person is present in the scene across the four frames, appearing to be in various postures.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.25,
+      "classify_s": 0.406,
+      "video_total_s": 1.827
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault020_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "Traffic flows on a street in the top frames. In the bottom right frame, a person is walking.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.28,
+      "classify_s": 0.501,
+      "video_total_s": 1.939
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault012_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "Two individuals are visible in the top-left frame, and people are walking in the other frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.266,
+      "classify_s": 0.474,
+      "video_total_s": 1.906
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault029_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "Two individuals are visible on a sidewalk next to a road in four sequential frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.31,
+      "classify_s": 0.532,
+      "video_total_s": 2.022
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault050_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A person is seen near shelves in the top frames, and another person is seen on the ground in the bottom frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.323,
+      "classify_s": 0.497,
+      "video_total_s": 1.968
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault046_x264.mp4",
+      "gold": "fighting",
+      "pred": "person_down",
+      "summary": "Several people are visible in the scene, with some appearing to be in motion or on the ground.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.259,
+      "classify_s": 0.407,
+      "video_total_s": 1.813
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault014_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "People are visible on a road in four sequential frames. Several individuals are walking along the side of the road.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.293,
+      "classify_s": 0.505,
+      "video_total_s": 2.024
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson052_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person is seen walking in a snowy area across four sequential frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.203,
+      "classify_s": 0.491,
+      "video_total_s": 1.881
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson014_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A vehicle is visible on a road in four sequential frames. No people are clearly visible in any frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.291,
+      "classify_s": 0.503,
+      "video_total_s": 1.962
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson025_x264.mp4",
+      "gold": "fire",
+      "pred": "fire",
+      "summary": "A fire is visible in the top-right frame, and there are people near what appears to be a roadway in the other frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.263,
+      "classify_s": 0.503,
+      "video_total_s": 1.921
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson053_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "The footage shows a hallway with a person present in multiple frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.212,
+      "classify_s": 0.496,
+      "video_total_s": 1.839
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson048_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "The top two frames show an outdoor seating area. The bottom two frames show a large wave crashing.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.301,
+      "classify_s": 0.5,
+      "video_total_s": 1.921
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson016_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person is visible inside a vehicle in multiple frames. There are no other people or specific actions visible.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.384,
+      "classify_s": 0.488,
+      "video_total_s": 2.077
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson040_x264.mp4",
+      "gold": "fire",
+      "pred": "crowd_incident",
+      "summary": "The footage shows a chaotic scene with bright lights and what appears to be a crowd or activity in the top-left frame, followed by nighttime street scenes in the other three frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.545,
+      "classify_s": 0.488,
+      "video_total_s": 2.203
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson018_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person is visible near vehicles in a nighttime scene across the four frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.267,
+      "classify_s": 0.505,
+      "video_total_s": 1.887
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson031_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "The scene shows a static view of an indoor area with tables and some decorative items across the four frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.286,
+      "classify_s": 0.508,
+      "video_total_s": 1.928
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson038_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person is seen moving through a dark area across the four frames.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 1.225,
+      "classify_s": 0.483,
+      "video_total_s": 1.883
+    }
+  ]
+}

@@ -1,0 +1,572 @@
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest034_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest035_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest021_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest051_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest006_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest039_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest012_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest024_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest041_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest016_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest011_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest022_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest048_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest004_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest010_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest005_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest042_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest043_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest040_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest018_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest030_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest047_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest007_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest036_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest019_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest009_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest046_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest014_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest038_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest023_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest031_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest020_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest026_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest032_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest033_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest017_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest003_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest027_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest050_x264.mp4
+arrest	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest025_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault047_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault019_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault052_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault031_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault002_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault039_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault025_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault007_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault044_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault032_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault026_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault028_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault024_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault027_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault018_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault037_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault004_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault040_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault017_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault035_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault011_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault034_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault006_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault030_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault036_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault010_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault051_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault015_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault038_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault013_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault005_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault022_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault016_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault023_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault033_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault041_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault001_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault042_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault045_x264.mp4
+fighting	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault048_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson029_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson046_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson035_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson045_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson002_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson049_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson001_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson009_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson008_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson026_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson020_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson039_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson005_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson021_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson012_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson050_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson013_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson044_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson024_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson022_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson023_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson034_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson030_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson041_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson028_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson015_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson017_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson042_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson019_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson036_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson027_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson037_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson051_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson003_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson011_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson010_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson047_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson007_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson006_x264.mp4
+fire	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson032_x264.mp4
+none	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Normal_Videos_100_x264.mp4
+none	/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Normal_Videos_015_x264.mp4
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_115.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence823.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/1XFiS6Lt_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_589.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Violence/Violence-Test025.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/w1T3NmEAt00_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_981.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence246.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/PlHzsigAFas_7.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_773.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence658.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/YL-qwpTMjzk_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_954.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Violence/Violence-Test027.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/v4dhdnsxiX4_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_367.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence727.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/mwuiYEBdkJs_3.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_258.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence589.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/pKOUG5AqLpY_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_633.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Violence/v049_converted.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/1dsLuL5Lvbc_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_562.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence333.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/sadsa_961.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_110.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence715.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/aIg9Yb0O7Hg_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_751.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Violence/v051_converted.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/tIvvuvuJFYc_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_549.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence535.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/F7W6PQ3V3y8_9.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_266.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence080.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/0NWz-01A2yk_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_847.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence674.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/kExp3yhspR0_3.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_614.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence138.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/zuCTuKvj_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_827.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence732.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/0H2s9UJcNJ0_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_629.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence323.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/HW48LUZKOL4_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_528.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence523.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/cBNVcBk3rjg_3.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_389.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence894.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/etyiEs3j8x8_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_842.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence663.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/Xh6FNqKDMak_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_669.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence104.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/aIg9Yb0O7Hg_3.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_447.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence958.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/gNIohJfdvEc_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_699.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence496.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/a7gBQaAFEtw_4.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_526.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence693.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/Mi4nMB8AHxI_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_365.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence662.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/CBfRtxkO1bE_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_392.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Violence/Violence-Test056.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/G3E1YP6agWs_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_963.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence079.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/YaWxiAtCwxE_8.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_488.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence253.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/39BFeYnbu-I_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_196.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence887.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/DIsQwAdR8MI_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_329.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Violence/v019_converted.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/z7dOEJwUpVk_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_19.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence026.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/6Rl7q_kXYbg_5.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_681.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence376.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/Mi4nMB8AHxI_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_435.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence762.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/MxkTo5F-nvU_4.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_192.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence563.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/uGGFPY75IYQ_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_97.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence728.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/ASGGSDG_183.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_174.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence884.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/RIXaF_TkLlU_5.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_694.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence551.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/YaWxiAtCwxE_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_109.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Violence/Violence-Test060.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/6Rl7q_kXYbg_4.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_616.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence287.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/QkqaGJ9x_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_379.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence271.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/lmfaDmCCRoY_7.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_964.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence442.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/jTbvVbkUaPM_4.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_843.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence606.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/7Xe6eysGKeU_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_214.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence352.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/4RqDG4I4iAk_4.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_681.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence460.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/SGntTioECg4_999.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_740.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Violence/Violence-Test029.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/F7W6PQ3V3y8_1.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_270.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence448.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/YL-qwpTMjzk_0.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_709.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence424.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/trtrhrt_1054.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_840.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence574.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/truutrdf_1087.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/Violence/V_333.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence067.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/Fight/s-jW4cyavW0_2.avi
+fighting	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/Violence/V_153.mp4
+fighting	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence861.avi
+fighting	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/Fight/XM0NI7ZmwWM_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal413.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_258.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_916.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/WCbsjDUV_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal232.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test111.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/Bp3wCVsS_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_576.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_593.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_571.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal075.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/lx4TN9dS_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal832.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n044_converted.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_237.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_502.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_196.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_830.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal261.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal465.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal023.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_635.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_409.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/85dkGMed_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal452.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal516.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/Suv_mMs8J9g_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_936.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal629.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_106.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/cwLtq5Y3_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_573.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/mX4cQM1xMFc_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/6doZoiaG9PM_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_246.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_286.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_16.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal840.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/1OXrIaQK_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/VXLdrn0b_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_421.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal519.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n067_converted.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal064.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_324.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test080.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_505.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_958.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_358.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_399.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/yvNawsRf_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal116.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_297.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/0H2s9UJcNJ0_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_443.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal385.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_43.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Normal/t_n019_converted.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal030.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_506.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal106.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test091.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_713.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n182_converted.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/Yf55ftZR_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_453.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test167.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/BOt8ZMpM_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_569.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/DX5wwFlF_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_183.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_683.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_557.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal071.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/E2gqgFNyPL8_2.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test024.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/b9I5dDvH_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/2KvkZ4yo_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal125.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_167.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_8.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_665.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal266.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/5RayT2Vy0EA_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n122_converted.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/wyLoweAn_9Q_1.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/DTq6Gu30-uA_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/66U2c3YMjOI_1.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/qrWTk-2a13o_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_985.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_97.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/wKMXI2vp_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/val/NonFight/1MVS2QPWbHc_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_885.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal237.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test141.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_667.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/40l8LuP4_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_822.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_643.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/hbTlgnTw_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_141.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_630.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/MmUtpm6Z_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_57.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/0H2s9UJcNJ0_1.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/mRqg-WXiR7Q_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/0QSeuqzpcOQ_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal810.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_520.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_955.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal463.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/lNAzMZFI_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal824.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_429.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_653.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal471.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_826.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_910.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_625.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal289.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n152_converted.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/OdxnpEnn_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test082.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_10.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal723.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal611.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_170.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test030.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_220.mp4
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/real life violence situations/Real Life Violence Dataset/NonViolence/NV_889.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_908.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_569.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/18xQQOv5_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/xTCvMktQ_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Normal/Normal520.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/NxtwlqSnLbY_0.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_779.mp4
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test159.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/KQTiHlA11fM_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Normal/n053_converted.avi
+none	/kaggle/input/datasets/mohamedmustafa/real-life-violence-situations-dataset/Real Life Violence Dataset/NonViolence/NV_280.mp4
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/36zWWHlldS8_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/kMI2JME3Aag_3.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/I-x0G5pAan0_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Normal/Normal-Test013.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/CqJB8ZWLZ-o_1.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/8PuNOqvh_0.avi
+none	/kaggle/input/datasets/vulamnguyen/rwf2000/RWF-2000/train/NonFight/p19HiyCX7EQ_0.avi
+none	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Normal/t_n010_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized276.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized027.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized148.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized790.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test113.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test186.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test032.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized702.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w076_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test181.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized413.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized447.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized740.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized519.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized416.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized075.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test188.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized811.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w074_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized592.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized340.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized153.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test001.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized222.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w072_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test025.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized069.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized478.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized631.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized583.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized178.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized155.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test036.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized188.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test102.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized074.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized489.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized189.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized314.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized269.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w006_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized716.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w099_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized068.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test159.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w002_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized370.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized832.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized244.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized607.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test023.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test018.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w021_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized831.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized126.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized429.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized782.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test168.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized486.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized669.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test040.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w019_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized352.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w092_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized705.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized013.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized543.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized637.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized585.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w078_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized506.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Weaponized/t_w014_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized308.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized250.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test028.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized273.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test060.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w087_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized436.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test179.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized720.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized463.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test146.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized505.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Weaponized/t_w016_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w041_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w031_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized530.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized345.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized284.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized211.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w051_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized252.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized088.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized537.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized079.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test039.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized084.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized071.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized743.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized827.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized315.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized203.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w057_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized427.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized620.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized152.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized129.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized201.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized339.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Weaponized/t_w009_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized358.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized460.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized437.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized241.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized665.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test112.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test100.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Test/Weaponized/Weaponized-Test063.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized296.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized810.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized614.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized606.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized154.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized143.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized672.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w047_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized518.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized638.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized102.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized299.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized473.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized325.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized613.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized369.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w094_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized161.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Test/Weaponized/t_w008_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized670.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized470.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted/Train/Weaponized/w059_converted.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized060.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized077.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized059.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized766.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized238.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized634.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized209.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized617.avi
+weapon	/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Weaponized/Weaponized597.avi

@@ -1,0 +1,17 @@
+{
+ "teacher_grids": 955,
+ "kept": 290,
+ "kept_of_total_per_class": {
+  "arrest": "41/160",
+  "fighting": "96/311",
+  "fire": "6/160",
+  "none": "109/159",
+  "weapon": "38/165"
+ },
+ "dropped": {
+  "label disagrees": 516,
+  "check found an invented detail": 145,
+  "teacher failed": 2,
+  "guardrail words": 2
+ }
+}

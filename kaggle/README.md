@@ -28,6 +28,10 @@ combinations (fast model + bigger re-checker) from the saved results without ext
 > - pulls retry, and happen before the teacher stage
 > - the self-check fails only on invented actions or things (re-scoring run 1 that way: ~300 kept)
 > - UCF is trimmed to arrest and fire
+>
+> **Run 2 (2026-10-16) finished**: results/finetune/README.md. SCVD incident recall 0.20 → 0.60 in-domain.
+> The Ollama import failed (newer Ollama rejects `--quantize q4_K_M` for safetensors), so there was no tar;
+> the notebook now retries with `--quantize int4`.
 
 12B caught 70 % of SCVD incidents, E2B 15 % (`model_compare`). 12B summarises the training clips with our real
 prompts; summaries whose label agrees with the dataset label teach E2B (QLoRA, Unsloth). Stage 2 is unchanged.

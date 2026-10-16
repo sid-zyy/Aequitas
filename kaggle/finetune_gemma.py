@@ -625,11 +625,18 @@ OLLAMA_OK = False
 if not SMOKE:
     model.save_pretrained_merged(str(MERGED), processor)
     (TMP / "Modelfile").write_text(f"FROM {MERGED}\n")
-    try:
-        print(sh(f"ollama create {STUDENT_OLLAMA} --quantize q4_K_M -f {TMP / 'Modelfile'}"))
-        OLLAMA_OK = True
-    except RuntimeError as e:
-        print("ollama import failed, evaluating with Unsloth instead:", str(e)[-800:])
+    # Newer Ollama only quantizes safetensors imports to int4/int8/nvfp4/mxfp4/mxfp8 (run 2 failed on q4_K_M);
+    # int4 is the nearest to the base model's Q4_K_M, so times stay roughly comparable.
+    for quant in ("q4_K_M", "int4"):
+        try:
+            print(sh(f"ollama create {STUDENT_OLLAMA} --quantize {quant} -f {TMP / 'Modelfile'}"))
+            OLLAMA_OK = True
+            print("imported with --quantize", quant)
+            break
+        except RuntimeError as e:
+            print(f"ollama import with {quant} failed:", str(e)[-800:])
+    if not OLLAMA_OK:
+        print("evaluating with Unsloth instead")
 
 # %% [markdown]
 # ## Test: fine-tuned E2B on the same 60 clips
