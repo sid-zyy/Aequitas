@@ -1,4 +1,4 @@
-"""Ollama request options: the MTP drafter setting is sent only when configured; call stats are kept."""
+"""Ollama request options: the MTP drafter and repeat penalty are sent only when configured; call stats are kept."""
 
 from aequitas.config import LlmEndpoint
 from aequitas.understand.vlm_client import OllamaClient
@@ -37,3 +37,13 @@ def test_draft_option_sent_when_set_including_zero():
         assert "".join(c.stream_text([{"role": "user", "content": "x"}])) == "ab"
         assert fake.calls[1]["options"]["draft_num_predict"] == n
         assert c.last_stats["eval_count"] == 2
+
+
+def test_repeat_penalty_sent_only_when_set():
+    c, fake = client()
+    c._chat([{"role": "user", "content": "x"}], {}, "x")
+    assert "repeat_penalty" not in fake.calls[0]["options"]
+    c, fake = client(repeat_penalty=1.1)
+    c._chat([{"role": "user", "content": "x"}], {}, "x")
+    "".join(c.stream_text([{"role": "user", "content": "x"}]))
+    assert fake.calls[0]["options"]["repeat_penalty"] == 1.1 and fake.calls[1]["options"]["repeat_penalty"] == 1.1

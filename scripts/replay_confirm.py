@@ -1,4 +1,6 @@
-"""Replay the saved per-window labels of the demo runs through different confirmation rules (no GPU, no noise)."""
+"""Replay the saved per-window labels of the demo runs through different confirmation rules (no GPU, no noise).
+
+    .venv/Scripts/python scripts/replay_confirm.py . demo_qwen_final demo_qwen_final_rep"""
 import sqlite3
 import sys
 from collections import Counter
@@ -8,7 +10,7 @@ import yaml
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
 expected = yaml.safe_load((root / "config/demo_expected.yaml").read_text())
-runs = ["demo", "demo_rep", "demo_ctx", "demo_cascade", "demo_gate", "demo_gate_rep"]
+runs = sys.argv[2:] or ["demo", "demo_rep", "demo_ctx", "demo_cascade", "demo_gate", "demo_gate_rep"]  # data/eval/<run>
 
 
 def windows(db):

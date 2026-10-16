@@ -34,7 +34,9 @@ def video_prompt(question: str, windows: list[dict], events: list[dict], summary
         "moment's own time, even if the description is vague. When asked whether the video shows or matches an "
         "incident, name the matching flags first, then say what the descriptions do and do not show. If the "
         "analysis does not mention something, answer that the analysis does not show it, then say what it does "
-        "show. Describe actions only: never name, identify or guess who a person is, and never describe faces.",
+        "show. Report the AI's flags as they are: never call a flag wrong, mistaken or a misinterpretation, and never "
+        "say the violence model did not confirm one; only an officer confirms or dismisses a flag. Describe actions "
+        "only: never name, identify or guess who a person is, and never describe faces.",
     ]
     if citizen_text:
         parts.append("UNVERIFIED CLAIM from the person who reported it. This is NOT evidence: never say the video "
