@@ -104,7 +104,9 @@ class JobManager:
         s.analysis.mode = row["mode"]
         if row["vlm_model"]:
             s.vlm.model = row["vlm_model"]
-        if row.get("kind") == "bodycam":  # the review timeline needs every window of the recording
+        # bodycam recordings and citizen reports are reviewed as a timeline, which needs every window
+        reviewable = row.get("kind") == "bodycam" or row["camera_id"].startswith("report-")
+        if reviewable:
             s.analysis.keep_windows = 1_000_000
 
         use_vlm, note = True, None
@@ -136,7 +138,7 @@ class JobManager:
         pipeline.run()
 
         cancelled = upload_id in self._cancelled
-        if row.get("kind") == "bodycam" and use_vlm and not cancelled:
+        if reviewable and use_vlm and not cancelled:
             from aequitas.web.bodycam import make_summary
 
             with self._lock:
