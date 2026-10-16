@@ -420,6 +420,26 @@ tr.out td { color: var(--faint); }
   <p class="takeaway rv" style="--i:3">Latency is judged hardest, so we took <b>the fastest model that fits</b>. Then we closed the accuracy gap with a <b>second signal</b> rather than a bigger model, and taught E2B from 12B (incidents found <b>20 % → 60 %</b> on the same dataset).</p>
 </section>
 
+<!-- 10a · same-size rivals -->
+<section class="slide" data-title="Same size">
+  <div class="eyebrow rv">Models that fit our 6 GB GPU · same 60 test videos</div>
+  <h2 class="rv" style="--i:1">Same size, so who's better?</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Model</th><th class="n">Incidents found</th><th class="n">False alarms on normal clips</th><th class="n">Time per video</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Gemma 4 E2B<span class="tag">chosen</span></td><td class="n">25 %</td><td class="n good">10 %</td><td class="n">1.8 s</td><td>Fastest, fewest false alarms</td></tr>
+        <tr><td>Qwen3-VL 2B</td><td class="n">70 %</td><td class="n">25 %</td><td class="n">2.5 s</td><td class="warn">Best balance: tested in the full app</td></tr>
+        <tr class="out"><td>Qwen2.5-VL 3B</td><td class="n">75 %</td><td class="n bad">85 %</td><td class="n">2.9 s</td><td>Flags almost everything</td></tr>
+        <tr class="out"><td>LLaVA-Phi3 3.8B</td><td class="n">97 %</td><td class="n bad">100 %</td><td class="n">2.9 s</td><td>Flags everything</td></tr>
+        <tr class="out"><td>Gemma 3 4B</td><td class="n">100 %</td><td class="n bad">95 %</td><td class="n">3.8 s</td><td>Flags everything</td></tr>
+        <tr class="out"><td>Granite 3.2 Vision 2B</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td>No valid answers</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway rv" style="--i:3">In the full app on our laptop, Qwen caught <b>every staged arrest</b> but missed <b>2 of 5 real CCTV fights</b>, at <b>2.07 s</b> per window against E2B's <b>1.41 s</b>. Latency is judged hardest: <b>E2B stays</b>.</p>
+</section>
+
 <!-- 10b · accuracy fix -->
 <section class="slide" data-title="Second signal">
   <div class="eyebrow rv">Fixing accuracy · a second signal</div>
