@@ -50,3 +50,22 @@ def test_summarize_recording_passes_confirmed_moments_and_reports_dropped():
     assert out["key_points"] == [{"time": "00:08", "t": 8, "point": "cuffs"}] and out["dropped"] == 1
     assert "confirmed these moments: 00:08 arrest" in llm.prompts[0] and "religion" in llm.prompts[0]
     assert summarize_recording(llm, [], None) == (None, 0.0)  # nothing to summarise: no call
+
+
+def test_violence_model_labels_are_marked_so_the_text_can_say_where_they_came_from():
+    ws = [{"t": 0, "label": "fighting", "summary": "People stand in a room.", "violence": 0.996, "source": "clip_model"},
+          {"t": 4, "label": "fighting", "summary": "Two people push each other.", "violence": 0.97, "source": "vlm"},
+          {"t": 8, "label": "arrest", "summary": "A room.", "violence": 0.95, "source": "vlm+clip"}]
+    assert timeline_lines(ws) == ["00:00 [fighting; violence model 1.00] People stand in a room.",
+                                  "00:04 [fighting] Two people push each other.", "00:08 [arrest] A room."]
+
+
+def test_motion_flags_name_what_only_the_violence_model_saw():
+    from aequitas.understand.recording_summary import motion_flags
+
+    ws = [{"t": 0, "label": "fighting", "source": "clip_model"}, {"t": 4, "label": "fighting", "source": "clip_model"},
+          {"t": 8, "label": "suspicious_activity", "source": "vlm+clip"},  # Gemma's label: the clip model only agreed
+          {"t": 12, "label": "none", "source": "clip_model"}]
+    assert motion_flags(ws).startswith("The violence model, which watches motion, flagged fighting at 00:00, 00:04.")
+    assert "suspicious" not in motion_flags(ws)
+    assert motion_flags([{"t": 0, "label": "arrest", "source": "vlm"}]) == ""

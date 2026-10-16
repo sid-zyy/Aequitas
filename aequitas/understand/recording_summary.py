@@ -52,8 +52,11 @@ def timeline_lines(windows: list[dict]) -> list[str]:
         if key == prev:
             continue
         prev = key
-        label = w.get("label") or "unlabelled"
-        lines.append(f"{mmss(w['t'])} [{label.replace('_', ' ')}] {w['summary'].strip()}")
+        label = (w.get("label") or "unlabelled").replace("_", " ")
+        if label != "none" and w.get("violence") is not None and (w.get("source") or "").startswith("clip_model"):
+            # the violence model saw the fight in the motion even when the description missed it: say so
+            label += f"; violence model {w['violence']:.2f}"
+        lines.append(f"{mmss(w['t'])} [{label}] {w['summary'].strip()}")
     if len(lines) > MAX_LINES:  # keep every incident line, thin the rest evenly
         inc = [i for i, ln in enumerate(lines) if "[none]" not in ln]
         rest = [i for i in range(len(lines)) if i not in set(inc)]
@@ -66,8 +69,10 @@ def timeline_lines(windows: list[dict]) -> list[str]:
 def prompt(lines: list[str], confirmed: list[str]) -> str:
     conf = ("\nAn officer has confirmed these moments: " + "; ".join(confirmed) + ".\n") if confirmed else ""
     return (
-        "Below is the timeline of a police body-camera recording. Each line is what an AI saw in 4 seconds of "
-        "video: time (mm:ss), a label, and a description.\n\n" + "\n".join(lines) + "\n" + conf + "\n"
+        "Below is the timeline of a video (a police body camera or a citizen's report). Each line is what an AI "
+        "saw in 4 seconds of video: time (mm:ss), a label, and a description. A label marked 'violence model' "
+        "came from a second model that watches motion: it saw that incident even where the description does not "
+        "mention it, so state it as flagged by the violence model.\n\n" + "\n".join(lines) + "\n" + conf + "\n"
         "Write:\n"
         "- overview: 2 to 4 plain sentences on what happens in the recording, in order. Only use what the "
         "timeline says. Do not guess identities, names, intentions, or anything not described.\n"
@@ -99,6 +104,21 @@ def ground(s: RecordingSummary, windows: list[dict], window_s: float = 4.0) -> R
     return RecordingSummary(overview=s.overview.strip(), key_points=[k for _, k in spread])
 
 
+def motion_flags(windows: list[dict]) -> str:
+    """A fixed sentence (not written by the LLM) listing incidents only the violence model saw. The description
+    model often misses a fight on CCTV (Gemma alone: 0/5 faculty clips), and the LLM summary then reads as if
+    nothing happened, so the flag is stated here in plain words."""
+    by_label: dict[str, list[str]] = {}
+    for w in windows:
+        if w.get("label") not in (None, "none") and (w.get("source") or "").startswith("clip_model"):
+            by_label.setdefault(w["label"].replace("_", " "), []).append(mmss(w["t"]))
+    if not by_label:
+        return ""
+    parts = [f"{label} at {', '.join(ts)}" for label, ts in by_label.items()]
+    return (f"The violence model, which watches motion, flagged {'; '.join(parts)}. The descriptions above may "
+            "not mention it: check these moments in the video.")
+
+
 def summarize_recording(client, windows: list[dict], confirmed: list[str] | None = None) -> tuple[dict | None, float]:
     """Returns ({overview, key_points: [{time, t, point}], dropped}, ms); (None, ms) without window summaries
     or when the model gave no valid answer."""
@@ -112,6 +132,6 @@ def summarize_recording(client, windows: list[dict], confirmed: list[str] | None
     if raw is None:
         return None, ms
     g = ground(raw, windows)
-    return {"overview": g.overview,
+    return {"overview": " ".join(x for x in (g.overview, motion_flags(windows)) if x),
             "key_points": [{"time": k.time, "t": parse_mmss(k.time), "point": k.point} for k in g.key_points],
             "dropped": len(raw.key_points) - len(g.key_points)}, ms
