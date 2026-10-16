@@ -61,3 +61,24 @@ identical between runs; the 14 changed clips account for part of the difference.
 - SCVD labels whole clips, and the scoring takes one label per clip.
 - The VLM was tested alone; the app's results come from VLM + violence model.
 - T4 times; laptop times differ (E2B: about 0.6 s summary + 0.4 s label per 4 s window on the RTX 4050).
+
+## Follow-up on the laptop: qwen3-vl:2b-instruct in the full app pipeline (2026-10-17)
+
+- **Setup:** the 21-clip demo set (`config/demo_cameras.yaml`) with the demo setup. That is the scene gate, the
+  violence model, two-vote confirmation and the current prompts (`config/eval_demo_qwen2b*.yaml` vs
+  `config/eval_demo_e2b_cmp*.yaml`).
+- **Hardware:** RTX 4050 laptop, Ollama, runs alternated Qwen, E2B, Qwen, E2B.
+- **Timings:** runs 3 and 4 were slowed by other work on the laptop (2–3× longer). Only the first pair's timings
+  are clean.
+
+| | qwen3-vl:2b-instruct | gemma4:e2b |
+|---|---|---|
+| Confirmed hits / false alarms / misses (run 1, run 2) | 8/1/2, 8/2/2 | 6/2/4, 7/1/3 |
+| 16 staged and street clips | all 4 arrests caught; fire-rescue also called vandalism once | misses 2–3 of arrest-1/2/3 in every run (also in the 3 earlier E2B runs today); fire-rescue also called arrest |
+| 5 faculty clips (held-out, reported only) | misses v001 and v026 in both runs (v026 called person_down) | catches 4–5 of 5 |
+| Time per 4 s window, clean pair | 2.07 s (1.72 summary + 0.35 label) | **1.41 s** (1.04 + 0.37) |
+| Whole run, clean pair | 202 s | **136 s** |
+
+**Decision: keep gemma4:e2b.** Qwen recognises handcuffing better and writes more specific descriptions, but it
+is worse on the real CCTV fights and about 47 % slower per window. Total execution time is weighted most
+heavily. The faculty clips were not used to make this choice. The speed difference alone decides it.

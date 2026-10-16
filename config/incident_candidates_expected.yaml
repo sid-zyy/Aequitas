@@ -1,0 +1,11 @@
+# What each candidate clip should be labelled (see config/incident_candidates_cameras.yaml).
+fire-aerial:           {required: [fire]}
+fire-ladder:           {required: [fire]}
+fire-smoke:            {required: [fire]}
+accident-highway:      {required: [accident], optional: [person_down]}
+accident-night:        {required: [accident]}
+accident-wreck:        {required: [accident]}
+vandalism-graffiti:    {required: [vandalism], optional: [fire]}
+theft-car:             {required: [theft]}
+theft-breakin:         {required: [theft], optional: [vandalism, suspicious_activity]}
+person-down-stretcher: {required: [person_down]}

@@ -1,0 +1,12 @@
+# Demo-clip comparison (e2b_cmp_rep): run F's setup with vlm.model gemma4:e2b.
+data_dir: data/eval/demo_e2b_cmp_rep
+analysis:
+  mode: periodic
+  window_s: 4
+  confirm_votes: 2
+  gate_model: google/siglip-base-patch16-224
+models:
+  violence_dir: models/violence_clip
+vlm:
+  model: gemma4:e2b
+  tile_px: 448
