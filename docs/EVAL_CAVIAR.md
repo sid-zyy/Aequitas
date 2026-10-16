@@ -24,7 +24,8 @@ The loosened thresholds were tuned on these same clips, so even a better number 
 **Rules (baseline and run A): the person detector is the bottleneck.**
 - YOLO11n gives people in this footage median confidence 0.16–0.27. The default filter (≥ 0.4) dropped 79–100% of them.
 - supervision's ByteTrack only starts tracks above its threshold **+ 0.1**, so low-confidence people were never
-  tracked. *Fixed:* the configured value is now the real start threshold.
+  tracked. *Fixed:* the configured value is now the real start threshold (since 2026-10-16 the tracker is
+  Ultralytics' BYTETracker, which has no offset; see docs/TRACKING.md).
 - In `Rest_FallOnFloor`, the person who falls is **not detected while walking**. They first appear already on
   the floor, so no "upright → down" transition exists to detect.
   - Person-down now also handles ID switches (upright at the same spot) and overhead perspective (height
