@@ -66,7 +66,7 @@ Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthet
 | vLLM serve profiles (FP8 / quantised path × none / MTP / n-gram), WSL install script | Written; **run on Kaggle only** | `scripts/vllm/` |
 | Quantisation (FP8 / W8A8 / W4A16, llm-compressor) | Written; **no successful run yet** | `scripts/quantize/quantize.py` |
 | `aequitas bench` (TTFT, TPOT, tokens/s, acceptance rate) | Done | `eval/bench.py` |
-| **Faculty dataset adapter** (`eval-dataset`: folder or manifest → all stages → accuracy, F1, summary similarity, time) | Done, waiting for the dataset | `eval/dataset.py` |
+| **Faculty dataset adapter** (`eval-dataset`: folder or manifest → all stages → accuracy, F1, summary similarity, time) | Done; no faculty dataset is coming (owner, 2026-10-16), only the 6 sample clips | `eval/dataset.py` |
 | Gemma fine-tune (12B → E2B distillation, QLoRA) | Run 2 done: SCVD incident recall 0.20 → 0.60 (in-domain); not yet served or tested on Bengaluru clips | `kaggle/finetune_gemma.py`, results/finetune/README.md |
 | Skeleton action model for the webcam (YOLO pose + STGCN++ NTU-120) | **Prototype, not wired in** | `vision/skeleton.py`, `scripts/skeleton_check.py` |
 | Tracker comparison on CAVIAR ground truth | Done | `scripts/tracker_compare.py`, docs/TRACKING.md |
@@ -130,7 +130,8 @@ numbers in the docs.
   (stage-2 eval, demo set, SCVD subset). Write `docs/QUANTIZATION.md`.
 - [ ] **Ablation re-run at the end** (Kaggle, re-import `kaggle/ablation.ipynb`; the torchvision fix is in
   the repo) → tables and charts for the presentation
-- [ ] Faculty dataset: run `eval-dataset` when it arrives; make its categories the label set if they differ
+- [x] Faculty dataset: none is coming (owner, 2026-10-16). The 6 sample clips are the faculty test, spread one per
+  locality on the Live page (config/bangalore.yaml)
 - [ ] Demo script: upload → live stages → labels → chat, **total execution time on screen**; final report and
   latency slide
 
@@ -174,7 +175,7 @@ numbers in the docs.
   Re-import `kaggle/finetune_gemma.ipynb`. Inputs are listed in kaggle/README.md.
 - **Tracker migration: done** (merged 2026-10-16). Tracking runs on Ultralytics' `BYTETracker` (OC-SORT via
   `tracker.algorithm`). CAVIAR scores match the old supervision tracker (docs/TRACKING.md).
-- **Faculty dataset:** format and categories still unknown.
+- **Faculty dataset:** none is coming (owner, 2026-10-16); the 6 sample clips are all there is.
 - **Open question for the owner:** test events #149–151 (demo-webcam, 03:38–03:39 on 2026-10-16) were created
   by Claude in the real `data/aequitas.db` while testing. Delete them?
 

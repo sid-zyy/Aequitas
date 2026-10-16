@@ -4,6 +4,8 @@
 # a vehicle fire) that were checked to be caught by the model (4 s windows, Gemma 4 E2B): only clips the
 # pipeline actually labels correctly are used. Camera names are real landmarks so the
 # demo reads naturally; the footage is not from those places.
+# One camera per locality plays one of the six faculty sample clips (real CCTV fights, w001 a weapon; data/footage/
+# faculty/). Gemma alone misses them; the violence clip model catches them (results/violence_clip/README.md).
 localities:
   - id: koramangala
     name: Koramangala
@@ -12,12 +14,14 @@ localities:
       - {id: kor-forum, name: Forum Mall, Hosur Road, file: data/footage/koramangala/forum.mp4}
       - {id: kor-80ft, name: 80 Feet Road, file: data/footage/koramangala/80ft-road.mp4}
       - {id: kor-jyoti-nivas, name: Jyoti Nivas College Road, file: data/footage/incidents/arrest-2.mp4}
+      - {id: kor-5th-block, name: 5th Block Cafe Terrace, file: data/footage/faculty/v001.mp4}
   - id: indiranagar
     name: Indiranagar
     cameras:
       - {id: ind-100ft, name: 100 Feet Road, file: data/footage/indiranagar/100ft-road.mp4}
       - {id: ind-cmh, name: CMH Road Metro, file: data/footage/indiranagar/cmh-metro.mp4}
       - {id: ind-12main, name: 12th Main, file: data/footage/indiranagar/12th-main.mp4}
+      - {id: ind-double-road, name: Double Road Restaurant, file: data/footage/faculty/v011.mp4}
   - id: whitefield
     name: Whitefield
     cameras:
@@ -25,6 +29,7 @@ localities:
       - {id: wf-phoenix, name: Phoenix Marketcity, file: data/footage/whitefield/phoenix.mp4}
       - {id: wf-hope-farm, name: Hope Farm Junction, file: data/footage/whitefield/hope-farm.mp4}
       - {id: wf-kundalahalli, name: Kundalahalli Gate, file: data/footage/incidents/arrest-1.mp4}
+      - {id: wf-epip, name: EPIP Zone Hostel Corridor, file: data/footage/faculty/v026.mp4}
   - id: mg-road
     name: MG Road
     cameras:
@@ -32,6 +37,7 @@ localities:
       - {id: mg-brigade, name: Brigade Road Junction, file: data/footage/mg-road/brigade-road.mp4}
       - {id: mg-trinity, name: Trinity Metro, file: data/footage/mg-road/trinity.mp4}
       - {id: mg-church-st, name: Church Street, file: data/footage/incidents/arrest-4.mp4}
+      - {id: mg-mayo-hall, name: Mayo Hall Court Complex, file: data/footage/faculty/w001.mp4}
   - id: majestic
     name: Majestic
     cameras:
@@ -39,22 +45,14 @@ localities:
       - {id: maj-kbs, name: Kempegowda Bus Station, file: data/footage/majestic/kbs.mp4}
       - {id: maj-gandhinagar, name: Gandhi Nagar, file: data/footage/majestic/gandhi-nagar.mp4}
       - {id: maj-platform-rd, name: Platform Road, file: data/footage/incidents/arrest-3.mp4}
+      - {id: maj-ksr-security, name: KSR Station Security Check, file: data/footage/faculty/v006.mp4}
   - id: electronic-city
     name: Electronic City
     cameras:
       - {id: ec-flyover, name: Electronic City Flyover, file: data/footage/electronic-city/flyover.mp4}
       - {id: ec-phase1, name: Phase 1 Main Gate, file: data/footage/electronic-city/phase1.mp4}
       - {id: ec-neeladri, name: Neeladri Road, file: data/footage/incidents/fire-rescue.mp4}
-  # Sample clips provided by the faculty (real CCTV; names suggest the SCVD dataset: v = violence,
-  # w = weaponized). Converted to H.264 for the browser. They are the held-out test set: never trained on.
-  - id: faculty
-    name: "Faculty test footage"
-    cameras:
-      - {id: fac-v001, name: "v001 (restaurant brawl)", file: data/footage/faculty/v001.mp4}
-      - {id: fac-v006, name: "v006", file: data/footage/faculty/v006.mp4}
-      - {id: fac-v011, name: "v011", file: data/footage/faculty/v011.mp4}
-      - {id: fac-v026, name: "v026 (corridor)", file: data/footage/faculty/v026.mp4}
-      - {id: fac-w001, name: "w001 (weapon)", file: data/footage/faculty/w001.mp4}
+      - {id: ec-hosur-service, name: Hosur Road Service Lane, file: data/footage/faculty/v003.mp4}
   # Live demo: the laptop's own webcam. Close-range view (gestures, objects held) and 2 s windows so a
   # judge's action shows up quickly. Not a real Bengaluru camera.
   - id: live-demo

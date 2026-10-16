@@ -16,8 +16,9 @@ requirement seems impossible, say so to the owner.
 4. **Study and implement 4-bit and 8-bit quantization**, with a written comparison of latency and accuracy
    per scheme.
 5. **React frontend, FastAPI backend. No Jupyter notebooks** in the deliverable.
-6. **The faculty will provide a dataset.** It defines the real evaluation. Build adapters for it rather than
-   hard-coding.
+6. **Faculty data: the six sample clips are all there is** (owner, 2026-10-16: no further dataset is coming).
+   They are v001, v003, v006, v011, v026 and w001 in `data/footage/faculty/`, and the held-out test: never train
+   or tune on them. The `eval-dataset` adapter stays for any labelled folder.
 7. **How the faculty judge it:**
    - the **approach** (explain the design choices)
    - how well we **demonstrate it end to end**
