@@ -129,6 +129,13 @@ class LiveManager:
         with self._lock:
             self._stop_locked()
 
+    def _version(self, c: LiveCamera) -> str:
+        """'?v=<file mtime>' for file cameras: the URL changes when a camera's clip is swapped, so browsers don't
+        keep playing the clip they cached under the same URL."""
+        if c.is_live or c.file is None or not Path(c.file).is_file():
+            return ""
+        return f"?v={int(Path(c.file).stat().st_mtime)}"
+
     def latest_frame(self, camera_id: str):
         p = self.pipeline
         return p.latest_frames.get(camera_id) if p is not None else None
@@ -145,7 +152,7 @@ class LiveManager:
                 "id": c.id, "name": c.name, "has_footage": self.has_footage(c.id), "live_source": c.is_live,
                 "view": c.view, "browser_camera": c.source == "browser",
                 # files play in a <video>; live sources stream the frames the pipeline reads (MJPEG)
-                "video_url": f"/api/live/cameras/{c.id}/{'mjpeg' if c.is_live else 'video'}",
+                "video_url": f"/api/live/cameras/{c.id}/{'mjpeg' if c.is_live else 'video'}{self._version(c)}",
                 "latest": latest, "recent": recent,
                 "behind_live_s": round(latest["lag_ms"] / 1000, 1) if latest and latest["lag_ms"] else None,
             })
