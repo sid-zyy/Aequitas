@@ -64,6 +64,9 @@ class LlmEndpoint(BaseModel):
     summary_max_tokens: int = 128  # stage 1 JSON: <=35-word summary + <=8-word evidence
     concise_summary: bool = True  # False = the original longer prompt (only to measure the time saved)
     guided_checks: bool = False  # stage 1 also answers grouped check questions (ASK-Hint style)
+    # Ollama speculative decoding: tokens the model's MTP drafter proposes per step (gemma4:e2b ships one, default 3).
+    # None = the model's own default; 0 = off. Measured in docs/SPECULATIVE.md.
+    draft_num_predict: int | None = Field(default=None, ge=0, le=16)
 
 
 class VlmCfg(LlmEndpoint):
