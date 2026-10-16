@@ -46,7 +46,8 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
     SCVD (70 % vs 25 %).
   - **To switch to Qwen:** `vlm.model: qwen3-vl:2b-instruct`, `analysis.label_context: false`,
     `vlm.repeat_penalty: 1.1`, `vlm.draft_num_predict: null`.
-  - **Quantization evidence** is measured on Qwen (all three precisions load on 6 GB); for E2B only 4-bit fits.
+  - **Quantization evidence:** Qwen on the laptop (results/qwen/README.md) and Gemma E2B at BF16 / Q8_0 / Q4_K_M / QAT
+    on a Kaggle T4 (results/quant_gemma/README.md). E2B Q8_0 (~3.5 GB on the GPU) would also fit; Q4_K_M is kept.
   - **Qwen3-VL 4B/8B in results/model_compare** returned 60/60 empty summaries: Ollama's default tags are the
     thinking builds. That run is not a verdict on those models.
   - **The fine-tune (12B → E2B)** applies to Gemma only.
@@ -141,6 +142,9 @@ numbers in the docs.
 - [x] **Quantisation study, measured on the laptop** (Qwen3-VL 2B, results/qwen/README.md): 4-bit 1.9 GB and
   1.60 s/window; 8-bit 2.5 GB and 1.74 s/window, and no more accurate end to end; 16-bit doesn't fit (4.7 GB,
   23/29 layers on the GPU, 9.6 s/window). 4-bit is used.
+- [x] **Gemma E2B quantisation, Kaggle T4** (results/quant_gemma/README.md): BF16, Q8_0 and Q4_K_M all flag 20/39
+  incident windows with 0/33 false alarms (QAT 18/39); BF16 4.11 s, Q8_0 2.06 s, QAT 1.89 s, Q4_K_M 1.84 s per window.
+  Only the Q4_K_M run had the MTP drafter on; QAT vs Q8_0 (both without) is the fair 4-bit vs 8-bit gap: 8 % faster.
 - [ ] **Ablation re-run at the end** (Kaggle, re-import `kaggle/ablation.ipynb`; the torchvision fix is in
   the repo) → tables and charts for the presentation
 - [x] Faculty dataset: none is coming (owner, 2026-10-16). The 6 sample clips are the faculty test, spread one per

@@ -17,3 +17,5 @@ results/finetune/lora/
 results/finetune/ollama.log
 results/finetune/review.html
 kaggle/bench_windows.zip
+results/quant_gemma/ollama.log
+results/quant_gemma/commands.log

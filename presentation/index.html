@@ -194,9 +194,6 @@ tr.out td { color: var(--faint); }
 .good { color: var(--ok); } .bad { color: var(--danger); } .warn { color: var(--saffron); }
 .takeaway { font-size: 24px; line-height: 1.45; margin: 0; max-width: 70ch; color: var(--muted); }
 .takeaway b { color: var(--fg); }
-/* numbers still to be measured */
-.tbd { font-family: var(--mono); font-size: 15px; color: var(--saffron); border: 1px dashed var(--saffron); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
-tr.pending td { color: var(--muted); }
 td.muted { color: var(--muted); }
 table.models { font-size: 19px; }
 table.models td { padding: 12px 14px; }
@@ -569,7 +566,7 @@ table.dense td { padding: 8px 18px; }
   <h2 class="rv" style="--i:1;max-width:22ch">We prioritise speed, without giving up accuracy.</h2>
   <div class="whygrid">
     <div class="whycard rv" style="--i:2"><span class="k">Fastest end to end</span><span class="v num good">0.91 s</span><p>per window on our laptop, against 1.01 s for Qwen. All 21 demo clips in <b>1 min 48 s</b> instead of 2 min 24 s.</p></div>
-    <div class="whycard rv" style="--i:3"><span class="k">Fits with room to spare</span><span class="v num">3.5 GB</span><p>at 4-bit on a 6 GB laptop GPU, leaving space for the scene gate beside it. No layers spill onto the CPU.</p></div>
+    <div class="whycard rv" style="--i:3"><span class="k">Fits with room to spare</span><span class="v num">2.7 GB</span><p>on the GPU at 4-bit, drafter included, out of our laptop's 6 GB. That leaves space for the scene gate beside it.</p></div>
     <div class="whycard rv" style="--i:4"><span class="k">Fewest false alarms</span><span class="v num good">10 %</span><p>of normal clips flagged, the lowest of every model that fits (Qwen 25 %). Officers only trust a queue that isn't full of noise.</p></div>
     <div class="whycard rv" style="--i:5"><span class="k">Built-in speculative decoding</span><span class="v num">−22 %</span><p>chat answer time with Gemma's own 98 MB MTP drafter. Qwen has no drafter, so it can't get this speed-up.</p></div>
     <div class="whycard rv" style="--i:6"><span class="k">One model, every task</span><span class="v num good">6 / 6</span><p>Hindi and Kannada reports translated with every fact kept (Qwen 2 / 6). The same model summarises, classifies, chats and translates, so only <b>one language model</b> sits on the GPU.</p></div>
@@ -593,24 +590,24 @@ table.dense td { padding: 8px 18px; }
 
 <!-- 11 · quantization -->
 <section class="slide" data-title="Quantization">
-  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · Qwen on our laptop, Gemma on Kaggle</div>
+  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · same 72 windows · Gemma on a Kaggle T4, Qwen on our laptop</div>
   <h2 class="rv" style="--i:1">Measured, not assumed: 4-bit wins.</h2>
   <div class="tablewrap rv" style="--i:2">
     <table class="dense">
-      <thead><tr><th>Qwen3-VL 2B · our laptop</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
+      <thead><tr><th>Gemma 4 E2B · the model we use</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
       <tbody>
+        <tr><td>16-bit (BF16)</td><td class="n">5.5 GB</td><td class="bad">No room left for the scene gate</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n bad">4.11 s</td></tr>
+        <tr><td>8-bit (Q8_0)</td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n">2.06 s</td></tr>
+        <tr><td>4-bit QAT</td><td class="n">2.5 GB</td><td class="good">Yes</td><td class="n">18 / 39</td><td class="n">0 / 33</td><td class="n">1.89 s</td></tr>
+        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M) + MTP<span class="tag">used</span></td><td class="n">2.7 GB</td><td class="good">Yes</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n good">1.84 s</td></tr>
+        <tr><td colspan="6" class="group" style="padding:14px 18px 6px">Qwen3-VL 2B · the runner-up · on our laptop</td></tr>
         <tr><td>16-bit (BF16)</td><td class="n">4.7 GB</td><td class="bad">No: a fifth runs on the CPU</td><td class="n">33 / 39</td><td class="n">0 / 33</td><td class="n bad">9.64 s</td></tr>
         <tr><td>8-bit (Q8_0)</td><td class="n">2.5 GB</td><td class="good">Yes</td><td class="n">34 / 39</td><td class="n">0 / 33</td><td class="n">1.74 s</td></tr>
-        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M)<span class="tag">best</span></td><td class="n">1.9 GB</td><td class="good">Yes</td><td class="n">33 / 39</td><td class="n">2 / 33</td><td class="n good">1.60 s</td></tr>
-        <tr><td colspan="6" class="group" style="padding:14px 18px 6px">Gemma 4 E2B · the model we use · same 72 windows · Kaggle T4</td></tr>
-        <tr class="pending"><td>16-bit (BF16)</td><td class="n"><span class="tbd">pending</span></td><td>~10 GB: no</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
-        <tr class="pending"><td>8-bit (Q8_0)</td><td class="n"><span class="tbd">pending</span></td><td>~5 GB: no</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
-        <tr class="pending"><td>4-bit (Q4_K_M)<span class="tag">used</span></td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
-        <tr class="pending"><td>4-bit QAT</td><td class="n"><span class="tbd">pending</span></td><td><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td><td class="n"><span class="tbd">pending</span></td></tr>
+        <tr><td>4-bit (Q4_K_M)</td><td class="n">1.9 GB</td><td class="good">Yes</td><td class="n">33 / 39</td><td class="n">2 / 33</td><td class="n good">1.60 s</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3">Same 72 windows, same settings. On Qwen, 16-bit spills onto the CPU and is <b>6× slower</b>; 8-bit is a little cleaner but <b>9 % slower</b>. Gemma E2B needs ~10 GB at 16-bit and ~5 GB at 8-bit, so on our laptop <b>only 4-bit fits</b>; its accuracy at each precision comes from the Kaggle run.</p>
+  <p class="takeaway rv" style="--i:3">On Gemma, going from 16-bit to 4-bit <b>lost no detections</b>: the same 20 / 39 incident windows, 0 false alarms. 16-bit is <b>2.2× slower</b> than 8-bit; 4-bit is <b>8 % faster</b> than 8-bit on its own (QAT) and <b>11 %</b> with the MTP drafter, and it named the most fights and fires correctly.</p>
 </section>
 
 <!-- 12 · detector -->
