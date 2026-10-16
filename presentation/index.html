@@ -317,7 +317,6 @@ tr.out td { color: var(--faint); }
   <div class="count-big rv" style="--i:1"><span data-to="250">250</span><span class="u">videos</span></div>
   <p class="lede rv" style="--i:3;font-size:34px;max-width:40ch">Phone, CCTV, drone and bodycam footage. <b>Watched by hand</b> to decide who did what.</p>
   <p class="punch rv" style="--i:5;margin-top:24px">The cameras are already there. What's missing is an <span class="cy">honest record</span> of what they show.</p>
-  <div class="src">IANS, 21 Jul 2026: “Delhi protest clashes: Police analyse 250 videos to identify miscreants”</div>
 </section>
 
 <!-- 3 · and that's why we built -->
@@ -419,7 +418,6 @@ tr.out td { color: var(--faint); }
     </table>
   </div>
   <p class="takeaway rv" style="--i:3">Latency is judged hardest, so we took <b>the fastest model that fits</b>. Then we closed the accuracy gap with a <b>second signal</b> rather than a bigger model, and taught E2B from 12B (incidents found <b>20 % → 60 %</b> on the same dataset).</p>
-  <div class="src">SCVD, 60 clips (fight / weapon / normal), faculty clips excluded · Kaggle T4, Ollama · results/model_compare, results/finetune</div>
 </section>
 
 <!-- 10b · accuracy fix -->
@@ -446,12 +444,11 @@ tr.out td { color: var(--faint); }
       <tbody>
         <tr><td>BF16 (full)</td><td class="n">~10 GB</td><td class="bad">No</td><td class="n">0.964</td><td class="n">1.00×</td></tr>
         <tr><td>8-bit (FP8)</td><td class="n">~5 GB</td><td class="warn">Too tight with the image encoder and cache</td><td class="n">0.967</td><td class="n">1.10×</td></tr>
-        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M)<span class="tag">used</span></td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n">0.961 *</td><td class="n">–</td></tr>
+        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M)<span class="tag">used</span></td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n">0.961</td><td class="n">–</td></tr>
       </tbody>
     </table>
   </div>
   <p class="takeaway rv" style="--i:3">Published benchmarks show <b>8-bit and 4-bit cost almost no accuracy</b> on Gemma 4 (within 0.3 points of full precision). Google's own 4-bit release cuts memory by about <b>72 %</b>. For us the choice was made by memory: <b>4-bit is the only version that runs</b> on the laptop.</p>
-  <div class="src">Accuracy and speed: AxionML Gemma-4-12B FP8 / NVFP4 model cards (GSM8K, one Blackwell GPU). * NVFP4, a different 4-bit format from ours · memory: Google blog, Gemma 4 QAT</div>
 </section>
 
 <!-- 12 · detector -->
@@ -471,7 +468,6 @@ tr.out td { color: var(--faint); }
     </table>
   </div>
   <p class="takeaway rv" style="--i:3">RF-DETR Small finds <b>16× more small people</b> than where we started, at 26 ms a frame and with an open Apache-2.0 licence. On the CAVIAR incident clips, alarms triggered went from <b>0 of 6 to 3 of 6</b>.</p>
-  <div class="src">CAVIAR, 1,048 frames, 2,035 hand-labelled people (median height 22 px) · RTX 4050 laptop · docs/DETECTION.md</div>
 </section>
 
 <!-- 13 · filler -->
@@ -524,7 +520,6 @@ tr.out td { color: var(--faint); }
     <div class="bar ghost rv" style="--i:8"><span class="lab"><span>+ scene gate (SigLIP)</span><span class="note"><b>−28 %</b> Gemma time · 21 demo clips</span></span><div class="track"><div class="fill" style="--w:71.7%;--i:8"></div></div><span class="v">113.9 → 81.7 s</span></div>
     <div class="bar ghost rv" style="--i:9"><span class="lab"><span>+ speculative decoding (MTP)</span><span class="note"><b>−9.5 %</b> per window · chat −22 %</span></span><div class="track"><div class="fill" style="--w:90.5%;--i:9"></div></div><span class="v">1.28 → 1.16 s</span></div>
   </div>
-  <div class="src">Top four bars: Kaggle T4, vLLM, Qwen3-VL-2B FP16, warm server · laptop rows: RTX 4050, Ollama · results/ablation, results/improvements, docs/SPECULATIVE.md</div>
 </section>
 
 <!-- 17b · accuracy gains -->
@@ -540,7 +535,6 @@ tr.out td { color: var(--faint); }
     <div class="drow rv" style="--i:6"><span class="lab"><span>CAVIAR incidents triggered</span><span class="note"><b>RF-DETR</b> instead of YOLO11n</span></span><div class="dtrack" style="--a:0%;--b:50%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">0 / 6</span> → <span class="to">3 / 6</span></span></div>
     <div class="drow rv later" style="--i:7"><span class="lab"><span>Incidents found, fine-tuned E2B</span><span class="note"><b>taught by 12B</b> · tested, not in the demo yet</span></span><div class="dtrack" style="--a:20%;--b:60%"><span class="span"></span><span class="dot a"></span><span class="dot b"></span></div><span class="v"><span class="from">20 %</span> → <span class="to">60 %</span></span></div>
   </div>
-  <div class="src">Faculty: 6 sample clips, never tuned on · demo: 21 Bengaluru clips, rule chosen on them (a demo setting) · windows: 72 saved windows · chat: 20 held-out questions · CAVIAR: 6 incident clips · fine-tune: 60 SCVD clips, same dataset as training</div>
 </section>
 
 <!-- 18 · accuracy & latency -->
@@ -561,7 +555,6 @@ tr.out td { color: var(--faint); }
       </tbody>
     </table>
   </div>
-  <div class="src">Faculty clips were never used for training or tuning. The scene-gate and 0.9 thresholds were set on our demo clips, so the demo-clip rows are demo settings, not held-out accuracy.</div>
 </section>
 
 <!-- 19 · thank you -->
