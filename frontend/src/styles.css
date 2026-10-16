@@ -403,3 +403,14 @@ html:has(.gov), html:has(.gov) body, html:has(.gov) #root { background: #f2f4f8;
   .gov-emergency { width: 100%; justify-content: center; }
   .gov .portal form > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
 }
+
+/* one video in depth (bodycam review, citizen reports): player + timeline left, moments + chat right */
+.video-review { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.video-review-main, .video-review-side { display: grid; gap: 14px; min-width: 0; }
+.review-row td { white-space: normal; }
+.video-chat { border: 1px solid var(--line-2); border-radius: 8px; background: var(--panel-2); padding: 12px; display: grid; gap: 8px; }
+.video-chat-log { display: grid; gap: 10px; max-height: 340px; overflow-y: auto; }
+.video-chat-turn { display: grid; gap: 6px; }
+.video-chat-input { display: flex; gap: 8px; }
+.btn.cite { padding: 0 6px; margin: 0 2px; font-size: 12px; }
+@media (max-width: 1100px) { .video-review { grid-template-columns: 1fr; } }

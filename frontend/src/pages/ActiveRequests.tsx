@@ -1,7 +1,36 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ActiveQueue, api, label, openCitizenPortal } from "../api";
+import { ActiveQueue, api, label, openCitizenPortal, RecordingDetail } from "../api";
 import ReportText from "../components/ReportText";
+import VideoReview, { running } from "../components/VideoReview";
+
+type Row = ActiveQueue["reports"][number];
+
+/** A citizen report's video reviewed like a bodycam recording: summary, timeline, key moments, per-video chat. */
+function ReportReview({ r }: { r: Row }) {
+  const [d, setD] = useState<RecordingDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let stop = false;
+    const tick = () => api.reportAnalysis(r.report_id).then((x) => { if (!stop) setD(x); return x; })
+      .catch((e) => { if (!stop) setError((e as Error).message); return null; });
+    tick();
+    const t = setInterval(() => tick().then((x) => { if (x && !running(x.status)) clearInterval(t); }), 3000);
+    return () => { stop = true; clearInterval(t); };
+  }, [r.report_id]);
+
+  if (error) return <div className="error">{error}</div>;
+  if (!d) return <div className="empty">Loading the analysis…</div>;
+  return (
+    <VideoReview d={d} setD={setD} api={{
+      review: (eventId, decision) => api.reviewReportMoment(r.report_id, eventId, decision),
+      summarize: () => api.summarizeReport(r.report_id),
+      ask: (q, history) => api.askReport(r.report_id, q, history),
+    }} extra={r.authenticity && !r.authenticity.error && (
+      <p className="note">AI-generated check: {r.authenticity.reasons?.[0]}</p>
+    )} />
+  );
+}
 
 const NEXT: Record<string, { to: string; text: string }[]> = {
   received: [{ to: "under_review", text: "Start review" }, { to: "rejected", text: "Reject" }],
@@ -102,7 +131,7 @@ export default function ActiveRequests() {
                         ))}
                         <button className="btn" style={{ marginRight: 6 }}
                           onClick={() => setOpen(open === r.report_id ? null : r.report_id)}>
-                          {open === r.report_id ? "▲ Hide" : "▶ Watch"}
+                          {open === r.report_id ? "▲ Hide" : "▶ Analyse"}
                         </button>
                         <button className="btn ghost" onClick={() => nav(`/reports?id=${r.report_id}`)}>Open</button>
                       </td>
@@ -110,25 +139,7 @@ export default function ActiveRequests() {
                     {open === r.report_id && (
                       <tr className="review-row">
                         <td colSpan={7}>
-                          <div className="review">
-                            <video className="player" src={r.video_url} controls autoPlay muted playsInline />
-                            <div>
-                              <div className="section-label">What the AI saw (needs officer confirmation)</div>
-                              {!r.findings.length && <p className="note">Nothing flagged{r.analysis.status !== "done" ? " yet: still analysing" : ""}.</p>}
-                              <ul className="history">
-                                {r.findings.map((f, i) => (
-                                  <li key={i}>
-                                    <span className="t mono">{f.at_s >= 0 && f.at_s < 36000 ? `${f.at_s.toFixed(0)} s` : ""}</span>
-                                    <span><b style={{ color: "#ffb3bb" }}>{label(f.category)}</b>
-                                      {f.status !== "confirmed" && <span className="note"> (single window)</span>}: {f.summary}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                              {r.authenticity && !r.authenticity.error && (
-                                <p className="note">AI-generated check: {r.authenticity.reasons?.[0]}</p>
-                              )}
-                            </div>
-                          </div>
+                          <ReportReview r={r} />
                         </td>
                       </tr>
                     )}

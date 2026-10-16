@@ -97,6 +97,8 @@ export type BodyEvent = {
   review: "confirmed" | "dismissed" | null; reviewed_by: string | null; keyframe_url: string;
 };
 export type RecordingDetail = Recording & { windows: BodyWindow[]; events: BodyEvent[]; video_url: string };
+export type VideoAnswer = { answer: string; cited_s: number[]; ms: number; model: string };
+type History = { q: string; a: string }[];
 
 export function openCitizenPortal() {
   const w = window.open("/report", "aequitas-citizen-portal", "popup,width=560,height=900");
@@ -127,6 +129,14 @@ export const api = {
   summarizeRecording: (id: string) => request<Recording>(`/api/bodycam/${id}/summary`, { method: "POST" }),
   reviewMoment: (id: string, eventId: number, decision: "confirmed" | "dismissed" | null) =>
     request<BodyEvent>(`/api/bodycam/${id}/events/${eventId}/review`, json({ decision })),
+  askRecording: (id: string, question: string, history: History) =>
+    request<VideoAnswer>(`/api/bodycam/${id}/ask`, json({ question, history })),
+  reportAnalysis: (id: string) => request<RecordingDetail>(`/api/reports/${id}/analysis`),
+  summarizeReport: (id: string) => request<RecordingDetail>(`/api/reports/${id}/summary`, { method: "POST" }),
+  reviewReportMoment: (id: string, eventId: number, decision: "confirmed" | "dismissed" | null) =>
+    request<BodyEvent>(`/api/reports/${id}/events/${eventId}/review`, json({ decision })),
+  askReport: (id: string, question: string, history: History) =>
+    request<VideoAnswer>(`/api/reports/${id}/ask`, json({ question, history })),
   reportStatus: (id: string, code: string) =>
     request<{ report_id: string; status: string; submitted_at: number; updated_at: number }>(
       `/api/citizen/reports/${encodeURIComponent(id)}?code=${encodeURIComponent(code)}`),

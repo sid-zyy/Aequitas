@@ -61,6 +61,7 @@ Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthet
 | Violence clip model (r3d_18 ONNX), clip votes | Done, in use (`models/violence_clip/`, not in git) | `vision/violence.py` |
 | Bodycam review: timeline, officer confirm/dismiss (audited), whole-recording summary, printable report | Done | `web/bodycam.py`, `understand/recording_summary.py` |
 | Citizen reports + AI-generated likelihood + sha256 | Done | `reports.py`, `authenticity.py` |
+| Per-video review + chat: citizen-report videos get the bodycam timeline (summary, key moments with keyframes, confirm/dismiss); a chat answers only from that video's analysis, citizen's words marked unverified, cited times become seek buttons | Done | `chat/video_qa.py`, `components/VideoReview.tsx` |
 | Police auth (scrypt, sessions, lockout, audit) | Done | `auth.py` |
 | **React frontend** (Live CCTV, Active requests, Bodycam, Reports, Citizen portal, Analyst chat) served by FastAPI | Done | `frontend/` → `aequitas/web/frontend_dist/` |
 | vLLM serve profiles (FP8 / quantised path × none / MTP / n-gram), WSL install script | Written; **run on Kaggle only** | `scripts/vllm/` |

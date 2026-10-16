@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from aequitas.auth import Auth, LockedOut
 from aequitas.chat.answer import ChatService
+from aequitas.chat.video_qa import answer_video
 from aequitas import emergency
 from aequitas.config import CameraCfg, Settings, resolve_device
 from aequitas.store.db import EventStore
@@ -30,6 +31,7 @@ from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
 from aequitas.translate import LANGUAGES, detect_language, translate_to_english
 from aequitas.types import Status
+from aequitas.web.bodycam import ReviewBody, make_summary, timeline
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
 from aequitas.web.live import LiveManager, load_localities
 
@@ -54,6 +56,16 @@ class AssistBody(BaseModel):
     lang: Literal["en", "hi", "kn"] = "en"
     message: str | None = Field(default=None, max_length=500)
     choice: Literal["yes", "no"] | None = None
+
+
+class VideoTurn(BaseModel):
+    q: str = Field(max_length=500)
+    a: str = Field(max_length=2000)
+
+
+class VideoAskBody(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    history: list[VideoTurn] = Field(default_factory=list, max_length=8)
 
 
 class ReportUpdate(BaseModel):
@@ -671,6 +683,81 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         auth.audit(user["user_id"] if user else None, "report_translated", report_id,
                    {"ms": result["ms"], "model": result["model"]}, request.client.host if request.client else "")
         return {**result, "cached": False}
+
+    # ---------- one video in depth: citizen reports reviewed like bodycam recordings, plus a per-video chat ----------
+
+
+    def _report_upload(report_id: str) -> tuple[dict, dict]:
+        r = reports.get(report_id)
+        u = store.upload(r["upload_id"]) if r else None
+        if r is None or u is None:
+            raise HTTPException(404, "report not found")
+        return r, u
+
+    def _video_detail(u: dict) -> dict:
+        tl = timeline(u, store.windows_for(u["camera_id"]), store.events_for(u["camera_id"]))
+        return {**_upload_json(u), **tl, "video_url": f"/api/uploads/{u['upload_id']}/video",
+                "officer": u.get("officer"), "view": u.get("view"),
+                "summary": json.loads(u["summary_json"]) if u.get("summary_json") else None,
+                "summary_s": round(u["summary_ms"] / 1000, 2) if u.get("summary_ms") else None}
+
+    def _ask_video(u: dict, body: VideoAskBody, request: Request, target: str, citizen_text: str | None) -> dict:
+        d = _video_detail(u)
+        llm = _translator()
+        try:
+            res = answer_video(llm, body.question, d["windows"], d["events"], d["summary"], d["duration_s"],
+                               citizen_text, [h.model_dump() for h in body.history])
+        except Exception as e:
+            log.warning("video question failed for %s: %s", target, e)
+            raise HTTPException(503, f"The chat model ({llm.model}) did not answer. Is it running?")
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "video_question", target,
+                   {"question": body.question[:200], "ms": res["ms"]}, request.client.host if request.client else "")
+        return {**res, "model": llm.model}
+
+    @app.get("/api/reports/{report_id}/analysis")
+    def report_analysis(report_id: str):
+        """The report's video as a review timeline: every window's summary, key moments with keyframes, overview."""
+        _r, u = _report_upload(report_id)
+        return _video_detail(u)
+
+    @app.post("/api/reports/{report_id}/summary")
+    def report_summary(report_id: str, request: Request):
+        _r, u = _report_upload(report_id)
+        if u["status"] != "done":
+            raise HTTPException(409, "The video is still being analysed")
+        if make_summary(settings, store, u) is None:
+            raise HTTPException(503, "The AI could not write a summary (no window summaries, or the model is offline)")
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "report_summary_written", report_id,
+                   ip=request.client.host if request.client else "")
+        return _video_detail(store.upload(u["upload_id"]))
+
+    @app.post("/api/reports/{report_id}/events/{event_id}/review")
+    def report_review(report_id: str, event_id: int, body: ReviewBody, request: Request):
+        _r, u = _report_upload(report_id)
+        ev = store.event(event_id)
+        if ev is None or ev["camera_id"] != u["camera_id"]:
+            raise HTTPException(404, "event not found in this report")
+        user = request.state.user
+        store.review_event(event_id, body.decision, (user["username"] if user else "officer") if body.decision else None)
+        auth.audit(user["user_id"] if user else None, "report_event_reviewed", f"{report_id}/{event_id}",
+                   {"decision": body.decision}, request.client.host if request.client else "")
+        return timeline(u, [], [store.event(event_id)])["events"][0]
+
+    @app.post("/api/reports/{report_id}/ask")
+    def report_ask(report_id: str, body: VideoAskBody, request: Request):
+        """Chat about this report's video only, answered from its analysis (and the citizen's words, unverified)."""
+        r, u = _report_upload(report_id)
+        text = (r.get("translation") or {}).get("text") or r["description"]
+        return _ask_video(u, body, request, report_id, text)
+
+    @app.post("/api/bodycam/{upload_id}/ask")
+    def bodycam_ask(upload_id: str, body: VideoAskBody, request: Request):
+        u = store.upload(upload_id)
+        if u is None or u.get("kind") != "bodycam":
+            raise HTTPException(404, "recording not found")
+        return _ask_video(u, body, request, upload_id, None)
 
     @app.patch("/api/reports/{report_id}")
     def update_report(report_id: str, body: ReportUpdate, request: Request):
