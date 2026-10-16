@@ -31,7 +31,7 @@ from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
 from aequitas.translate import LANGUAGES, detect_language, translate_to_english
 from aequitas.types import Status
-from aequitas.web.bodycam import ReviewBody, make_summary, timeline
+from aequitas.web.bodycam import ReviewBody, make_summary, reviewed, timeline
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
 from aequitas.web.live import LiveManager, load_localities
 
@@ -761,7 +761,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         store.review_event(event_id, body.decision, (user["username"] if user else "officer") if body.decision else None)
         auth.audit(user["user_id"] if user else None, "report_event_reviewed", f"{report_id}/{event_id}",
                    {"decision": body.decision}, request.client.host if request.client else "")
-        return timeline(u, [], [store.event(event_id)])["events"][0]
+        return reviewed(u, event_id, store)
 
     @app.post("/api/reports/{report_id}/ask")
     def report_ask(report_id: str, body: VideoAskBody, request: Request):
