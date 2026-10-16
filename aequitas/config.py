@@ -67,6 +67,9 @@ class LlmEndpoint(BaseModel):
     # Ollama speculative decoding: tokens the model's MTP drafter proposes per step (gemma4:e2b ships one, default 3).
     # None = the model's own default; 0 = off. Measured in docs/SPECULATIVE.md.
     draft_num_predict: int | None = Field(default=None, ge=0, le=16)
+    # Ollama repeat penalty (None = the model's default). Qwen3-VL 2B at temperature 0 can repeat a sentence until the
+    # token cap (chat answers: 3 of 6 test questions); 1.1 stopped it (0 of 6) and shortened the answers.
+    repeat_penalty: float | None = Field(default=None, ge=1.0, le=2.0)
 
 
 class VlmCfg(LlmEndpoint):

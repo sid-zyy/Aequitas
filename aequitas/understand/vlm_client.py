@@ -133,6 +133,8 @@ class OllamaClient(LlmClient):
         opts = {"temperature": 0, "num_ctx": self.cfg.num_ctx, "num_predict": num_predict}
         if self.cfg.draft_num_predict is not None:
             opts["draft_num_predict"] = self.cfg.draft_num_predict
+        if self.cfg.repeat_penalty is not None:
+            opts["repeat_penalty"] = self.cfg.repeat_penalty
         return opts
 
     def _chat(self, messages: list[dict], schema: dict, name: str, max_tokens: int | None = None) -> str:

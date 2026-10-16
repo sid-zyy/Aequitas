@@ -27,11 +27,12 @@ VARIANTS = {"base": dict(guided=False, context=False), "guided": dict(guided=Tru
             "context": dict(guided=False, context=True), "guided+context": dict(guided=True, context=True)}
 
 
-def run(variant: str, index: list[dict], root: Path, model: str) -> list[dict]:
+def run(variant: str, index: list[dict], root: Path, model: str, repeat_penalty: float | None = None) -> list[dict]:
     v = VARIANTS[variant]
     s = Settings()
     s.vlm.model = model
     s.vlm.guided_checks = v["guided"]
+    s.vlm.repeat_penalty = repeat_penalty
     client = make_client(s.vlm)
     rows, prev = [], {}
     for it in index:
@@ -69,13 +70,14 @@ def main() -> None:
     ap.add_argument("--windows", default="data/bench_windows")
     ap.add_argument("--variants", nargs="+", default=list(VARIANTS))
     ap.add_argument("--model", default="gemma4:e2b")
+    ap.add_argument("--repeat-penalty", type=float, default=None, help="Ollama repeat_penalty (default: the model's)")
     ap.add_argument("--out", default="data/reports/bench_variants.jsonl")
     args = ap.parse_args()
     root = Path(args.windows)
     index = json.loads((root / "index.json").read_text())
     rows = []
     for variant in args.variants:
-        rows += run(variant, index, root, args.model)
+        rows += run(variant, index, root, args.model, args.repeat_penalty)
         print(f"{variant}: done", flush=True)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")

@@ -30,8 +30,12 @@ QUESTIONS = ["What happened near the metro?", "Were there any fights today?", "S
              "What happened at night?", "Give me a short briefing."]
 
 
+REPEAT_PENALTY: float | None = None  # --repeat-penalty
+
+
 def make_client(model: str, draft: int) -> OllamaClient:
     s = Settings()
+    s.vlm.repeat_penalty = REPEAT_PENALTY
     s.vlm.model = model
     s.vlm.backend = "ollama"
     s.vlm.draft_num_predict = draft
@@ -108,10 +112,13 @@ def main() -> None:
     ap.add_argument("--windows", default="data/bench_windows")
     ap.add_argument("--drafts", nargs="+", type=int, default=[0, 1, 2, 3, 4, 6])
     ap.add_argument("--model", default="gemma4:e2b")
+    ap.add_argument("--repeat-penalty", type=float, default=None, help="Ollama repeat_penalty (default: the model's)")
     ap.add_argument("--rounds", type=int, default=2, help="passes over all settings (alternating order)")
     ap.add_argument("--limit", type=int, default=0, help="first N windows only (a quick check)")
     ap.add_argument("--out", default="data/reports/bench_spec.jsonl")
     args = ap.parse_args()
+    global REPEAT_PENALTY
+    REPEAT_PENALTY = args.repeat_penalty
     root = Path(args.windows)
     index = json.loads((root / "index.json").read_text())
     index = index[: args.limit] if args.limit else index
