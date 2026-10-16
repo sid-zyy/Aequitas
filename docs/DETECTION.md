@@ -211,26 +211,72 @@ its paper (56.0 COCO AP), so the port is probably wrong. Treat both as **not tes
   - A cascade would keep two models in memory and add an escalation rule we'd have to tune.
   - Its misses (people the cheap model never saw) are exactly the case we're trying to fix.
 
+## Integrated: `detector.family: rfdetr` (2026-10-16)
+
+- **How to turn it on:** `pip install -e .[rfdetr]`, then set `detector: {family: rfdetr, rfdetr_size: small}`.
+  - `vision/detector.Detector` returns the same `sv.Detections` with COCO-80 ids for either family.
+  - RF-DETR's COCO category ids are mapped: person 1 → 0, backpack 27 → 24, handbag 31 → 26, suitcase 33 → 28.
+- **Defaults are unchanged** (`family: yolo`), so an install without `rfdetr` still runs.
+- **What it affects:** the version tag stored with events becomes `rfdetr-small`. Only triggered mode uses a
+  detector, so periodic mode is unaffected.
+- **Tests:** `tests/test_detector.py`, with a fake model.
+
+### CAVIAR rules, end to end (11 clips, `aequitas run` + `eval-report`, Gemma 4 E2B verifying, no violence model)
+
+| Run | Config | Trigger: hits / false alarms / misses | Confirmed: hits / false alarms / misses |
+|---|---|---|---|
+| YOLO11n | `eval_caviar_v2.yaml` | 0 / 0 / 6 (no candidates at all) | 0 / 0 / 6 |
+| **RF-DETR-S**, same thresholds | `eval_caviar_rfdetr.yaml` | **3 / 6 / 3** | **2 / 0 / 4** |
+| RF-DETR-S, code-default confidences | `eval_caviar_rfdetr_default.yaml` | 2 / 3 / 4 | 0 / 0 / 6 |
+
+- **Same thresholds:** the rules fire for the first time on CAVIAR.
+  - **Confirmed:** person down on Fight_OneManDown and Rest_SlumpOnFloor, with no confirmed false alarm.
+  - **Fight:** the fight rule fired on Fight_OneManDown (rule score 1.0), but Gemma rejected it ("a person is
+    visible…").
+  - **False alarms:** the six trigger-level false alarms are all the person-down rule on normal clips. Gemma
+    rejected every one, so the trigger + VLM agreement design is doing its job.
+- **Caveat on the thresholds:** the v2 thresholds (detector 0.10, person 0.15, track start 0.15) were tuned on
+  these clips for YOLO11n. This compares detectors on equal settings, not an unbiased accuracy.
+- **Default confidences** (0.25 / 0.4 / 0.25, never tuned on CAVIAR): triggers on 2 clips, and nothing is confirmed.
+- Still missed: both fights confirmed, Rest_FallOnFloor, and the left bag.
+
+### Bags (`scripts/bag_check.py`, CAVIAR LeftBag: the bag is 16×22 px, labelled for frames 945–1354)
+
+| Detector | Frames with the bag found at ≥ 0.10 | at ≥ 0.25 | Best confidence |
+|---|---|---|---|
+| yolo11n 640 (in use) | 0 % | 0 % | – |
+| yolo11m 960 | 0 % | 0 % | – |
+| yolo26m 960 | 1 % | 0 % | 0.11 |
+| **rfdetr small** | **65 %** | 4 % | 0.28 |
+| rfdetr medium | 60 % | 6 % | 0.38 |
+
+The rule still can't fire on this clip, for two reasons:
+1. **The tracker drops the bag.** Its confidence is mostly 0.10–0.25. With `tracker.fuse_score` on, anything at
+   ≤ 0.2 can't keep a track, so the bag is tracked at its spot in 0 frames (17 of 68 with `fuse_score` off,
+   diagnostic only).
+2. **The rule needs more time than the clip has.** `abandoned_object.unattended_s` is 30 s, but the bag is in
+   the clip for only ~16 s.
+
+Neither setting was changed on these clips. Both need data we don't evaluate on. LeftBag_PickedUp has no ground
+truth locally.
+
 ## Next steps (in order)
 
-1. **Integrate:**
-   - Add `detector.family: yolo | rfdetr` (and `rfdetr_size`) in `config.py`.
-   - Add an RF-DETR path in `vision/detector.Detector`. It has to map COCO category ids to our ids (person 1 → 0,
-     backpack 27 → 24, handbag 31 → 26, suitcase 33 → 28).
-   - Add `rfdetr` to the `detector` extra. Unit tests use a fake model.
-2. **Re-run the rules on CAVIAR** (`eval-report`) with RF-DETR-S. The question is whether the 0/6 rises.
-   - Retune `tracker.activation_threshold` / `fuse_score` and the detector confidence only on data we don't
-     report.
-3. **Bags:** abandoned-object needs backpack, handbag and suitcase, which weren't scored here. Check them on the
-   CAVIAR LeftBag clips.
-4. **Latency:** export RF-DETR-S to ONNX and run it with ONNX Runtime GPU or TensorRT. The aim is to measure the
+1. **Decide the default for triggered mode.** `config/settings.yaml` stays `family: yolo` until a decision(
+   )is made.
+2. **Retune on data we don't report:**
+   - `tracker.activation_threshold` and `fuse_score`, and the detector / person confidences, for RF-DETR's
+     calibration.
+   - The person-down rule's false triggers.
+   - `abandoned_object.unattended_s` for short clips.
+3. **Latency:** export RF-DETR-S to ONNX and run it with ONNX Runtime GPU or TensorRT. The aim is to measure the
    2–4 ms-class numbers on the 4050.
    - TensorRT for Windows is a ~2 GB download.
    - ONNX Runtime GPU is smaller, but replaces the CPU `onnxruntime` the violence model uses.
-5. **When the faculty dataset arrives:** label ~200 person boxes on it (or use its own labels) and re-run this
-   script. The pseudo-label column then goes away.
-6. **Later:** fine-tune RF-DETR on CCTV person data. It is built for fine-tuning; Ultralytics models are under
-   AGPL either way.
+4. **When the faculty dataset arrives:** label ~200 person boxes on it (or use its own labels) and re-run
+   `detector_compare.py`. The pseudo-label column then goes away.
+5. **Later:** fine-tune RF-DETR on CCTV person and bag data. It is built for fine-tuning; Ultralytics models are
+   under AGPL either way.
 
 ## Caveats
 

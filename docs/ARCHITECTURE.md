@@ -107,7 +107,8 @@ time order (`understand/keyframes.py`, 448 px tiles), which goes to stage 1, the
 ### 4.2 Triggered: YOLO and rules decide when the VLM looks (`pipeline._triggered_step`)
 
 Per frame:
-1. YOLO11n detects people and bags (`vision/detector.py`, 12.7 ms/frame on the 4050).
+1. YOLO11n detects people and bags (`vision/detector.py`, 12.7 ms/frame on the 4050), or RF-DETR with
+   `detector.family: rfdetr` (~27 ms/frame; 0/6 → 3/6 CAVIAR rule hits, docs/DETECTION.md).
 2. ByteTrack (Ultralytics' `BYTETracker`; OC-SORT via `tracker.algorithm`) keeps IDs per camera, with people
    and bags tracked separately.
 3. Motion energy is measured on the person boxes.

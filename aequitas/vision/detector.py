@@ -33,7 +33,12 @@ def load_yolo(weights: str, backend: str, device: str):
     return YOLO(weights)
 
 
-class Detector:
+def Detector(cfg: DetectorCfg, device: str):
+    """People and bags in a BGR frame -> sv.Detections with COCO-80 class ids (COCO_NAMES)."""
+    return RFDetrDetector(cfg, device) if cfg.family == "rfdetr" else YoloDetector(cfg, device)
+
+
+class YoloDetector:
     def __init__(self, cfg: DetectorCfg, device: str):
         self.cfg = cfg
         self.device = device
@@ -52,6 +57,28 @@ class Detector:
             **kwargs,
         )[0]
         return sv.Detections.from_ultralytics(result)
+
+
+# RF-DETR's predict() returns COCO category ids (1-90, with gaps); Aequitas uses the 80-class ids YOLO uses.
+COCO91_TO_80 = {1: 0, 27: 24, 31: 26, 33: 28}  # person, backpack, handbag, suitcase (only the classes we keep)
+
+
+class RFDetrDetector:
+    def __init__(self, cfg: DetectorCfg, device: str, model=None):
+        self.cfg = cfg
+        if model is None:
+            import rfdetr
+
+            cls = {"nano": "RFDETRNano", "small": "RFDETRSmall", "medium": "RFDETRMedium", "large": "RFDETRLarge"}
+            model = getattr(rfdetr, cls[cfg.rfdetr_size])(device="cuda" if device.startswith("cuda") else device)
+        self.model = model
+
+    def __call__(self, image: np.ndarray) -> sv.Detections:
+        d = self.model.predict(image[:, :, ::-1].copy(), threshold=self.cfg.conf)  # BGR -> RGB
+        cls = np.array([COCO91_TO_80.get(int(c), -1) for c in d.class_id], dtype=int)
+        keep = cls >= 0
+        return sv.Detections(xyxy=d.xyxy[keep].astype(np.float32), confidence=d.confidence[keep].astype(np.float32),
+                             class_id=cls[keep])
 
 
 class Boxes:

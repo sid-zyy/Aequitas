@@ -26,6 +26,8 @@ nvidia = ["nvidia-ml-py>=12"]
 # AI-likelihood frame detector for citizen videos (aequitas/authenticity.py), c2pa content credentials,
 # and the SigLIP scene gate (aequitas/understand/gate.py; its tokenizer needs sentencepiece)
 detector = ["transformers>=4.40", "pillow>=10", "c2pa-python>=0.6", "sentencepiece>=0.2"]
+# RF-DETR person/bag detector for triggered mode (detector.family: rfdetr; docs/DETECTION.md)
+rfdetr = ["rfdetr>=1.11"]
 
 [project.scripts]
 aequitas = "aequitas.cli:main"

@@ -16,6 +16,13 @@ Scoring is clip-level, with `aequitas eval-report`.
 | A: tracker + person-down fixes | `eval_caviar_v2.yaml` | 0 | 0 | 6 | – | 0.00 |
 | B: VLM review only, every 4 s window, all events | `eval_caviar_periodic.yaml` | 3 | 8 | 3 | 0.27 | 0.50 |
 | B: VLM review, `confirmed` only | | 0 | 2 | 6 | 0.00 | 0.00 |
+| C (2026-10-16, GPU): A with **RF-DETR-S** instead of YOLO11n, triggers | `eval_caviar_rfdetr.yaml` | 3 | 6 | 3 | 0.33 | 0.50 |
+| C: `confirmed` only | | 2 | 0 | 4 | 1.00 | 0.33 |
+| A re-run 2026-10-16 (GPU, YOLO11n) | `eval_caviar_v2.yaml` | 0 | 0 | 6 | – | 0.00 |
+
+Run C changes only the detector (docs/DETECTION.md). The A thresholds were tuned on these clips for YOLO11n, so C is a
+detector comparison on equal settings, not an unbiased accuracy. With untuned default confidences RF-DETR-S gives 2
+trigger hits and 0 confirmed.
 
 The loosened thresholds were tuned on these same clips, so even a better number here would be optimistic.
 

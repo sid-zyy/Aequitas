@@ -1,0 +1,7 @@
+# CAVIAR with RF-DETR-Small at the code-default confidences (detector 0.25, person 0.4, track start 0.25): none of
+# them tuned on CAVIAR. Only the minimum person height is lowered (CAVIAR people are ~22 px tall).
+data_dir: data/eval/caviar_rfdetr_default
+detector:
+  family: rfdetr
+  rfdetr_size: small
+  min_person_height_px: 20
