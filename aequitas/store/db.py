@@ -64,6 +64,9 @@ MIGRATIONS = [
     ("events", "reviewed_at", "INTEGER"),
     ("uploads", "summary_json", "TEXT"),  # bodycam: whole-recording overview + key points
     ("uploads", "summary_ms", "REAL"),
+    ("reports", "language", "TEXT"),        # en | hi | kn: the language the citizen wrote in (text kept as written)
+    ("reports", "urgent", "INTEGER"),       # 1: the citizen told the portal's assistant they need help now
+    ("reports", "translation_json", "TEXT"),  # officer-requested English translation {text, ms, model}
 ]
 
 

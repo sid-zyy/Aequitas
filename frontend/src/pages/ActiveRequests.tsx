@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveQueue, api, label, openCitizenPortal } from "../api";
+import ReportText from "../components/ReportText";
 
 const NEXT: Record<string, { to: string; text: string }[]> = {
   received: [{ to: "under_review", text: "Start review" }, { to: "rejected", text: "Reject" }],
@@ -44,7 +45,7 @@ export default function ActiveRequests() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Active requests</h1>
-          <p className="page-sub">Citizen reports still open, longest waiting first. Updates every 3 s. Every action is written to the audit trail.</p>
+          <p className="page-sub">Citizen reports still open: urgent first, then longest waiting. Updates every 3 s. Every action is written to the audit trail.</p>
         </div>
         <button className="btn" style={{ marginLeft: "auto" }} onClick={openCitizenPortal}>Open citizen portal ↗</button>
       </div>
@@ -78,10 +79,11 @@ export default function ActiveRequests() {
                   return (
                     <Fragment key={r.report_id}>
                     <tr className={(fresh.has(r.report_id) ? "fresh" : "") + (open === r.report_id ? " expanded" : "")}>
-                      <td><b className="mono">{r.report_id}</b>{r.duplicate_of && <div><span className="badge unverified">duplicate</span></div>}</td>
+                      <td><b className="mono">{r.report_id}</b>{r.urgent && <div><span className="badge incident">urgent</span></div>}{r.duplicate_of && <div><span className="badge unverified">duplicate</span></div>}</td>
                       <td className="mono">{age(r.created_at)}</td>
                       <td><span className="badge status">{label(r.status)}</span></td>
-                      <td className="desc">{r.description}{r.location && <div className="note">{r.location}</div>}</td>
+                      <td className="desc"><ReportText reportId={r.report_id} text={r.description} language={r.language}
+                        translation={r.translation} />{r.location && <div className="note">{r.location}</div>}</td>
                       <td>
                         {r.analysis.status && r.analysis.status !== "done" && <span className="note">{r.analysis.status}…</span>}
                         {r.categories.map((c) => <span key={c} className="badge incident" style={{ marginRight: 4 }}>{label(c)}</span>)}

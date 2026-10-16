@@ -35,17 +35,18 @@ class ReportStore:
             return self.store._conn.execute(sql, params).fetchall()
 
     def create(self, upload_id: str, camera_id: str, description: str, sha256: str, location: str | None = None,
-               incident_at: int | None = None, contact: str | None = None) -> tuple[str, str]:
+               incident_at: int | None = None, contact: str | None = None, language: str = "en",
+               urgent: bool = False) -> tuple[str, str]:
         """Returns (report_id, tracking_code). The code is shown to the citizen once and not stored."""
         report_id = "R" + secrets.token_hex(4).upper()
         code = secrets.token_urlsafe(9)
         dup = self._q("SELECT report_id FROM reports WHERE sha256=? ORDER BY created_at LIMIT 1", (sha256,))
         now = int(time.time() * 1000)
         self._q("INSERT INTO reports(report_id, tracking_hash, upload_id, camera_id, description, location, "
-                "incident_at, contact, sha256, duplicate_of, status, created_at, updated_at) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "incident_at, contact, sha256, duplicate_of, status, created_at, updated_at, language, urgent) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (report_id, _hash(code), upload_id, camera_id, description, location, incident_at, contact, sha256,
-                 dup[0]["report_id"] if dup else None, "received", now, now), commit=True)
+                 dup[0]["report_id"] if dup else None, "received", now, now, language, int(urgent)), commit=True)
         return report_id, code
 
     def get(self, report_id: str) -> dict | None:
@@ -80,11 +81,19 @@ class ReportStore:
     def set_authenticity(self, report_id: str, result: dict) -> None:
         self._q("UPDATE reports SET authenticity=? WHERE report_id=?", (json.dumps(result), report_id), commit=True)
 
+    def set_translation(self, report_id: str, result: dict) -> None:
+        self._q("UPDATE reports SET translation_json=? WHERE report_id=?", (json.dumps(result, ensure_ascii=False),
+                                                                            report_id), commit=True)
+
     @staticmethod
     def _row(r) -> dict:
         d = dict(r)
         d.pop("tracking_hash", None)
         d["authenticity"] = json.loads(d["authenticity"]) if d.get("authenticity") else None
+        d["language"] = d.get("language") or "en"
+        d["urgent"] = bool(d.get("urgent"))
+        t = d.pop("translation_json", None)
+        d["translation"] = json.loads(t) if t else None
         return d
 
 
