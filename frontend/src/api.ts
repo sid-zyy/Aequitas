@@ -57,12 +57,20 @@ export type Report = {
   report_id: string; description: string; location: string | null; incident_at: number | null;
   contact: string | null; sha256: string; duplicate_of: string | null; status: string; notes: string | null;
   created_at: number; updated_at: number; video_url: string;
+  language: string; urgent: boolean; translation: Translation | null;
   authenticity: null | {
     ai_likelihood_pct: number | null; verdict: string; reasons: string[]; disclaimer: string; error?: string;
   };
   analysis: { status: string | null; events_found: number | null; total_s: number | null };
   events?: EventItem[];
   audit?: { action: string; created_at: number; username: string | null }[];
+};
+
+export type Translation = { text: string; ms: number; model: string; from: string; from_name: string; cached?: boolean };
+
+export type AssistTurn = {
+  state: "ask" | "emergency" | "report"; reply: string; urgent: boolean;
+  choices: { value: "yes" | "no"; label: string }[]; helplines: { number: string; label: string }[];
 };
 
 export type ActiveQueue = {
@@ -107,6 +115,9 @@ export const api = {
   report: (id: string) => request<Report>(`/api/reports/${id}`),
   updateReport: (id: string, body: { status?: string; notes?: string }) =>
     request<Report>(`/api/reports/${id}`, { ...json(body), method: "PATCH" }),
+  translateReport: (id: string) => request<Translation>(`/api/reports/${id}/translate`, { method: "POST" }),
+  assist: (body: { lang: string; message?: string; choice?: "yes" | "no" }) =>
+    request<AssistTurn>("/api/citizen/assist", json(body)),
   submitReport: (form: FormData) =>
     request<{ report_id: string; tracking_code: string; status: string; message: string }>(
       "/api/citizen/reports", { method: "POST", body: form }),

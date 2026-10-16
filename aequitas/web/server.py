@@ -22,11 +22,13 @@ from pydantic import BaseModel, Field
 
 from aequitas.auth import Auth, LockedOut
 from aequitas.chat.answer import ChatService
+from aequitas import emergency
 from aequitas.config import CameraCfg, Settings, resolve_device
 from aequitas.store.db import EventStore
 from aequitas.store.query import QueryFilter
 from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
+from aequitas.translate import LANGUAGES, detect_language, translate_to_english
 from aequitas.types import Status
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
 from aequitas.web.live import LiveManager, load_localities
@@ -46,6 +48,12 @@ class AskBody(BaseModel):
 class LoginBody(BaseModel):
     username: str = Field(min_length=1, max_length=40)
     password: str = Field(min_length=1, max_length=200)
+
+
+class AssistBody(BaseModel):
+    lang: Literal["en", "hi", "kn"] = "en"
+    message: str | None = Field(default=None, max_length=500)
+    choice: Literal["yes", "no"] | None = None
 
 
 class ReportUpdate(BaseModel):
@@ -516,6 +524,8 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         incident_at: str = Form(""),
         contact: str = Form("", max_length=200),
         consent: bool = Form(False),
+        language: str = Form("en", max_length=5),
+        urgent: bool = Form(False),
     ):
         """Anyone can report: a video and what happened. Returns a report ID and a tracking code."""
         if not consent:
@@ -561,8 +571,9 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "frames_total": frames_expected(duration_ms, settings.sample_fps),
             "created_at": int(time.time() * 1000),
         })
+        lang = detect_language(description, language)
         report_id, code = reports.create(upload_id, cam_id, description.strip(), sha.hexdigest(),
-                                         location.strip() or None, when, contact.strip() or None)
+                                         location.strip() or None, when, contact.strip() or None, lang, urgent)
         auth.audit(None, "report_submitted", report_id, {"sha256": sha.hexdigest(), "bytes": written}, ip)
         jobs.submit(upload_id)
         threading.Thread(target=_check_authenticity, args=(report_id, dest.as_posix()), daemon=True).start()
@@ -576,6 +587,11 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             raise HTTPException(404, "No report with that ID and tracking code")
         return {"report_id": r["report_id"], "status": PUBLIC_STATUS[r["status"]],
                 "submitted_at": r["created_at"], "updated_at": r["updated_at"]}
+
+    @app.post("/api/citizen/assist")
+    def citizen_assist(body: AssistBody):
+        """The portal's emergency assistant (rule-based: fixed helpline numbers, never promises help is sent)."""
+        return emergency.reply(body.lang, body.message, body.choice)
 
     # ---------- police review of citizen reports ----------
 
@@ -599,11 +615,11 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
 
     @app.get("/api/reports/active")
     def active_reports():
-        """The work queue: reports still open, oldest first (longest waiting at the top), with the
-        incident labels the AI found so the officer can triage without opening each one."""
+        """The work queue: reports still open, urgent ones first, then oldest first (longest waiting at the top),
+        with the incident labels the AI found so the officer can triage without opening each one."""
         rows = [r for r in reports.list(limit=500) if r["status"] in ACTIVE]
         out = []
-        for r in sorted(rows, key=lambda r: r["created_at"]):
+        for r in sorted(rows, key=lambda r: (not r["urgent"], r["created_at"])):  # urgent first
             j = _report_json(r)
             f = QueryFilter(camera_ids=[r["camera_id"]], statuses=list(Status), limit=50, sort="oldest")
             evs = [e for e in store.query(f) if e["category"] != "none"]
@@ -624,6 +640,37 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         auth.audit(user["user_id"] if user else None, "report_viewed", report_id,
                    ip=request.client.host if request.client else "")
         return _report_json(r, detail=True)
+
+    def _translator():
+        if getattr(app.state, "translator", None) is None:
+            llm = getattr(service.parser, "llm", None)
+            if llm is None:
+                from aequitas.understand.vlm_client import make_client
+
+                llm = make_client(settings.chat.endpoint(settings.vlm))
+            app.state.translator = llm
+        return app.state.translator
+
+    @app.post("/api/reports/{report_id}/translate")
+    def translate_report(report_id: str, request: Request, refresh: bool = False):
+        """English translation of a Hindi/Kannada report by the local LLM. The original stays as written;
+        the translation is cached on the report and timed."""
+        r = reports.get(report_id)
+        if r is None:
+            raise HTTPException(404, "report not found")
+        if r["translation"] and not refresh:
+            return {**r["translation"], "cached": True}
+        llm = _translator()
+        english, ms = translate_to_english(llm, r["description"], r["language"])
+        if english is None:
+            raise HTTPException(502, f"The translation model ({llm.model}) did not answer. Is it running?")
+        result = {"text": english, "ms": round(ms), "model": f"{llm.cfg.backend}:{llm.model}",
+                  "from": r["language"], "from_name": LANGUAGES.get(r["language"], r["language"])}
+        reports.set_translation(report_id, result)
+        user = request.state.user
+        auth.audit(user["user_id"] if user else None, "report_translated", report_id,
+                   {"ms": result["ms"], "model": result["model"]}, request.client.host if request.client else "")
+        return {**result, "cached": False}
 
     @app.patch("/api/reports/{report_id}")
     def update_report(report_id: str, body: ReportUpdate, request: Request):

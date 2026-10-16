@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, label, openCitizenPortal, Report, timeOf } from "../api";
+import ReportText from "../components/ReportText";
+import { LANG_NAME } from "../i18n";
 
 const STATUSES = ["received", "under_review", "action_taken", "closed", "rejected"];
 
@@ -56,12 +58,14 @@ export default function Reports() {
             <div key={r.report_id} className={"report-row" + (sel === r.report_id ? " sel" : "")} onClick={() => setSel(r.report_id)}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <b className="mono">{r.report_id}</b>
+                {r.urgent && <span className="badge incident" title="The citizen told the portal assistant they need help now">urgent</span>}
                 <span className="badge status">{label(r.status)}</span>
+                {r.language !== "en" && <span className="badge status">{LANG_NAME[r.language] ?? r.language}</span>}
                 {r.authenticity?.verdict === "likely_ai" && <span className="badge incident">likely AI</span>}
                 {r.duplicate_of && <span className="badge unverified">duplicate</span>}
                 <span className="note" style={{ marginLeft: "auto" }}>{day(r.created_at)}</span>
               </div>
-              <div style={{ color: "#cfdbe3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.description}</div>
+              <div lang={r.language} style={{ color: "#cfdbe3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.description}</div>
             </div>
           ))}
         </section>
@@ -70,6 +74,7 @@ export default function Reports() {
           <section className="card">
             <div className="card-head">
               <span className="card-title">Report {detail.report_id}</span>
+              {detail.urgent && <span className="badge incident">urgent</span>}
               <span className="card-sub">{day(detail.created_at)}</span>
               <select className="select" style={{ width: 180, marginLeft: "auto" }} value={detail.status}
                 onChange={(e) => update({ status: e.target.value })}>
@@ -79,7 +84,9 @@ export default function Reports() {
             <div className="card-body" style={{ display: "grid", gap: 16 }}>
               <video className="player" src={detail.video_url} controls />
               <dl className="kv">
-                <dt>Citizen says</dt><dd>{detail.description}</dd>
+                <dt>Citizen says</dt><dd><ReportText reportId={detail.report_id} text={detail.description}
+                  language={detail.language} translation={detail.translation} /></dd>
+                {detail.urgent && <><dt>Urgent</dt><dd>The citizen said they need help now and was shown 112 and the other helpline numbers.</dd></>}
                 <dt>Location</dt><dd>{detail.location ?? "—"}</dd>
                 <dt>When</dt><dd>{detail.incident_at ? day(detail.incident_at) : "—"}</dd>
                 <dt>Contact</dt><dd>{detail.contact ?? "—"}</dd>

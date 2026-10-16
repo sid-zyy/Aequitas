@@ -21,7 +21,7 @@ export default function App() {
   }, []);
 
   // The citizen portal is public and has its own layout.
-  if (loc.pathname.startsWith("/report")) return <CitizenReport />;
+  if (loc.pathname === "/report" || loc.pathname.startsWith("/report/")) return <CitizenReport />; // not /reports
   if (user === undefined) return <div className="tricolour"><i /><i /><i /></div>;
   if (user === null) return <Login onSignedIn={setUser} />;
 

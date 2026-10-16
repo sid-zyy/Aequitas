@@ -280,7 +280,7 @@ COLUMN` if missing).
 | `uploads` | uploaded videos and bodycam recordings: status, mode, `started_at`, total time, recording summary |
 | `dropped_candidates` | jobs dropped by backpressure |
 | `users`, `sessions`, `audit_log` | police accounts (scrypt), hashed session tokens, who did what |
-| `reports` | citizen reports: tracking-code hash, sha256 of the file, authenticity result, police notes |
+| `reports` | citizen reports: tracking-code hash, sha256 of the file, authenticity result, police notes, language (`en`/`hi`/`kn`), urgent flag, cached English translation |
 
 Key frames are JPEGs under `data/keyframes/<camera>/<day>/`.
 
@@ -295,8 +295,8 @@ Key frames are JPEGs under `data/keyframes/<camera>/<day>/`.
 - live: `/api/live/*`, through `LiveManager`. Selecting a locality starts a periodic pipeline on its cameras
   and stops the previous one, because one 6 GB GPU can't analyse the whole city.
 - MJPEG preview, the browser-camera frame push
-- citizen reports: `/api/citizen/*`, no account, rate-limited
-- police report review: `/api/reports*`
+- citizen reports: `/api/citizen/*`, no account, rate-limited; `/api/citizen/assist` is the portal's emergency assistant
+- police report review: `/api/reports*`; `POST /api/reports/{id}/translate` = English translation by the local chat LLM, timed and cached
 - bodycam: `/api/bodycam*`
 
 Police endpoints need a signed-in session. Citizen endpoints never do.
@@ -308,10 +308,10 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
 |---|---|
 | Login | police sign-in (demo `admin/admin` is created only on an empty database, flagged in the audit log) |
 | Live CCTV | Bengaluru localities (`config/bangalore.yaml`) → camera tiles with the latest summary, label, **summary and label time**, seconds behind live; averages across tiles; the laptop webcam as a camera (`BrowserCamera`) |
-| Active requests | open citizen reports, longest waiting first, with video, AI findings, AI-generated likelihood |
+| Active requests | open citizen reports, urgent first, then longest waiting, with video, AI findings, AI-generated likelihood |
 | Bodycam review | upload → timeline of 4 s summaries, key moments to Confirm/Dismiss (audited), whole-recording overview, printable report marked as an AI draft, **total and per-stage time** |
 | All reports | the citizen-report archive with each analysis's total time |
-| Citizen portal (`/report`) | public upload, report ID + one-time tracking code |
+| Citizen portal (`/report`) | public upload, report ID + one-time tracking code; English / हिन्दी / ಕನ್ನಡ switch; emergency assistant |
 | Analyst chat | streamed, grounded answers with `[#id]` links |
 
 ## 13. Products on the same core
@@ -329,6 +329,14 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
   - Each file is fingerprinted with sha256 (re-uploads are linked) and analysed by the same pipeline.
   - An **AI-generated likelihood** comes from C2PA provenance, generator metadata, camera metadata and an
     optional frame classifier. It's evidence for a human, not proof.
+  - **Languages** (`translate.py`): the portal UI is in English, Hindi or Kannada (`frontend/src/i18n.ts`). The
+    report text is stored as written; its language comes from the script (Devanagari → hi, Kannada → kn), else
+    the UI language. Officers press "Translate to English": one text-only call to the chat model, shown under
+    the original with its time, cached on the report and audited.
+  - **Emergency assistant** (`emergency.py`): asks "do you need emergency help right now?". Yes (button, or a
+    danger word in any of the three languages) shows 112, 100, 101, 108 and 1091 as selectable text and marks
+    the report urgent; no explains the form. It is rule-based on purpose: no LLM writes its replies, so it can't
+    invent a number or say help was dispatched.
 - **Webcam, close range:**
   - Today: the close-view prompt + the definitions fix (§7).
   - Prototype: `vision/skeleton.py`, YOLO pose + STGCN++ trained on NTU RGB+D 120 (PYSKL checkpoints, plain
