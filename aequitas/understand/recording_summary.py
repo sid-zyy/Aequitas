@@ -74,8 +74,11 @@ def prompt(lines: list[str], confirmed: list[str]) -> str:
         "came from a second model that watches motion: it saw that incident even where the description does not "
         "mention it, so state it as flagged by the violence model.\n\n" + "\n".join(lines) + "\n" + conf + "\n"
         "Write:\n"
-        "- overview: 2 to 4 plain sentences on what happens in the recording, in order. Only use what the "
-        "timeline says. Do not guess identities, names, intentions, or anything not described.\n"
+        "- overview: 2 to 4 plain sentences telling what happens in the recording as one story, in order: the "
+        "setting and who is there, then what changes (when an incident starts and how long it lasts: 'from mm:ss "
+        "to mm:ss', or 'at mm:ss' for a single line), then how it ends. Merge lines that describe the same thing; do not retell every line. If "
+        "nothing is labelled, say that no incident was seen. Only use what the timeline says. Do not guess "
+        "identities, names, intentions, or anything not described.\n"
         "- key_points: up to 8 DIFFERENT moments an officer reviewing the recording should look at, each with "
         "the time copied exactly from a timeline line and a short description. When several lines in a row "
         "describe the same thing, give one key point at the first of them. Prefer the start of each labelled "
@@ -108,15 +111,22 @@ def motion_flags(windows: list[dict]) -> str:
     """A fixed sentence (not written by the LLM) listing incidents only the violence model saw. The description
     model often misses a fight on CCTV (Gemma alone: 0/5 faculty clips), and the LLM summary then reads as if
     nothing happened, so the flag is stated here in plain words."""
-    by_label: dict[str, list[str]] = {}
+    by_label: dict[str, list[list[float]]] = {}  # label -> [start, end] runs of back-to-back windows
     for w in windows:
         if w.get("label") not in (None, "none") and (w.get("source") or "").startswith("clip_model"):
-            by_label.setdefault(w["label"].replace("_", " "), []).append(mmss(w["t"]))
+            end = w.get("end", w["t"] + 4.0)
+            runs = by_label.setdefault(w["label"].replace("_", " "), [])
+            if runs and w["t"] - runs[-1][1] < 0.5:
+                runs[-1][1] = end
+            else:
+                runs.append([w["t"], end])
     if not by_label:
         return ""
-    parts = [f"{label} at {', '.join(ts)}" for label, ts in by_label.items()]
-    return (f"The violence model, which watches motion, flagged {'; '.join(parts)}. The descriptions above may "
-            "not mention it: check these moments in the video.")
+    parts = [f"{label} " + ", ".join(f"at {mmss(a)}" if b - a <= 4.5 else f"from {mmss(a)} to {mmss(b)}"
+                                     for a, b in runs)
+             for label, runs in by_label.items()]
+    return (f"The violence model, which watches motion, flagged {'; '.join(parts)}; the descriptions may not "
+            "show it, so check these moments in the video.")
 
 
 def summarize_recording(client, windows: list[dict], confirmed: list[str] | None = None) -> tuple[dict | None, float]:
