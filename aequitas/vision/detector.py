@@ -1,4 +1,5 @@
-"""YOLO detection (shared across cameras) and ByteTrack tracking (one tracker per camera and class group).
+"""YOLO detection (shared across cameras) and ByteTrack/OC-SORT tracking (Ultralytics; one tracker per camera and
+class group).
 
 People and bags are tracked separately so a person box can never inherit a bag's ID."""
 
@@ -6,6 +7,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import supervision as sv
@@ -52,42 +54,71 @@ class Detector:
         return sv.Detections.from_ultralytics(result)
 
 
+class Boxes:
+    """The attributes Ultralytics trackers read from a Results.boxes object, built from plain numpy arrays."""
+
+    def __init__(self, xyxy: np.ndarray, conf: np.ndarray, cls: np.ndarray):
+        self.xyxy, self.conf, self.cls = xyxy, conf, cls
+        self.xywh = np.concatenate([(xyxy[:, :2] + xyxy[:, 2:]) / 2, xyxy[:, 2:] - xyxy[:, :2]], axis=1)
+
+    def __len__(self) -> int:
+        return len(self.conf)
+
+    def __getitem__(self, idx) -> Boxes:
+        return Boxes(self.xyxy[idx], self.conf[idx], self.cls[idx])
+
+
+def make_tracker(cfg: TrackerCfg):
+    """Ultralytics BYTETracker or OCSORT with Aequitas's thresholds; track_buffer is in frames."""
+    from ultralytics.trackers.byte_tracker import BYTETracker
+    from ultralytics.trackers.oc_sort import OCSORT
+    from ultralytics.utils import YAML
+    from ultralytics.utils.checks import check_yaml
+
+    cls = {"bytetrack": BYTETracker, "ocsort": OCSORT}[cfg.algorithm]
+    args = YAML.load(check_yaml(f"{cfg.algorithm}.yaml"))
+    args.update(
+        track_high_thresh=cfg.activation_threshold,  # first-pass matching and track start use the same value
+        new_track_thresh=cfg.activation_threshold,
+        track_low_thresh=min(args["track_low_thresh"], cfg.activation_threshold),
+        track_buffer=cfg.lost_track_buffer,
+        match_thresh=cfg.matching_threshold,
+        fuse_score=cfg.fuse_score,
+    )
+    return cls(SimpleNamespace(**args))
+
+
 class CameraTracker:
     def __init__(self, cfg: TrackerCfg, det_cfg: DetectorCfg, fps: float):
+        # fps is unused: lost_track_buffer is already in frames (Ultralytics' track_buffer is too)
         self.det_cfg = det_cfg
-
-        def make() -> sv.ByteTrack:
-            # supervision starts new tracks only above track_activation_threshold + 0.1; subtract it so
-            # the configured value is the real start threshold (found on CAVIAR: people at 0.2-0.35
-            # confidence were never tracked).
-            return sv.ByteTrack(
-                track_activation_threshold=max(0.05, cfg.activation_threshold - 0.1),
-                lost_track_buffer=cfg.lost_track_buffer,
-                minimum_matching_threshold=cfg.matching_threshold,
-                frame_rate=max(1, round(fps)),
-            )
-
-        self.person_tracker = make()
-        self.object_tracker = make()
+        self.person_tracker = make_tracker(cfg)
+        self.object_tracker = make_tracker(cfg)
 
     def update(self, dets: sv.Detections) -> tuple[list[TrackObs], list[TrackObs]]:
-        if len(dets):
-            is_person = dets.class_id == PERSON
-            persons = self.person_tracker.update_with_detections(dets[is_person])
-            objects = self.object_tracker.update_with_detections(dets[~is_person])
-        else:
-            persons = self.person_tracker.update_with_detections(dets)
-            objects = self.object_tracker.update_with_detections(dets)
+        is_person = dets.class_id == PERSON if len(dets) else np.zeros(0, bool)
+        persons = self._track(self.person_tracker, dets[is_person] if len(dets) else dets)
+        objects = self._track(self.object_tracker, dets[~is_person] if len(dets) else dets)
         return self._to_obs(persons, person=True), self._to_obs(objects, person=False)
 
-    def _to_obs(self, dets: sv.Detections, person: bool) -> list[TrackObs]:
+    @staticmethod
+    def _track(tracker, dets: sv.Detections) -> list[tuple[int, np.ndarray, float, int]]:
+        """-> (track id, detection box, confidence, class) for each track matched this frame."""
+        n = len(dets)
+        xyxy = dets.xyxy.astype(np.float32) if n else np.zeros((0, 4), np.float32)
+        conf = dets.confidence.astype(np.float32) if n and dets.confidence is not None else np.ones(n, np.float32)
+        cls = dets.class_id.astype(np.float32) if n and dets.class_id is not None else np.zeros(n, np.float32)
+        out = tracker.update(Boxes(xyxy, conf, cls))
+        # Each row is [x1, y1, x2, y2, track_id, score, cls, idx]; report the detection's own box (idx), not the
+        # Kalman estimate, as supervision did.
+        return [(int(r[4]), xyxy[int(r[7])], float(conf[int(r[7])]), int(cls[int(r[7])])) for r in out]
+
+    def _to_obs(self, tracks: list[tuple[int, np.ndarray, float, int]], person: bool) -> list[TrackObs]:
         out = []
-        if dets.tracker_id is None:
-            return out
         # Object IDs are offset so person and object IDs never collide in shared dicts.
         offset = 0 if person else 1_000_000
-        for box, conf, cls, tid in zip(dets.xyxy, dets.confidence, dets.class_id, dets.tracker_id):
-            obs = TrackObs(int(tid) + offset, COCO_NAMES.get(int(cls), str(cls)), float(conf), tuple(map(float, box)))
+        for tid, box, conf, cls in tracks:
+            obs = TrackObs(tid + offset, COCO_NAMES.get(cls, str(cls)), conf, tuple(map(float, box)))
             if person and (obs.conf < self.det_cfg.min_person_conf or obs.h < self.det_cfg.min_person_height_px):
                 continue
             out.append(obs)
