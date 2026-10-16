@@ -32,7 +32,7 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 | R2 | Team meeting | Gemma 4 is the candidate VLM. YOLO is optional. Multi-camera. The chatbot is model-independent. Grounded response = summary + event references. |
 | R3 | Owner: product split | Part 1 General (supporting). **Part 2 Police bodycam review** (major). **Part 3 CCTV public order** (major). Indian context. Inference for every frame or timestamp. |
 | R4 | Owner: decisions | Bodycam audio: English, Hindi, Kannada. No footage partner: public datasets, staged recordings, synthetic data. A GPU laptop is the target. Kaggle may be used for training. |
-| **R5 ⚠️** | **Hackathon faculty: TOP PRIORITY** | **(1) summarization, (2) classification of the summarized info, (3) chatbot.** **vLLM.** **Speculative decoding + MTP.** **4-bit and 8-bit quantization.** **React + FastAPI, no Jupyter.** **The faculty dataset.** Judged on **approach**, **end-to-end demo**, **latency (total execution time)**. |
+| **R5 ⚠️** | **Hackathon faculty: TOP PRIORITY** | **(1) summarization, (2) classification of the summarized info, (3) chatbot.** **Serving (vLLM optional; Ollama in use).** **Speculative decoding + MTP.** **4-bit and 8-bit quantization.** **React + FastAPI, no Jupyter.** **The faculty dataset.** Judged on **approach**, **end-to-end demo**, **latency (total execution time)**. |
 | R6 | Owner + design | Guardrails: no face recognition or identification; no profiling by religion, caste, party or attire; peaceful gatherings are not incidents; a human confirms incidents (docs/POLICE_EDITION.md §8). |
 
 ### Decisions made
@@ -122,8 +122,8 @@ numbers in the docs.
   `.py` files, used only on Kaggle)
 - [x] Per-stage timings and total time per upload shown in the UI
 - [x] Faculty dataset adapter (`aequitas eval-dataset`)
-- [ ] **vLLM on the laptop** (needs WSL, above): Gemma 4 E2B FP8, then `aequitas bench` at concurrency
-  1/4/16 and the demo set end to end
+- [x] **Serving decided: Ollama** (owner, 2026-10-16: vLLM was only an option). vLLM 0.31 was installed in WSL but
+  can't fit Gemma 4 E2B in 6 GB; the vLLM scripts stay for a bigger GPU
 - [x] **MTP measured in Ollama** (docs/SPECULATIVE.md, `scripts/bench_spec.py`): gemma4:e2b's drafter at 3 tokens,
   window 1.28 → 1.16 s, chat 0.58 → 0.45 s, labels unchanged. n-gram needs vLLM: not measured
 - [ ] **Quantisation study:** W8A8 and W4A16 checkpoints (`scripts/quantize`) + FP8, latency × accuracy

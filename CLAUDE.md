@@ -10,9 +10,11 @@ requirement seems impossible, say so to the owner.
    - **(1) Summarization:** the VLM summarises the video.
    - **(2) Classification of the summarized info:** classify the *summary text*.
    - **(3) Chatbot** over the results.
-2. **Serve models with a vLLM server.** Ollama is only a dev fallback.
+2. **Model serving: vLLM was an option, not a requirement** (owner, 2026-10-16). The demo serves from **Ollama**
+   on the laptop, because vLLM can't fit Gemma 4 E2B in 6 GB (HANDOVER.md §7). The vLLM path (`vlm.backend: openai`,
+   `scripts/vllm/`) stays as a documented alternative for bigger GPUs.
 3. **Faster inference with speculative decoding and multi-token prediction (MTP).** Gemma 4 has MTP
-   drafters that vLLM supports. Measure the speed-up; don't just turn it on.
+   drafters. Measure the speed-up; don't just turn it on. Measured in Ollama: docs/SPECULATIVE.md.
 4. **Study and implement 4-bit and 8-bit quantization**, with a written comparison of latency and accuracy
    per scheme.
 5. **React frontend, FastAPI backend. No Jupyter notebooks** in the deliverable.
