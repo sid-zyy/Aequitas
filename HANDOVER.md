@@ -70,6 +70,7 @@ Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthet
 | Gemma fine-tune (12B → E2B distillation, QLoRA) | Run 1 failed at stage 5; run 2 ready | `kaggle/finetune_gemma.py` |
 | Skeleton action model for the webcam (YOLO pose + STGCN++ NTU-120) | **Prototype, not wired in** | `vision/skeleton.py`, `scripts/skeleton_check.py` |
 | Tracker comparison on CAVIAR ground truth | Done | `scripts/tracker_compare.py`, docs/TRACKING.md |
+| Detector comparison (YOLO11/26, RT-DETR, RF-DETR, D-FINE, DEIMv2) on CAVIAR + faculty samples | Done; not integrated | `scripts/detector_compare.py`, docs/DETECTION.md |
 
 ## 4. Key numbers (for the slides)
 
@@ -89,6 +90,7 @@ All on the RTX 4050 laptop with Ollama unless noted. Details are in the linked f
 | Time-saved ladder, 80 s video (Kaggle T4, vLLM, Qwen FP16) | 33.1 s → 5.4 s (6.1×) | results/ablation/README.md |
 | Trackers on CAVIAR | tracker choice ≤ 0.02 IDF1; YOLO11n → 11m@960 3×; DeepSORT 4–5× ID switches, 30–46 ms/frame | docs/TRACKING.md |
 | YOLO11n / pose crop | 12.7 ms / 17.6 ms per frame | docs/DESIGN.md §4.4 |
+| Detectors on CAVIAR (AP50, person) | YOLO11n 0.102 · YOLO26l@960 0.344 · RF-DETR-S 0.425 (~27 ms) · D-FINE-X 0.522 (75 ms) | docs/DETECTION.md |
 
 ## 5. Machine setup
 
@@ -136,7 +138,9 @@ numbers in the docs.
   bodycam clips arrest-1 and fire-rescue)
 - [ ] Webcam: record a test clip (`scripts/skeleton_check.py --record 20`: wave, thumbs up, sit still, a staged
   push with a second person). Wire the skeleton model in as a webcam second signal only if it separates these.
-- [ ] Time YOLO11m at 960 px on the 4050 (it tripled tracking quality on CAVIAR) and decide for triggered mode
+- [ ] **Detector for triggered mode** (docs/DETECTION.md): RF-DETR-Small is recommended (CAVIAR AP50 0.425 vs 0.102
+  for YOLO11n, small-person recall 16×, ~27 ms/frame eager). Owner decides; then integrate (`detector.family`),
+  re-run `eval-report` on CAVIAR, check bags, export to ONNX/TensorRT for latency
 - [ ] Riot data (XD-Violence riot + peaceful crowds) for a later fine-tune; the owner downloads and uploads it
 - [ ] Hazard detector training (fire/smoke/weapons; D-Fire class order still to verify)
 
