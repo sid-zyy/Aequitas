@@ -327,8 +327,11 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
   - Officers confirm or dismiss each AI moment. The AI status and the human decision are stored separately.
 - **Citizen reports** (`reports.py`, `authenticity.py`):
   - Each file is fingerprinted with sha256 (re-uploads are linked) and analysed by the same pipeline.
-  - An **AI-generated likelihood** comes from C2PA provenance, generator metadata, camera metadata and an
-    optional frame classifier. It's evidence for a human, not proof.
+  - An **AI-generated check**: a percentage only from real evidence (C2PA provenance, AI-tool or camera
+    metadata). When only the frame detector (haywoodsloan/ai-image-detector-deploy on 8 frames) speaks, the
+    officer sees words, never a percentage: "AI-like frames" at a median ≥ 0.85 (1 of 80 real test clips, 34 of
+    50 AI clips), else "inconclusive". Measured in results/authenticity/README.md. It's evidence for a human,
+    not proof.
   - **Languages** (`translate.py`): the portal UI is in English, Hindi or Kannada (`frontend/src/i18n.ts`). The
     report text is stored as written; its language comes from the script (Devanagari → hi, Kannada → kn), else
     the UI language. Officers press "Translate to English": one text-only call to the chat model, shown under

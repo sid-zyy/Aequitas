@@ -5,11 +5,13 @@ and real phone videos can be flagged. Signals, strongest first:
 
 1. provenance: a C2PA manifest (Sora, Veo, Adobe... embed one) that declares AI generation -> ~99 %
 2. generator fingerprints in the file's metadata (tool names written by generators/editors) -> ~90 %
-3. a frame classifier (an image AI-detector run on sampled frames) -> its mean probability
-4. camera metadata (phone make/model, GPS) -> evidence of a real capture, lowers the score
+3. camera metadata (phone make/model, GPS) -> evidence of a real capture -> ~10 %
+4. a frame classifier (an image AI-detector run on sampled frames) -> a check, NOT a percentage
 
-Re-uploads through messaging apps strip metadata, so (1), (2) and (4) are often absent; then the
-frame classifier decides. With no classifier and no metadata, the result says "not enough signal"."""
+Only (1)-(3) give a percentage. Re-uploads through messaging apps strip metadata, so they are often absent; then
+only the frame check speaks, and it is reported as words ("inconclusive", or "AI-like frames" above a measured
+threshold): image detectors are trained on stills, and their scores on compressed video are uncalibrated (they give
+real stock video 100 %). Measured in results/authenticity/README.md (scripts/eval_authenticity.py)."""
 
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-VERSION = "1"
+VERSION = "2"
 DISCLAIMER = ("AI-likelihood is an automated estimate to help prioritise review, not proof. Real videos can be "
               "flagged, and new AI generators can be missed. Verify with the citizen and the original file.")
 
@@ -39,20 +41,24 @@ _AI_LABEL = re.compile(r"(fake|artificial|ai|generated|synthetic|sdxl)", re.I)
 
 
 class AuthenticityCfg(BaseModel):
-    # Image AI-detector from Hugging Face run on sampled frames (transformers image-classification).
-    # Default: Organika/sdxl-detector (CC-BY-NC: fine for a demo, replace before any commercial use).
-    # None = metadata checks only.
-    frame_model: str | None = "Organika/sdxl-detector"
+    # Image AI-detector from Hugging Face run on sampled frames (transformers image-classification). None =
+    # metadata checks only. Default: haywoodsloan/ai-image-detector-deploy (SwinV2, Apache-2.0, 781 MB). Measured on
+    # 80 real and 50 AI clips (results/authenticity/README.md): 1/80 real clips >= 0.85 (Organika/sdxl-detector,
+    # the old default: 30/80), 34/40 Kling clips caught, 0/10 open-model clips (CogVideoX, Hunyuan, Mochi...).
+    frame_model: str | None = "haywoodsloan/ai-image-detector-deploy"
     frames: int = 8
-    # Verdict thresholds on the final likelihood. Strict on purpose: the frame detector gave 64 % (per frame
-    # 0.33-0.97) on a re-encoded video of a real photo, so only high scores are called likely AI.
+    # The GPU is shared with the VLM (6 GB laptop): use it only when this much VRAM is free (peak ~0.85 GB for
+    # the default model; 8 frames take ~0.3 s on the GPU, ~3 s on the CPU).
+    gpu_min_free_gb: float = 1.5
+    # Verdict thresholds on the final likelihood (C2PA / metadata evidence).
     likely_ai_at: float = 0.85
     uncertain_at: float = 0.5
-    # The frame detector alone never says "likely AI": on 22 real stock / CCTV clips (data/footage, 2026-10-16)
-    # it gave 5 of them 100 % (accident, fire, punching, flyover, an arrest). Image detectors are trained on
-    # stills; compressed video frames look "synthetic" to them. Metadata / C2PA evidence can still say likely AI.
-    frame_alone_max_verdict: str = "uncertain"
-
+    # The frame detector alone is never shown as a percentage: image detectors' scores are uncalibrated on video
+    # (Organika gave 22 of 80 real stock / CCTV clips >= 99.5 %). A frame-only result says "AI-like frames"
+    # (verdict uncertain) when the median frame score reaches frame_flag_at, else "inconclusive" (a low score
+    # misses most open-model generators). None = always inconclusive. Measured on non-faculty clips only.
+    frame_flag_at: float | None = 0.85
+    frame_flag_note: str = "in our test this flagged 1 of 80 real clips and 34 of 50 AI clips"
 
 def _read_edges(path: Path, n: int = 4 * 1024**2) -> bytes:
     """Metadata lives in the moov/udta boxes, at the start or the end of an MP4."""
@@ -110,17 +116,23 @@ def sample_frames(path: Path, n: int):
 _CLASSIFIERS: dict[str, object] = {}
 
 
-def frame_classifier(model_id: str):
+def _device(gpu_min_free_gb: float) -> int:
+    """0 = first GPU (~10x faster) when it has the free memory, else -1 = CPU (the VLM keeps the GPU)."""
+    try:
+        import torch
+
+        if torch.cuda.is_available() and torch.cuda.mem_get_info()[0] >= gpu_min_free_gb * 1024**3:
+            return 0
+    except Exception:  # torch missing, or the driver cannot report memory
+        pass
+    return -1
+
+
+def frame_classifier(model_id: str, gpu_min_free_gb: float = 1.5):
     if model_id not in _CLASSIFIERS:
         from transformers import pipeline
 
-        try:
-            import torch
-
-            device = 0 if torch.cuda.is_available() else -1  # GPU: ~10x faster than the CPU default
-        except ImportError:
-            device = -1
-        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id, device=device)
+        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id, device=_device(gpu_min_free_gb))
     return _CLASSIFIERS[model_id]
 
 
@@ -133,29 +145,36 @@ def ai_probability(predictions: list[dict]) -> float:
     return float(1 - max(real)) if real else 0.5
 
 
-def combine(meta: dict, c2pa: dict | None, frame_p: float | None, cfg: AuthenticityCfg) -> tuple[float | None, list[str]]:
+def combine(meta: dict, c2pa: dict | None, frame_p: float | None,
+            cfg: AuthenticityCfg) -> tuple[float | None, list[str], str]:
+    """(likelihood, reasons, basis). basis says which evidence decided: provenance, metadata, camera, frames or
+    none. With basis "frames" the likelihood is None: the frame score is reported as a check, not a percentage."""
     reasons = []
     if (c2pa and c2pa.get("ai_declared")) or meta["ai_source_type"]:
         reasons.append("Content credentials (C2PA) declare the video AI-generated"
                        + (f" by {c2pa['generator']}" if c2pa and c2pa.get("generator") else ""))
-        return 0.99, reasons
+        return 0.99, reasons, "provenance"
     if meta["generators"]:
         reasons.append(f"File metadata names an AI video tool: {', '.join(meta['generators'])}")
-        return max(0.9, frame_p or 0), reasons
-    if frame_p is None:
-        if meta["camera_metadata"]:
-            reasons.append("Phone camera metadata present (make/model or location); no frame check ran")
-            return 0.1, reasons
-        reasons.append("No metadata and no frame check: not enough signal")
-        return None, reasons
-    p = frame_p
-    reasons.append(f"Frame detector: {p * 100:.0f} % median AI probability over sampled frames")
+        return 0.9, reasons, "metadata"
     if meta["camera_metadata"]:
-        p *= 0.6
-        reasons.append("Phone camera metadata present: lowers the likelihood")
+        reasons.append("Phone camera metadata present (make/model or location): points to a real capture")
+        if frame_p is not None:
+            reasons.append("The frame detector also ran; its score is not used (uncalibrated on video)")
+        return 0.1, reasons, "camera"
+    if frame_p is None:
+        reasons.append("No metadata and no frame check: not enough signal")
+        return None, reasons, "none"
+    if cfg.frame_flag_at is not None and frame_p >= cfg.frame_flag_at:
+        reasons.append("Frame check: AI-like frames, needs a human look"
+                       + (f" ({cfg.frame_flag_note})" if cfg.frame_flag_note else ""))
     else:
-        reasons.append("No camera metadata (common for forwarded videos, also for AI ones)")
-    return round(min(1.0, p), 4), reasons
+        reasons.append("Frame check: inconclusive")
+    # the raw frame score stays in the result's "frame_score", not in the text the officer reads
+    reasons.append("Only an image AI-detector ran, on sampled frames. On real stock and CCTV video it scores as "
+                   "high as on AI video, so its score is not shown as a percentage")
+    reasons.append("No camera metadata (common for forwarded videos, also for AI ones)")
+    return None, reasons, "frames"
 
 
 def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
@@ -167,22 +186,19 @@ def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
     frame_p, frame_detail = None, None
     if cfg.frame_model and not meta["ai_source_type"]:
         try:
-            clf = frame_classifier(cfg.frame_model)
+            clf = frame_classifier(cfg.frame_model, cfg.gpu_min_free_gb)
             probs = [ai_probability(clf(img)) for img in sample_frames(path, cfg.frames)]
             if probs:
                 frame_p = round(statistics.median(probs), 4)  # robust to a few wild frames
                 frame_detail = {"model": cfg.frame_model, "per_frame": [round(x, 3) for x in probs]}
         except Exception as e:  # transformers missing, download failed, unreadable video...
             frame_detail = {"model": cfg.frame_model, "error": str(e)[:200]}
-    likelihood, reasons = combine(meta, c2, frame_p, cfg)
-    frame_only = frame_p is not None and not (meta["ai_source_type"] or meta["generators"]
-                                              or (c2 and c2.get("ai_declared")))
-    if likelihood is None:
+    likelihood, reasons, basis = combine(meta, c2, frame_p, cfg)
+    if basis == "frames":
+        flagged = cfg.frame_flag_at is not None and frame_p >= cfg.frame_flag_at
+        verdict = "uncertain" if flagged else "inconclusive"
+    elif likelihood is None:
         verdict = "not_enough_signal"
-    elif likelihood >= cfg.likely_ai_at and frame_only and cfg.frame_alone_max_verdict == "uncertain":
-        verdict = "uncertain"
-        reasons.append("Only the frame detector points to AI, and it also flags real compressed video: "
-                       "needs a human look")
     elif likelihood >= cfg.likely_ai_at:
         verdict = "likely_ai"
     elif likelihood >= cfg.uncertain_at:
@@ -192,6 +208,7 @@ def analyze_video(path: str | Path, cfg: AuthenticityCfg | None = None) -> dict:
     return {
         "ai_likelihood": likelihood,
         "ai_likelihood_pct": round(likelihood * 100) if likelihood is not None else None,
-        "verdict": verdict, "reasons": reasons, "metadata": meta, "c2pa": c2, "frames": frame_detail,
+        "verdict": verdict, "basis": basis, "headline": reasons[0], "frame_score": frame_p, "reasons": reasons,
+        "metadata": meta, "c2pa": c2, "frames": frame_detail,
         "disclaimer": DISCLAIMER, "version": VERSION, "seconds": round(time.perf_counter() - t0, 2),
     }

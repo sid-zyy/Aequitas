@@ -1,0 +1,78 @@
+[
+ {
+  "model": "haywoodsloan/ai-image-detector-deploy",
+  "auc": 0.87,
+  "at_uncertain": {
+   "t": 0.5,
+   "fpr": 0.0375,
+   "tpr": 0.68
+  },
+  "at_likely_ai": {
+   "t": 0.85,
+   "fpr": 0.0375,
+   "tpr": 0.68
+  },
+  "real_at_100pct": 0,
+  "n_real": 80,
+  "n_ai": 50,
+  "fpr_le_5": {
+   "t_in_sample": 0.1258,
+   "tpr_in_sample": 0.74,
+   "cv_fpr": 0.05,
+   "cv_tpr": 0.6799999999999999
+  },
+  "fpr_le_10": {
+   "t_in_sample": 0.0456,
+   "tpr_in_sample": 0.74,
+   "cv_fpr": 0.125,
+   "cv_tpr": 0.74
+  },
+  "faculty": {
+   "data/footage/faculty/v001.mp4": 0.0007,
+   "data/footage/faculty/v003.mp4": 0.0015,
+   "data/footage/faculty/v006.mp4": 0.0035,
+   "data/footage/faculty/v011.mp4": 0.0018,
+   "data/footage/faculty/v026.mp4": 0.0073,
+   "data/footage/faculty/w001.mp4": 0.021
+  },
+  "crop_bottom": 0.15
+ },
+ {
+  "model": "Ateeqq/ai-vs-human-image-detector",
+  "auc": 0.81,
+  "at_uncertain": {
+   "t": 0.5,
+   "fpr": 0.5,
+   "tpr": 0.82
+  },
+  "at_likely_ai": {
+   "t": 0.85,
+   "fpr": 0.45,
+   "tpr": 0.82
+  },
+  "real_at_100pct": 35,
+  "n_real": 80,
+  "n_ai": 50,
+  "fpr_le_5": {
+   "t_in_sample": 0.9999,
+   "tpr_in_sample": 0.54,
+   "cv_fpr": 0.0875,
+   "cv_tpr": 0.56
+  },
+  "fpr_le_10": {
+   "t_in_sample": 0.9997,
+   "tpr_in_sample": 0.64,
+   "cv_fpr": 0.1625,
+   "cv_tpr": 0.66
+  },
+  "faculty": {
+   "data/footage/faculty/v001.mp4": 0.9939,
+   "data/footage/faculty/v003.mp4": 0.0004,
+   "data/footage/faculty/v006.mp4": 0.9987,
+   "data/footage/faculty/v011.mp4": 0.0038,
+   "data/footage/faculty/v026.mp4": 0.9992,
+   "data/footage/faculty/w001.mp4": 0.9991
+  },
+  "crop_bottom": 0.15
+ }
+]

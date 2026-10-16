@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActiveQueue, api, label, openCitizenPortal, RecordingDetail } from "../api";
+import { aiCheck } from "../aiCheck";
 import ReportText from "../components/ReportText";
 import VideoReview, { running } from "../components/VideoReview";
 
@@ -27,7 +28,7 @@ function ReportReview({ r }: { r: Row }) {
       summarize: () => api.summarizeReport(r.report_id),
       ask: (q, history) => api.askReport(r.report_id, q, history),
     }} extra={r.authenticity && !r.authenticity.error && (
-      <p className="note">AI-generated check: {r.authenticity.reasons?.[0]}</p>
+      <p className="note">AI-generated check: {aiCheck(r.authenticity).frameOnly ? aiCheck(r.authenticity).title : r.authenticity.reasons?.[0]}</p>
     )} />
   );
 }
@@ -104,7 +105,7 @@ export default function ActiveRequests() {
               </thead>
               <tbody>
                 {rows.map((r) => {
-                  const pct = r.authenticity?.ai_likelihood_pct;
+                  const ai = r.authenticity && !r.authenticity.error ? aiCheck(r.authenticity) : null;
                   return (
                     <Fragment key={r.report_id}>
                     <tr className={(fresh.has(r.report_id) ? "fresh" : "") + (open === r.report_id ? " expanded" : "")}>
@@ -119,9 +120,9 @@ export default function ActiveRequests() {
                         {r.analysis.status === "done" && !r.categories.length && <span className="badge none">nothing flagged</span>}
                       </td>
                       <td className="mono">
-                        {!r.authenticity ? <span className="note">checking…</span> : pct == null ? <span className="note">no signal</span> : (
-                          <b style={{ color: r.authenticity.verdict === "likely_ai" ? "var(--danger)" : r.authenticity.verdict === "uncertain" ? "var(--warn)" : "var(--ok)" }}
-                            title={r.authenticity.verdict.replace(/_/g, " ")}>{pct}%{r.authenticity.verdict === "uncertain" && " ?"}</b>
+                        {!r.authenticity ? <span className="note">checking…</span> : !ai ? <span className="note">check failed</span>
+                          : ai.pct == null ? <span style={{ color: ai.color }} title={ai.title}>{ai.text}</span> : (
+                          <b style={{ color: ai.color }} title={ai.title}>{ai.text}{r.authenticity.verdict === "uncertain" && " ?"}</b>
                         )}
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>
