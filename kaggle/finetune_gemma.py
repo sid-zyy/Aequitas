@@ -62,6 +62,10 @@ STUDENT_HF = "unsloth/gemma-4-E2B-it"
 STUDENT_OLLAMA = "aequitas-e2b"
 TRAIN_PER_CLASS = 150   # clips per class from the training pool (fighting, weapon, none; UCF classes capped at 40)
 UCF_PER_CLASS = 40
+# Dataset families left out even when attached. UCF-Crime: run 1 kept ~21 of ~1128 teacher grids (~2 %, theft and
+# vandalism 0) for ~2.5 h of 12B time; its untrimmed videos rarely show the incident in a sampled window.
+# Leaving it out also drops arrest / fire / accident / theft / vandalism from training and from the extra test set.
+SKIP_FAMILIES = {"ucf"}
 GRIDS_PER_CLIP = 2      # the whole clip + one random 4 s window (what the live pipeline sends)
 EPOCHS = 2
 TEST_PER_CLASS = 20     # identical to model_compare (QUICK = True)
@@ -268,7 +272,7 @@ for p in sorted(INPUT.rglob("*")):
     if p.suffix.lower() not in VIDEO_EXTS or faculty(p) or str(p.resolve()) in test_paths:
         continue
     lab, fam = label_of(p.relative_to(INPUT))
-    if lab:
+    if lab and fam not in SKIP_FAMILIES:
         pool.setdefault(f"{fam}:{lab}", []).append(p)
 TRAIN: list[Item] = []
 TEST_EXTRA: list[Item] = []  # held out from the other datasets: riot, arrest, fire, peaceful crowds...
@@ -294,6 +298,8 @@ FAMILY = {str(p): k.split(":")[0] for k, ps in pool.items() for p in ps}
 print({k: len(v) for k, v in pool.items()}, "-> training clips:", len(TRAIN), "| extra test clips:", len(TEST_EXTRA))
 held = test_paths | {str(it.path.resolve()) for it in TEST_EXTRA}
 assert not held & {str(it.path.resolve()) for it in TRAIN}, "a test clip leaked into training"
+if SKIP_FAMILIES:
+    print("NOTE: left out even if attached:", ", ".join(sorted(SKIP_FAMILIES)), "(SKIP_FAMILIES)")
 if not any(it.label == "riot" for it in TRAIN):
     print("NOTE: no riot clips attached (XD-Violence or Violent Flows), riots are not trained in this run")
 (OUT / "test_clips.txt").write_text("\n".join(f"{it.label}\t{it.path}" for it in TEST))
