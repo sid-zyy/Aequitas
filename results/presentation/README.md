@@ -14,7 +14,7 @@ Run twice; both runs gave identical labels. Scored with `eval-report --expected 
 | v026 | fighting | fighting, confirmed |
 | w001 (weapon clip) | fighting or weapon | chase, confirmed (false alarm: wrong label) |
 
-Confirmed: 4 hits, 1 false alarm, 1 miss (precision 0.80, recall 0.80). The fighting labels come from the
+Every clip produced an incident event (6/6 flagged), and the violence model scored every clip 0.96 or more (6/6). The right label was confirmed on 4/6. Scored by eval-report: 4 hits, 1 false alarm (w001 "chase"), 1 miss (v003, unverified person_down); precision 0.80, recall 0.80. The fighting labels come from the
 violence clip model's votes; Gemma's own summaries describe people standing or sitting (Gemma alone: 0/5).
 
 | | Run 1 (cold: model loads) | Run 2 (warm) |

@@ -376,7 +376,7 @@ tr.out td { color: var(--faint); }
   <div class="imp">
     <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches motion instead. It votes with Gemma, and alone it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, next to the GPU, so it adds almost nothing to the wait.</p>
     <div class="bigstats">
-      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">4</span> / 5</span><span class="l">faculty fights confirmed (Gemma alone vs with the second signal)</span></div>
+      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent (Gemma's own labels vs the violence model, every clip scored 0.96 or more)</span></div>
       <div class="stat rv" style="--i:4"><span class="v num">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
     </div>
   </div>
@@ -422,7 +422,7 @@ tr.out td { color: var(--faint); }
     <table>
       <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
       <tbody>
-        <tr class="pick"><td>Faculty clips, end to end</td><td>4 of 5 fights confirmed · 1 wrong label (weapon clip called “chase”)</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
+        <tr class="pick"><td>Faculty clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4 (v003 is too short to confirm; the weapon clip was called “chase”)</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
         <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
         <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
         <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
