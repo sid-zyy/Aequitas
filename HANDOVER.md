@@ -82,7 +82,7 @@ All on the RTX 4050 laptop with Ollama unless noted. Details are in the linked f
 | End to end, 21 demo clips | 1 min 48 s; 7/10 incidents confirmed, 1 false alarm (±2 run-to-run) | results/improvements/README.md §5 |
 | SigLIP gate | 17 ms/window; −28 % Gemma time; 0/39 incident windows skipped (threshold set on those windows) | results/improvements/README.md |
 | Previous-window context | flagged 22 → 25/39, 0 false alarms | same |
-| Violence clip model | val acc 0.95; 5/5 faculty clips | results/violence_clip/README.md |
+| Violence clip model | val acc 0.95; 6/6 faculty clips; **unseen real CCTV (300 clips): recall 0.93 with 45 % false alarms at 0.51, 0.77 / 14 % at 0.9**, AUC 0.89 | results/violence_clip/README.md |
 | Stage 2 (57 summaries, regression set) | accuracy 0.983, macro-F1 0.991, 1.45 s p50 | results/chat_eval/README.md |
 | Chat parsing | 28/28 dev, 20/20 held out; Gemma ~0.7 s/question | same |
 | Webcam false alarms (stage 2, saved windows) | 57/120 → 6/120 labels | commit e0c2791 |
@@ -91,6 +91,7 @@ All on the RTX 4050 laptop with Ollama unless noted. Details are in the linked f
 | Trackers on CAVIAR | tracker choice ≤ 0.02 IDF1; YOLO11n → 11m@960 3×; DeepSORT 4–5× ID switches, 30–46 ms/frame | docs/TRACKING.md |
 | YOLO11n / pose crop | 12.7 ms / 17.6 ms per frame | docs/DESIGN.md §4.4 |
 | Detectors on CAVIAR (AP50, person) | YOLO11n 0.102 · YOLO26l@960 0.344 · RF-DETR-S 0.425 (~27 ms) · D-FINE-X 0.522 (75 ms) | docs/DETECTION.md |
+| Detectors on real violence CCTV (118 hand-labelled people, recall/precision @0.4) | YOLO11n 0.47/0.86 · YOLO11m 0.48/0.90 · RF-DETR-S 0.70/0.87 · RF-DETR-M 0.72/0.93 | docs/DETECTION.md |
 
 ## 5. Machine setup
 

@@ -97,6 +97,7 @@ class HF:
 CANDIDATES = {
     # name: (factory, note)
     "yolo11n 640 (today)": lambda: Ultra("yolo11n.pt", 640),
+    "yolo11m 640": lambda: Ultra("yolo11m.pt", 640),
     "yolo11m 960": lambda: Ultra("yolo11m.pt", 960),
     "yolo26n 640": lambda: Ultra("yolo26n.pt", 640),
     "yolo26s 640": lambda: Ultra("yolo26s.pt", 640),

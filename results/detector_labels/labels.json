@@ -1,0 +1,337 @@
+{
+ "_note": "Hand-verified by Claude from candidate boxes (docs/DETECTION.md). people = candidate indices that are one person's visible extent; missed = people no candidate covers; uncertain = judgement calls (occlusion, blur, merged boxes); skip = not labelled.",
+ "faculty/v001@0.33": {
+  "skip": "crowded"
+ },
+ "faculty/v001@0.67": {
+  "people": [
+   1,
+   3,
+   5,
+   6,
+   2,
+   8,
+   9,
+   10,
+   11,
+   14
+  ],
+  "missed": 1,
+  "uncertain": true
+ },
+ "faculty/v006@0.33": {
+  "skip": "crowded"
+ },
+ "faculty/v006@0.67": {
+  "skip": "crowded"
+ },
+ "faculty/v011@0.33": {
+  "people": [
+   3,
+   0,
+   1,
+   7,
+   6,
+   5,
+   14
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "faculty/v011@0.67": {
+  "skip": "crowded"
+ },
+ "faculty/v026@0.33": {
+  "people": [],
+  "missed": 1,
+  "uncertain": false
+ },
+ "faculty/v026@0.67": {
+  "people": [
+   0
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "faculty/w001@0.33": {
+  "people": [
+   0,
+   1,
+   3
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "faculty/w001@0.67": {
+  "people": [
+   0,
+   1,
+   7
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "footage/v003_converted 3@0.33": {
+  "people": [
+   6,
+   9,
+   4,
+   5,
+   0,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "footage/v003_converted 3@0.67": {
+  "people": [
+   6,
+   4,
+   2,
+   1,
+   0
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "fight/fi099@0.50": {
+  "people": [
+   1
+  ],
+  "missed": 1,
+  "uncertain": true
+ },
+ "fight/fi108@0.50": {
+  "people": [
+   0,
+   2,
+   3,
+   6
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "fight/fi011@0.50": {
+  "people": [
+   5,
+   4,
+   3,
+   2,
+   8,
+   6
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi067@0.50": {
+  "skip": "crowded"
+ },
+ "fight/fi131@0.50": {
+  "people": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi125@0.50": {
+  "people": [
+   2,
+   4,
+   1
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi104@0.50": {
+  "skip": "extreme blur, unlabellable"
+ },
+ "fight/fi078@0.50": {
+  "people": [
+   2
+  ],
+  "missed": 1,
+  "uncertain": true
+ },
+ "fight/fi123@0.50": {
+  "people": [
+   0,
+   13,
+   9,
+   3,
+   1,
+   6
+  ],
+  "missed": 1,
+  "uncertain": true
+ },
+ "fight/fi092@0.50": {
+  "people": [],
+  "missed": 2,
+  "uncertain": false
+ },
+ "fight/fi150@0.50": {
+  "people": [
+   1,
+   2
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi056@0.50": {
+  "people": [
+   0,
+   2,
+   3
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi130@0.50": {
+  "people": [
+   2,
+   1,
+   3,
+   9,
+   11
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi036@0.50": {
+  "people": [
+   0,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "fight/fi073@0.50": {
+  "people": [
+   3,
+   0,
+   5,
+   4,
+   1,
+   7
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi025@0.50": {
+  "people": [
+   2,
+   4,
+   7
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "fight/fi065@0.50": {
+  "skip": "crowded"
+ },
+ "fight/fi137@0.50": {
+  "skip": "crowded"
+ },
+ "fight/fi038@0.50": {
+  "people": [
+   0,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "fight/fi080@0.50": {
+  "people": [
+   1,
+   3
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi026@0.50": {
+  "people": [
+   3,
+   0,
+   2,
+   4,
+   1,
+   5
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi019@0.50": {
+  "people": [
+   2,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi085@0.50": {
+  "people": [
+   0,
+   2,
+   3,
+   1
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "noFight/nofi121@0.50": {
+  "people": [
+   0,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi144@0.50": {
+  "people": [
+   0
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi091@0.50": {
+  "people": [
+   3,
+   1,
+   2,
+   6
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "noFight/nofi112@0.50": {
+  "people": [
+   0
+  ],
+  "missed": 0,
+  "uncertain": false
+ },
+ "noFight/nofi081@0.50": {
+  "people": [
+   4,
+   8,
+   9
+  ],
+  "missed": 0,
+  "uncertain": true
+ },
+ "noFight/nofi053@0.50": {
+  "skip": "crowded"
+ },
+ "noFight/nofi142@0.50": {
+  "people": [
+   3,
+   0,
+   1
+  ],
+  "missed": 0,
+  "uncertain": false
+ }
+}

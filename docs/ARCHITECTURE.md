@@ -136,7 +136,7 @@ depend on detection.
 
 | Signal | Code | Used where | Measured |
 |---|---|---|---|
-| **Violence clip model:** r3d_18 trained on SCVD + RLVS + RWF-2000, ONNX, scores 2 s clips | `vision/violence.py`, `kaggle/violence_clip.py` | periodic: max score per window → `fuse_window`, and a vote towards confirmation; triggered: the fight trigger | val acc 0.95 (threshold calibrated on val); 5/5 faculty clips (Gemma alone 0/5); results/violence_clip/README.md |
+| **Violence clip model:** r3d_18 trained on SCVD + RLVS + RWF-2000, ONNX, scores 2 s clips | `vision/violence.py`, `kaggle/violence_clip.py` | periodic: max score per window → `fuse_window`, and a vote towards confirmation; triggered: the fight trigger | val acc 0.95 (threshold calibrated on val); 6/6 faculty clips (Gemma alone 0/5); unseen real CCTV (300 clips): recall 0.93 but 45 % false alarms at 0.51, 0.77 / 14 % at 0.9; results/violence_clip/README.md |
 | **Rule triggers** | `triggers/` | triggered mode | unit-tested on synthetic tracks; weak on CAVIAR (above) |
 | **Agreement across windows** | `understand/periodic.WindowAggregator` | periodic: 2 agreeing windows → confirmed | (§8) |
 | Hazard detector (YOLO fire/smoke/knife/gun/stick) | `vision/hazards.py`, `kaggle/hazard_detector.py` | triggered, optional | written and smoke-tested, **not trained on real data yet** |

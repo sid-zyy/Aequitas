@@ -100,6 +100,79 @@ its paper (56.0 COCO AP), so the port is probably wrong. Treat both as **not tes
      between runs (clocks, heat), so quote the rerun range.
 7. **GPU memory is not a constraint.** 100–250 MiB, against the ~5 GB Gemma needs on the same 6 GB GPU.
 
+## Real violence CCTV, hand-labelled (2026-10-16)
+
+`scripts/detector_label_check.py`. The frames are:
+- 2 frames from each of the 6 faculty clips, including v003, the new street-fight clip.
+- 1 middle frame from each of 30 clips of the **Surveillance Camera Fight Dataset** (Akti et al. 2019, MIT; 300
+  real YouTube CCTV clips, 150 fight / 150 noFight, downloaded to `data/videos/survfight`, 86 MB). We drew
+  20 fight and 10 noFight clips.
+
+**How the labels were made:**
+- Every detector's boxes at ≥ 0.25 confidence were pooled and merged, giving 501 candidates. Each was judged on
+  the full frame as "one person's visible extent" or not, and people no detector boxed were counted as missed.
+- **33 frames labelled, 118 people (7 missed by every detector).** 9 frames were too crowded or blurred to label
+  reliably and were left out (two v001, two v006, one v011, four from the fight dataset).
+- 15 frames involve judgement calls (occlusion, blur, two fighters in one box) and are flagged `uncertain`. The
+  "clear only" column (18 frames, 46 people) leaves them out.
+- The labels are Claude's, made from candidate boxes. Treat them as approximate, not as an expert ground truth.
+  Labels and boxes: `results/detector_labels/` (the frame images stay local).
+
+**Results** (recall / precision, IoU ≥ 0.5, at person confidence **0.4**, as configured for the app):
+
+| Detector | All 118: recall | precision | at 0.25: recall | precision | Clear only (46): recall | precision | Faculty (37): recall | Fight dataset (81): recall |
+|---|---|---|---|---|---|---|---|---|
+| **yolo11n 640 (in use)** | 0.47 | 0.86 | 0.53 | 0.70 | 0.61 | 0.82 | 0.49 | 0.46 |
+| yolo11m 640 | 0.48 | 0.90 | 0.56 | 0.84 | 0.54 | 0.89 | 0.49 | 0.48 |
+| yolo11m 960 | 0.42 | 0.86 | 0.52 | 0.81 | 0.54 | 0.96 | 0.27 | 0.48 |
+| yolo26m 640 | 0.53 | 0.87 | 0.60 | 0.84 | 0.65 | 0.91 | 0.41 | 0.58 |
+| yolo26l 960 | 0.53 | 0.85 | 0.58 | 0.81 | 0.65 | 0.91 | 0.51 | 0.54 |
+| rtdetr-l 640 | 0.67 | 0.84 | 0.75 | 0.60 | 0.76 | 0.90 | 0.81 | 0.60 |
+| **rfdetr small** | **0.70** | 0.87 | 0.81 | 0.66 | **0.78** | 0.90 | **0.84** | 0.64 |
+| **rfdetr medium** | **0.72** | **0.93** | 0.81 | 0.67 | **0.78** | **0.95** | 0.81 | **0.68** |
+| d-fine-m | 0.69 | 0.68 | 0.85 | 0.39 | 0.74 | 0.74 | 0.78 | 0.65 |
+
+**What it says:**
+- **The ranking holds on real violence.**
+  - RF-DETR finds 70–72 % of people, against 47 % for yolo11n and 48 % for yolo11m, at the same or better
+    precision.
+  - On the faculty clips it's 0.84 against 0.49.
+  - The clear-only frames give the same order: 0.78 against 0.54–0.61.
+- **YOLO11m is not better than YOLO11n here** (0.48 vs 0.47).
+  - At 960 px it's worse on the faculty clips (0.27). These are 720p frames with large people, so upscaling
+    doesn't help, and bigger-input YOLO drops large, blurred, oddly posed bodies.
+  - YOLO11m isn't what the app uses either: `config/settings.yaml` has `yolo11n.pt` at 640.
+- **Violent scenes are hard even when people are large.** Fighters grapple, fall, blur and overlap.
+  - Every YOLO misses about half of them.
+  - In several fights (e.g. fi092), most detectors put **one box around two grappling people**. The fight rule
+    needs two separate tracks, so it can't fire then.
+- **D-FINE-M** finds about as many people but has the lowest precision (0.68). Its scores are calibrated
+  differently from the others, so 0.4 is too low a threshold for it.
+- **Caveats:**
+  - **Small sample:** 118 people, one labeller.
+  - **Some bias towards these detectors:** the candidate pool is these detectors' own boxes, so people every
+    detector missed are counted only when spotted by eye (7).
+  - **Crowded scenes excluded:** the crowded frames, where differences are likely largest, aren't scored.
+
+### The violence clip model on the same dataset (all 300 clips, held out from its training)
+
+`scripts/violence_survfight.py`: frames at 4 fps, 2 s windows, max over the clip.
+
+| Threshold | Fight recall | False alarms on noFight | Precision | Accuracy |
+|---|---|---|---|---|
+| 0.51 (calibrated on its validation set) | **0.93** | **67/150 (45 %)** | 0.68 | 0.74 |
+| 0.9 (`models.violence_alone_threshold`) | 0.77 | 21/150 (14 %) | 0.85 | 0.81 |
+
+- ROC AUC is 0.89, and scoring takes 193 ms per clip (CPU ONNX, decoding included).
+- Neither threshold was tuned on this data.
+- **On unseen real CCTV the model is much weaker than its 0.95 validation accuracy.** At 0.51 it flags almost
+  half of the non-fight clips.
+- The app already treats it this way:
+  - Alone it needs ≥ 0.9.
+  - Otherwise it only votes alongside the VLM label (`fuse_window`).
+  - On this data, that 0.9 gives a 14 % false-alarm rate per clip.
+- The new faculty clip v003 scores 0.98, so the model calls all 6 faculty clips violent.
+
 ## Recommendation
 
 **Switch triggered mode to RF-DETR-Small, with Medium as a config option.**
@@ -108,6 +181,7 @@ its paper (56.0 COCO AP), so the port is probably wrong. Treat both as **not tes
 |---|---|---|---|
 | CAVIAR AP50 | 0.102 | **0.425 (4.2×)** | 0.475 (4.7×) |
 | Small-person recall | 0.030 | **0.484 (16×)** | 0.514 |
+| Real violence CCTV, recall / precision @0.4 | 0.47 / 0.86 | **0.70 / 0.87** | 0.72 / 0.93 |
 | ms/frame (eager) | 11.8 | 26–28 | ~32 |
 | Licence | AGPL | **Apache-2.0** | Apache-2.0 |
 
@@ -125,8 +199,11 @@ its paper (56.0 COCO AP), so the port is probably wrong. Treat both as **not tes
 - **Per camera, by the size of the people in it.** This is the Chameleon idea (Jiang et al., SIGCOMM 2018):
   adapt each camera's configuration, because the best one depends on object size and is stable over time.
   - **Far cameras** (people < ~60 px, CAVIAR-like) need a DETR.
-  - **Close cameras** (the webcam, bodycam, close indoor CCTV) are where every model finds people of 30 px and
-    taller at 0.83–0.99, so a light YOLO26 is enough.
+  - **Close cameras** (the webcam, bodycam, close indoor CCTV): on CAVIAR every model finds people of 30 px
+    and taller at 0.83–0.99.
+    - But the real-violence test shows YOLOs still miss about half of large people once they fight, fall or
+      overlap. RF-DETR-S finds 0.84 of them on the faculty clips, against 0.49.
+    - So a light YOLO is enough only for calm, close scenes. For incident footage, keep the DETR.
   - This is a per-camera `detector:` override plus a one-off calibration that measures median person height.
     It's cheap to build.
 - **Per frame, cheap first and escalate to the strong model** (cascade): **not recommended now.**
