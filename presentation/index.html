@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Aequitas by CyberSIege</title>
+<title>Aequitas by CyberSiege</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -134,13 +134,15 @@ h1 { font-size: 112px; }
 .word span { display: inline-block; }
 .slide.active .word span { animation: drop .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 70ms + 1500ms); }
 @keyframes drop { from { opacity: 0; transform: translateY(-60px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
-.beam { width: 1336px; height: 4px; background: var(--accent); border-radius: 2px; transform-origin: center; position: relative; }
-.beam::before, .beam::after { content: ""; position: absolute; top: -9px; width: 22px; height: 22px; border-radius: 50%; background: var(--saffron); }
-.beam::before { left: -8px; } .beam::after { right: -8px; }
-.slide.active .beam { animation: settle 2.2s cubic-bezier(.3,1.4,.4,1) both; animation-delay: 2.2s; }
-@keyframes settle { 0% { transform: rotate(-9deg); opacity: 0; } 15% { opacity: 1; } 45% { transform: rotate(5deg); } 70% { transform: rotate(-2deg); } 100% { transform: rotate(0); opacity: 1; } }
+.beam { width: 1336px; height: 2px; background: var(--accent); position: relative; transform-origin: center; }
+.beam::before, .beam::after { content: ""; position: absolute; top: 0; width: 2px; height: 16px; background: var(--muted); transform-origin: top; }
+.beam::before { left: 0; } .beam::after { right: 0; }
+.slide.active .beam { animation: draw 1.8s cubic-bezier(.65,0,.15,1) both; animation-delay: 2.2s; }
+.slide.active .beam::before, .slide.active .beam::after { animation: hang .9s cubic-bezier(.3,0,.2,1) both; animation-delay: 3.9s; }
+@keyframes draw { from { transform: scaleX(0); opacity: .2; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes hang { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 .gloss { font-family: var(--mono); font-size: 20px; color: var(--faint); }
-.slide.active .gloss { animation: rise .8s ease both; animation-delay: 3.6s; }
+.slide.active .gloss { animation: rise .8s ease both; animation-delay: 4.6s; }
 
 /* --- 4 about --- */
 .two { display: grid; grid-template-columns: 1fr 1.25fr; gap: 72px; align-items: start; }
@@ -518,7 +520,7 @@ tr.out td { color: var(--faint); }
       <div class="eyebrow rv">Aequitas · Roman goddess of fairness</div>
       <h1 class="huge split">Thank you.</h1>
       <p class="lede rv" style="--i:2">She holds the scales level. We built a system that keeps <b>a fair record</b>, and leaves the judgement to people.</p>
-      <div class="rv" style="--i:3;font-family:var(--display);font-stretch:110%;font-weight:800;font-size:40px;letter-spacing:.04em">Cyber<span class="sa">SIege</span></div>
+      <div class="rv" style="--i:3;font-family:var(--display);font-stretch:110%;font-weight:800;font-size:40px;letter-spacing:.04em">Cyber<span class="sa">Siege</span></div>
     </div>
     <figure class="rv" style="--i:1"><div class="frame"><img src="assets/aequitas.jpg" alt="Marble statue of Aequitas holding up a pair of scales, by Francis Harwood, 1758"></div><figcaption>Francis Harwood, Aequitas, 1758 · photo Sailko, CC BY 3.0</figcaption></figure>
   </div>
