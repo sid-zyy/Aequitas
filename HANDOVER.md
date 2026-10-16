@@ -67,7 +67,7 @@ Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthet
 | Quantisation (FP8 / W8A8 / W4A16, llm-compressor) | Written; **no successful run yet** | `scripts/quantize/quantize.py` |
 | `aequitas bench` (TTFT, TPOT, tokens/s, acceptance rate) | Done | `eval/bench.py` |
 | **Faculty dataset adapter** (`eval-dataset`: folder or manifest → all stages → accuracy, F1, summary similarity, time) | Done, waiting for the dataset | `eval/dataset.py` |
-| Gemma fine-tune (12B → E2B distillation, QLoRA) | Run 1 failed at stage 5; run 2 ready | `kaggle/finetune_gemma.py` |
+| Gemma fine-tune (12B → E2B distillation, QLoRA) | Run 2 done: SCVD incident recall 0.20 → 0.60 (in-domain); not yet served or tested on Bengaluru clips | `kaggle/finetune_gemma.py`, results/finetune/README.md |
 | Skeleton action model for the webcam (YOLO pose + STGCN++ NTU-120) | **Prototype, not wired in** | `vision/skeleton.py`, `scripts/skeleton_check.py` |
 | Tracker comparison on CAVIAR ground truth | Done | `scripts/tracker_compare.py`, docs/TRACKING.md |
 | Detector comparison (YOLO11/26, RT-DETR, RF-DETR, D-FINE, DEIMv2) on CAVIAR + faculty samples | Done; not integrated | `scripts/detector_compare.py`, docs/DETECTION.md |
@@ -135,8 +135,10 @@ numbers in the docs.
   latency slide
 
 ### Accuracy (in progress)
-- [ ] Fine-tune run 2 on Kaggle (§7); evaluate base vs fine-tuned (results/chat_eval/README.md, demo set,
-  bodycam clips arrest-1 and fire-rescue)
+- [x] Fine-tune run 2 on Kaggle: results/finetune/README.md (in-domain gain; Ollama import failed, timed in
+  transformers; notebook now falls back to `--quantize int4`)
+- [ ] Serve the fine-tuned adapter (vLLM `--enable-lora`, results/finetune/lora/) and evaluate base vs fine-tuned
+  on the demo set (`config/eval_demo_final.yaml`), bodycam clips arrest-1 and fire-rescue, and chat_eval
 - [ ] Webcam: record a test clip (`scripts/skeleton_check.py --record 20`: wave, thumbs up, sit still, a staged
   push with a second person). Wire the skeleton model in as a webcam second signal only if it separates these.
 - [x] RF-DETR integrated behind `detector.family: rfdetr` (`pip install -e .[rfdetr]`). CAVIAR rules: YOLO11n 0/6 →
@@ -161,7 +163,10 @@ numbers in the docs.
 - **Fine-tune, run 1** died at stage 5. `ollama pull` got a 503 after 3.5 h of teacher work, and only 96 of
   1,654 teacher summaries were kept: 12B's self-check rejected 84 %, mostly over "number of people" and
   clothing.
-- **Fine-tune, run 2** is pushed. Changes:
+- **Fine-tune, run 2** finished (results/finetune/README.md): 290 teacher summaries kept; on the 60 SCVD test
+  clips incident recall 0.20 → 0.60, precision 0.62 → 0.86. In-domain only, weapon 0/20 labelled weapon,
+  fire worse, and the Ollama import failed on `--quantize q4_K_M`, so its time (7.7 s, transformers) is not
+  comparable. Run 2's changes were:
   - pulls retry and happen early
   - the self-check fails only on invented actions or things
   - UCF-Crime keeps arrest and fire, and drops theft, vandalism and accident

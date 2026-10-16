@@ -13,3 +13,6 @@ frontend/node_modules/
 results/detector_labels/full/
 results/detector_labels/sheets/
 results/detector_labels/overview/
+results/finetune/lora/
+results/finetune/ollama.log
+results/finetune/review.html

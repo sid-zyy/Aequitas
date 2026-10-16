@@ -1,0 +1,397 @@
+{
+  "label": "finetuned_e2b_hf_extra",
+  "view": "cctv",
+  "run": "2026-10-16T07:37:15",
+  "n_videos": 30,
+  "total_execution_s": 241.8,
+  "per_video_s": {
+    "p50": 7.769,
+    "p95": 9.799,
+    "mean": 8.06
+  },
+  "classification": {
+    "n": 30,
+    "accuracy": 0.3,
+    "macro_f1": 0.3627,
+    "valid": 30,
+    "per_class_f1": {
+      "arrest": 0.5882,
+      "fighting": 0.5,
+      "fire": 0.0
+    },
+    "incident_precision": 1.0,
+    "incident_recall": 0.5667,
+    "confusion": {
+      "accident": {},
+      "arrest": {
+        "none": 3,
+        "arrest": 5,
+        "harassment": 1,
+        "accident": 1
+      },
+      "fighting": {
+        "none": 4,
+        "arrest": 1,
+        "fighting": 4,
+        "harassment": 1
+      },
+      "fire": {
+        "none": 6,
+        "arrest": 1,
+        "fighting": 2,
+        "harassment": 1
+      },
+      "harassment": {},
+      "none": {}
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building, also while firefighters or police work at it (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held. Officers who only stand, talk, work or direct traffic are not an arrest",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest044_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A person in a dark hoodie walks through a doorway and enters a room.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 5.983,
+      "classify_s": 0.539,
+      "video_total_s": 6.694
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest002_x264.mp4",
+      "gold": "arrest",
+      "pred": "arrest",
+      "summary": "A man in a white shirt and dark pants is restrained by police officers in a dark room.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.886,
+      "classify_s": 0.586,
+      "video_total_s": 7.67
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest029_x264.mp4",
+      "gold": "arrest",
+      "pred": "arrest",
+      "summary": "A person in a black shirt is restrained on the ground by several people in uniforms.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.562,
+      "classify_s": 0.561,
+      "video_total_s": 7.298
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest015_x264.mp4",
+      "gold": "arrest",
+      "pred": "arrest",
+      "summary": "A person in a white van is approached by a police officer who handcuffs the person.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.747,
+      "classify_s": 0.575,
+      "video_total_s": 7.532
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest037_x264.mp4",
+      "gold": "arrest",
+      "pred": "arrest",
+      "summary": "A person in a white shirt is restrained and handcuffed by two police officers while another person stands nearby.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.113,
+      "classify_s": 0.643,
+      "video_total_s": 7.938
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest013_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A person in a white shirt and dark pants walks from the left to the right across a road and enters a garage.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.619,
+      "classify_s": 0.588,
+      "video_total_s": 8.414
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest001_x264.mp4",
+      "gold": "arrest",
+      "pred": "none",
+      "summary": "A person in a white shirt walks from the left to the right side of the frame.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.693,
+      "classify_s": 0.615,
+      "video_total_s": 7.496
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest028_x264.mp4",
+      "gold": "arrest",
+      "pred": "harassment",
+      "summary": "A person in a high-visibility vest is restrained and held by another person in a hallway.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.933,
+      "classify_s": 0.567,
+      "video_total_s": 7.726
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest049_x264.mp4",
+      "gold": "arrest",
+      "pred": "arrest",
+      "summary": "A person in a high-visibility vest is restrained on the ground by two police officers.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.733,
+      "classify_s": 0.568,
+      "video_total_s": 7.49
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arrest008_x264.mp4",
+      "gold": "arrest",
+      "pred": "accident",
+      "summary": "A white sedan is involved in a traffic incident with a dark vehicle, and a person in a dark jacket is standing near the damaged car.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 8.514,
+      "classify_s": 0.579,
+      "video_total_s": 9.316
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault009_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A man in a white shirt sits at a table while another person stands nearby. A person in a dark shirt is visible in the background.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 8.895,
+      "classify_s": 0.584,
+      "video_total_s": 9.738
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault008_x264.mp4",
+      "gold": "fighting",
+      "pred": "arrest",
+      "summary": "A person in a blue shirt is restrained on the ground by several people in uniforms and a police officer.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.25,
+      "classify_s": 0.306,
+      "video_total_s": 7.763
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault003_x264.mp4",
+      "gold": "fighting",
+      "pred": "fighting",
+      "summary": "A person in a white shirt is pushed and falls down the stairs while another person stands nearby.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.042,
+      "classify_s": 0.558,
+      "video_total_s": 7.776
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault049_x264.mp4",
+      "gold": "fighting",
+      "pred": "fighting",
+      "summary": "A person in a red shirt is pushed to the ground by another person in a white shirt.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.861,
+      "classify_s": 0.565,
+      "video_total_s": 7.595
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault020_x264.mp4",
+      "gold": "fighting",
+      "pred": "fighting",
+      "summary": "A person in a black jacket pushes a woman in a white top and red skirt across a sidewalk.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.898,
+      "classify_s": 0.584,
+      "video_total_s": 7.667
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault012_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A person in a blue jacket walks toward a police officer who stands near a barrier.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.562,
+      "classify_s": 0.607,
+      "video_total_s": 7.328
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault029_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A person in a dark uniform walks along a low wall while another person in a dark uniform walks near them.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.63,
+      "classify_s": 0.634,
+      "video_total_s": 8.439
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault050_x264.mp4",
+      "gold": "fighting",
+      "pred": "harassment",
+      "summary": "A person in a purple shirt is restrained by another person in a yellow shirt while they are held down.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.292,
+      "classify_s": 0.536,
+      "video_total_s": 7.977
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault046_x264.mp4",
+      "gold": "fighting",
+      "pred": "fighting",
+      "summary": "A person in a white shirt is pushed to the ground by another person in a black shirt, who then stands over the fallen person.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 8.316,
+      "classify_s": 0.581,
+      "video_total_s": 9.031
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Assault014_x264.mp4",
+      "gold": "fighting",
+      "pred": "none",
+      "summary": "A person in a white shirt and dark pants walks toward a black SUV, and another person in a dark shirt and light pants walks away from the vehicle.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 9.063,
+      "classify_s": 0.642,
+      "video_total_s": 10.058
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson052_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a dark jacket walks through a snowy area and then stops near a door.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.546,
+      "classify_s": 0.61,
+      "video_total_s": 7.38
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson014_x264.mp4",
+      "gold": "fire",
+      "pred": "arrest",
+      "summary": "A person in a white shirt and dark pants walks toward a police officer in a uniform and handcuffs them.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.819,
+      "classify_s": 0.598,
+      "video_total_s": 8.601
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson025_x264.mp4",
+      "gold": "fire",
+      "pred": "fighting",
+      "summary": "A person in a white shirt is pushed to the ground by another person in a dark shirt.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.905,
+      "classify_s": 0.406,
+      "video_total_s": 7.491
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson053_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a white shirt and dark pants walks from the left toward the right, then stops and turns to face the camera.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 9.091,
+      "classify_s": 0.635,
+      "video_total_s": 9.848
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson048_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a white shirt and dark pants walks from the left to the right, then stops and turns around.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.386,
+      "classify_s": 0.583,
+      "video_total_s": 8.103
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson016_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a blue jacket is sitting in a car while another person stands near the open door.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.991,
+      "classify_s": 0.537,
+      "video_total_s": 7.761
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson040_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a white shirt and blue jeans walks across a street in the rain, then stops and turns to walk away.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.875,
+      "classify_s": 0.607,
+      "video_total_s": 8.666
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson018_x264.mp4",
+      "gold": "fire",
+      "pred": "fighting",
+      "summary": "A person in a white shirt is pushed into a parked car by another person in a dark jacket.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.184,
+      "classify_s": 0.613,
+      "video_total_s": 7.912
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson031_x264.mp4",
+      "gold": "fire",
+      "pred": "none",
+      "summary": "A person in a white shirt and dark pants walks across a street and enters a building.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 7.112,
+      "classify_s": 0.58,
+      "video_total_s": 7.829
+    },
+    {
+      "video": "/kaggle/input/datasets/roumaissaa/ucf-crime-anomaly-videos-part-1-no-abuse/Arson038_x264.mp4",
+      "gold": "fire",
+      "pred": "harassment",
+      "summary": "A person in a white shirt runs toward the camera and is grabbed by another person.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 6.524,
+      "classify_s": 0.542,
+      "video_total_s": 7.249
+    }
+  ]
+}
