@@ -100,7 +100,7 @@ for model in MODELS:
     warm_up(model)
     ps = sh("ollama ps")  # size and GPU/CPU split of the loaded model
     t0 = time.time()
-    log = sh(f"cd {REPO} && {sys.executable} scripts/bench_variants.py --windows {WINDOWS} --variants {VARIANT} "
+    log = sh(f"cd {REPO} && PYTHONPATH={REPO} {sys.executable} scripts/bench_variants.py --windows {WINDOWS} --variants {VARIANT} "
              f"--model {model} --out {OUT}/rows-{tag}.jsonl")
     summary.append({"model": model, "pull_s": round(pull_s), "bench_s": round(time.time() - t0), "ollama_ps": ps,
                     "table": log[log.index("| variant"):] if "| variant" in log else log[-2000:]})
