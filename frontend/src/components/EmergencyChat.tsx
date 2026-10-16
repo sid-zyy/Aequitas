@@ -11,6 +11,7 @@ export default function EmergencyChat({ lang, onUrgent }: { lang: Lang; onUrgent
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false); // a popup in the bottom-right corner; the conversation is kept while closed
   const end = useRef<HTMLDivElement>(null);
 
   async function turn(body: { message?: string; choice?: "yes" | "no" }, shown?: string) {
@@ -27,7 +28,7 @@ export default function EmergencyChat({ lang, onUrgent }: { lang: Lang; onUrgent
   // Start (and restart in the new language when it changes).
   useEffect(() => { setMsgs([]); turn({}); }, [lang]); // eslint-disable-line
 
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [msgs]);
+  useEffect(() => { if (open) end.current?.scrollIntoView({ block: "nearest" }); }, [msgs, open]);
 
   function send(e: FormEvent) {
     e.preventDefault();
@@ -39,12 +40,19 @@ export default function EmergencyChat({ lang, onUrgent }: { lang: Lang; onUrgent
 
   const last = msgs[msgs.length - 1]?.turn;
   return (
-    <section className="card chat-card" lang={lang} aria-live="polite">
+    <>
+    {!open && (
+      <button className="chat-fab" lang={lang} onClick={() => setOpen(true)} aria-label={t.chatTitle}>
+        <span aria-hidden>💬</span> {t.chatTitle}
+      </button>
+    )}
+    <section className="card chat-card chat-popup" lang={lang} aria-live="polite" hidden={!open}>
       <div className="card-head">
         <span className="card-title">{t.chatTitle}</span>
         <span className="card-sub">{t.chatSub}</span>
         <button className="btn ghost" style={{ marginLeft: "auto", padding: "4px 10px" }}
           onClick={() => { setMsgs([]); onUrgent(false); turn({}); }}>{t.restart}</button>
+        <button className="btn ghost chat-close" onClick={() => setOpen(false)} aria-label="Close">×</button>
       </div>
       <div className="card-body chat-body">
         {msgs.map((m, i) => (
@@ -82,5 +90,6 @@ export default function EmergencyChat({ lang, onUrgent }: { lang: Lang; onUrgent
         <button className="btn navy" disabled={busy || !text.trim()}>{t.send}</button>
       </form>
     </section>
+    </>
   );
 }
