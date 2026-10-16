@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Aequitas by CyberSIege</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -199,8 +200,18 @@ tr.out td { color: var(--faint); }
 .imp .what b { color: var(--fg); }
 .bigstats { display: flex; flex-direction: column; gap: 34px; }
 .bigstats .stat .v { font-size: 110px; }
+.stackcol { display: flex; flex-direction: column; gap: 48px; }
+.stackcol .what { font-size: 26px; line-height: 1.5; color: var(--muted); margin: 0; max-width: 64ch; }
+.stackcol .what b { color: var(--fg); }
+.statrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+.statrow > * { min-width: 0; }
+.statrow .stat .v { font-size: 92px; }
+.statrow .stat .l { max-width: 30ch; }
 .bars { display: flex; flex-direction: column; gap: 24px; }
-.bar { display: grid; grid-template-columns: 340px 1fr 110px; align-items: center; gap: 20px; font-size: 22px; }
+.bar { display: grid; grid-template-columns: 420px 1fr 110px; align-items: center; gap: 20px; font-size: 22px; }
+.bar .lab { display: flex; flex-direction: column; gap: 4px; }
+.bar .note { font-family: var(--mono); font-size: 15px; color: var(--muted); }
+.bar .note b { color: var(--saffron); font-weight: 600; }
 .bar .track { height: 48px; background: var(--panel); border-radius: 3px; overflow: hidden; }
 .bar .fill { height: 100%; background: var(--accent); width: var(--w); border-radius: 3px; }
 .bar.base .fill { background: var(--faint); }
@@ -378,6 +389,20 @@ tr.out td { color: var(--faint); }
   <div class="src">SCVD, 60 clips (fight / weapon / normal), faculty clips excluded · Kaggle T4, Ollama · results/model_compare, results/finetune</div>
 </section>
 
+<!-- 10b · accuracy fix -->
+<section class="slide" data-title="Second signal">
+  <div class="eyebrow rv">Fixing accuracy · a second signal</div>
+  <h2 class="rv" style="--i:1">15 % isn't enough. So it never decides alone.</h2>
+  <div class="stackcol">
+    <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches <b>motion</b> instead. It votes with Gemma, and on its own it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, beside the GPU, so it adds almost nothing to the wait.</p>
+    <div class="statrow">
+      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent: Gemma's own labels vs the violence model (every clip scored 0.96 or more)</span></div>
+      <div class="stat rv" style="--i:4"><span class="v num" data-to="77" data-suf=" %">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
+      <div class="stat rv" style="--i:5"><span class="v num">20 → 60 %</span><span class="l">incidents found after fine-tuning E2B on 12B's answers (same dataset). Tested, not in the live demo yet: its 4-bit export failed.</span></div>
+    </div>
+  </div>
+</section>
+
 <!-- 11 · quantization -->
 <section class="slide" data-title="Quantization">
   <div class="eyebrow rv">Quantization · 4-bit vs 8-bit</div>
@@ -418,7 +443,7 @@ tr.out td { color: var(--faint); }
 
 <!-- 13 · filler -->
 <section class="slide center" data-title="Improve">
-  <h1 class="split" style="max-width:15ch">Then we made it <span class="cy">faster</span>, and <span class="sa">harder to fool</span>.</h1>
+  <h1 class="split" style="max-width:15ch">Then we made it <span class="cy">faster</span>.</h1>
 </section>
 
 <!-- 14 · scene gate -->
@@ -434,22 +459,9 @@ tr.out td { color: var(--faint); }
   </div>
 </section>
 
-<!-- 15 · violence model -->
-<section class="slide" data-title="Violence model">
-  <div class="eyebrow rv">Improvement 2 · Violence clip model</div>
-  <h2 class="rv" style="--i:1">Never trust one model's word.</h2>
-  <div class="imp">
-    <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches motion instead. It votes with Gemma, and alone it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, next to the GPU, so it adds almost nothing to the wait.</p>
-    <div class="bigstats">
-      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">6</span> / 6</span><span class="l">faculty clips flagged as violent (Gemma's own labels vs the violence model, every clip scored 0.96 or more)</span></div>
-      <div class="stat rv" style="--i:4"><span class="v num" data-to="77" data-suf=" %">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
-    </div>
-  </div>
-</section>
-
 <!-- 16 · MTP -->
 <section class="slide" data-title="Speculative decoding">
-  <div class="eyebrow rv">Improvement 3 · Speculative decoding (MTP)</div>
+  <div class="eyebrow rv">Improvement 2 · Speculative decoding (MTP)</div>
   <h2 class="rv" style="--i:1">A 98 MB drafter guesses ahead. Gemma checks the guesses.</h2>
   <div class="tablewrap rv" style="--i:2">
     <table>
@@ -470,10 +482,10 @@ tr.out td { color: var(--faint); }
   <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows</div>
   <h2 class="rv" style="--i:1">33 seconds down to 5.</h2>
   <div class="bars">
-    <div class="bar base rv" style="--i:2"><span>Baseline, one window at a time</span><div class="track"><div class="fill" style="--w:100%;--i:2"></div></div><span class="v">33.1 s</span></div>
-    <div class="bar rv" style="--i:3"><span>+ 8 windows in flight</span><div class="track"><div class="fill" style="--w:60.7%;--i:3"></div></div><span class="v">20.1 s</span></div>
-    <div class="bar rv" style="--i:4"><span>+ short, capped summaries</span><div class="track"><div class="fill" style="--w:45.3%;--i:4"></div></div><span class="v">15.0 s</span></div>
-    <div class="bar rv" style="--i:5"><span>+ skip static windows</span><div class="track"><div class="fill" style="--w:16.3%;--i:5"></div></div><span class="v">5.4 s</span></div>
+    <div class="bar base rv" style="--i:2"><span class="lab"><span>Baseline, one window at a time</span><span class="note">each window waits for the one before</span></span><div class="track"><div class="fill" style="--w:100%;--i:2"></div></div><span class="v">33.1 s</span></div>
+    <div class="bar rv" style="--i:3"><span class="lab"><span>+ 8 windows in flight</span><span class="note"><b>−13.0 s</b> · the GPU batches windows together</span></span><div class="track"><div class="fill" style="--w:60.7%;--i:3"></div></div><span class="v">20.1 s</span></div>
+    <div class="bar rv" style="--i:4"><span class="lab"><span>+ short, capped summaries</span><span class="note"><b>−5.1 s</b> · fewer words for the model to write</span></span><div class="track"><div class="fill" style="--w:45.3%;--i:4"></div></div><span class="v">15.0 s</span></div>
+    <div class="bar rv" style="--i:5"><span class="lab"><span>+ skip static windows</span><span class="note"><b>−9.6 s</b> · unchanged frames skip the model</span></span><div class="track"><div class="fill" style="--w:16.3%;--i:5"></div></div><span class="v">5.4 s</span></div>
   </div>
   <p class="takeaway rv" style="--i:6"><b>6.1× faster</b> in total. On top of this, the laptop adds the scene gate (−28 % Gemma time) and speculative decoding (−9.5 % per window, −22 % per chat answer).</p>
   <div class="src">Kaggle T4, vLLM, Qwen3-VL-2B FP16, warm server · results/ablation</div>
@@ -585,6 +597,7 @@ tr.out td { color: var(--faint); }
   show(m ? parseInt(m[1], 10) - 1 : 0);
   fit();
   window.addEventListener("resize", fit);
+  window.addEventListener("hashchange", function () { var h = /^#s(\d+)$/.exec(location.hash); if (h && parseInt(h[1], 10) - 1 !== cur) show(parseInt(h[1], 10) - 1); });
   document.addEventListener("keydown", function (e) {
     if (["ArrowRight", "PageDown", " ", "Enter"].indexOf(e.key) >= 0) { e.preventDefault(); show(cur + 1); }
     else if (["ArrowLeft", "PageUp", "Backspace"].indexOf(e.key) >= 0) { e.preventDefault(); show(cur - 1); }
