@@ -9,7 +9,10 @@
 # 2. *Add Input*: **"Smart-City CCTV Violence Detection Dataset (SCVD)"** (folders Violence / Weaponized / NonViolence).
 # 3. **Save Version → Save & Run All** (runs in the background). Download `model_compare.zip` when done.
 #
-# The faculty's 5 sample clips (v001, v006, v011, v026, w001) are skipped, so they stay a clean test set.
+# The faculty's 6 sample clips (v001, v003, v006, v011, v026, w001) are skipped, so they stay a clean test set.
+#
+# `SET` picks the line-up: "small" (default) compares models of Gemma 4 E2B's size, the ones that fit the demo
+# laptop's 6 GB GPU at 4-bit; "large" is the first run (E2B against E4B, 12B and Qwen3-VL 4B/8B).
 # Cascade rows (a fast model + a bigger re-checker) are computed from the saved per-video results: the
 # re-checker's verdict replaces the fast model's only on videos the fast model flagged.
 
@@ -24,16 +27,22 @@ import time
 from pathlib import Path
 
 WORK = Path("/kaggle/working")
-OUT = WORK / "model_compare"
+OUT = WORK / "model_compare"  # the zip is named after it
 OUT.mkdir(parents=True, exist_ok=True)
 QUICK = True  # True: 20 videos per class (~60 videos per model). False: 60 per class.
 PER_CLASS = 20 if QUICK else 60
 # qwen3-vl's default tags are the thinking variants: with a JSON schema they returned empty answers on Kaggle
 # (run 1: 0/60 valid). The -instruct tags answer directly.
-MODELS = ["gemma4:e2b", "gemma4:e4b-it-qat", "gemma4:12b-it-qat", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct"]
-CASCADES = [("gemma4:e2b", "gemma4:e4b-it-qat"), ("gemma4:e2b", "gemma4:12b-it-qat"),
-            ("gemma4:e2b", "qwen3-vl:8b-instruct")]
-EXCLUDE = {"v001", "v006", "v011", "v026", "w001"}
+SET = "small"
+if SET == "small":  # about 2-4 B parameters, 4-bit in Ollama, each fits 6 GB
+    MODELS = ["gemma4:e2b", "qwen3-vl:2b-instruct", "qwen2.5vl:3b", "gemma3:4b", "granite3.2-vision:2b",
+              "llava-phi3:3.8b"]
+    CASCADES = []
+else:
+    MODELS = ["gemma4:e2b", "gemma4:e4b-it-qat", "gemma4:12b-it-qat", "qwen3-vl:4b-instruct", "qwen3-vl:8b-instruct"]
+    CASCADES = [("gemma4:e2b", "gemma4:e4b-it-qat"), ("gemma4:e2b", "gemma4:12b-it-qat"),
+                ("gemma4:e2b", "qwen3-vl:8b-instruct")]
+EXCLUDE = {"v001", "v003", "v006", "v011", "v026", "w001"}
 LABEL_MAP = {"violence": "fighting", "weaponized": "weapon", "weaponised": "weapon", "nonviolence": "none",
              "non_violence": "none", "normal": "none"}
 INCIDENT = {"fighting", "riot", "weapon", "harassment", "arrest", "theft", "vandalism", "crowd_incident"}
