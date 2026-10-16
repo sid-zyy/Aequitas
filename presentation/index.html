@@ -1,0 +1,503 @@
+<title>Aequitas by CyberSIege</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a fixed 1600×900 stage scaled to the window; one idea per slide, left-aligned, big numbers carry the argument. */
+:root {
+  --bg: #0b1218;
+  --panel: #111b23;
+  --line: #233644;
+  --fg: #e7eef3;
+  --muted: #8ea3b1;
+  --faint: #5f7584;
+  --accent: #2fd3e8;
+  --saffron: #ff9933;
+  --danger: #ff4d5e;
+  --ok: #37c25b;
+  --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body);
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+.viewport { position: fixed; inset: 0; overflow: hidden; }
+.stage {
+  width: 1600px; height: 900px; position: absolute; left: 50%; top: 50%;
+  transform-origin: center center;
+}
+.slide {
+  position: absolute; inset: 0; padding: 88px 112px 96px;
+  display: flex; flex-direction: column; gap: 36px;
+  visibility: hidden; opacity: 0; transition: opacity .45s ease, visibility 0s linear .45s;
+  box-sizing: border-box;
+}
+.slide.active { visibility: visible; opacity: 1; transition: opacity .45s ease; }
+.slide.center { justify-content: center; }
+
+/* type scale: 15 / 18 / 22 / 30 / 44 / 64 / 96 / 150 */
+.eyebrow { font-family: var(--mono); font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+h1, h2 { font-family: var(--display); font-weight: 800; font-stretch: 75%; margin: 0; line-height: .98; text-wrap: balance; letter-spacing: -.01em; }
+h2 { font-size: 72px; }
+h1 { font-size: 112px; }
+.huge { font-size: 132px; }
+.lede { font-size: 26px; line-height: 1.45; color: var(--muted); max-width: 62ch; margin: 0; }
+.lede b, .hl { color: var(--fg); font-weight: 600; }
+.sa { color: var(--saffron); }
+.cy { color: var(--accent); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.src { font-family: var(--mono); font-size: 15px; color: var(--faint); margin-top: auto; }
+
+/* reveal: visible at rest, rises in when its slide becomes active */
+.slide.active .rv { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 140ms + 120ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* chrome */
+.progress { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; background: var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.progress i { display: block; height: 4px; width: 0; background: var(--accent); transition: width .4s ease; }
+.counter { position: fixed; right: max(20px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-family: var(--mono); font-size: 13px; color: var(--faint); }
+.brand { position: fixed; left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-family: var(--mono); font-size: 13px; color: var(--faint); letter-spacing: .1em; }
+.navbtn { position: fixed; top: 50%; transform: translateY(-50%); width: 44px; height: 88px; border: 0; background: transparent; color: var(--faint); font-size: 28px; cursor: pointer; opacity: .35; }
+.navbtn:hover, .navbtn:focus-visible { opacity: 1; color: var(--fg); outline: 2px solid var(--accent); outline-offset: -4px; }
+.navbtn.prev { left: env(safe-area-inset-left, 0px); }
+.navbtn.next { right: env(safe-area-inset-right, 0px); }
+
+/* --- 1 brief --- */
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.stagecard { border-top: 2px solid var(--line); padding-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.stagecard .k { font-family: var(--mono); font-size: 18px; color: var(--accent); }
+.stagecard h3 { font-family: var(--display); font-stretch: 85%; font-weight: 700; font-size: 44px; margin: 0; }
+.stagecard p { font-size: 21px; color: var(--muted); margin: 0; line-height: 1.45; }
+.rules { display: flex; gap: 14px; flex-wrap: wrap; }
+.chip { font-family: var(--mono); font-size: 16px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.chip.hot { border-color: var(--saffron); color: var(--saffron); }
+
+/* --- 2 headlines --- */
+.clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.clip { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+.clip .meta { font-family: var(--mono); font-size: 14px; color: var(--faint); display: flex; justify-content: space-between; gap: 12px; }
+.clip .meta b { color: var(--saffron); font-weight: 600; }
+.clip h4 { margin: 0; font-family: var(--body); font-weight: 600; font-size: 21px; line-height: 1.32; }
+.clip p { margin: 0; font-size: 16px; color: var(--muted); line-height: 1.4; }
+.punch { font-family: var(--display); font-stretch: 80%; font-weight: 700; font-size: 40px; line-height: 1.1; margin: 0; }
+
+/* --- 3 reveal --- */
+.why { font-family: var(--display); font-stretch: 90%; font-weight: 400; font-size: 64px; color: var(--muted); }
+.why span { display: inline-block; }
+.slide.active .why span { animation: rise .6s ease both; animation-delay: calc(var(--i) * 260ms + 200ms); }
+.word { font-family: var(--display); font-weight: 900; font-stretch: 125%; font-size: 190px; line-height: 1; letter-spacing: .02em; display: flex; }
+.word span { display: inline-block; }
+.slide.active .word span { animation: drop .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 70ms + 1500ms); }
+@keyframes drop { from { opacity: 0; transform: translateY(-60px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+.beam { width: 1336px; height: 4px; background: var(--accent); border-radius: 2px; transform-origin: center; position: relative; }
+.beam::before, .beam::after { content: ""; position: absolute; top: -9px; width: 22px; height: 22px; border-radius: 50%; background: var(--saffron); }
+.beam::before { left: -8px; } .beam::after { right: -8px; }
+.slide.active .beam { animation: settle 2.2s cubic-bezier(.3,1.4,.4,1) both; animation-delay: 2.2s; }
+@keyframes settle { 0% { transform: rotate(-9deg); opacity: 0; } 15% { opacity: 1; } 45% { transform: rotate(5deg); } 70% { transform: rotate(-2deg); } 100% { transform: rotate(0); opacity: 1; } }
+.gloss { font-family: var(--mono); font-size: 20px; color: var(--faint); }
+.slide.active .gloss { animation: rise .8s ease both; animation-delay: 3.6s; }
+
+/* --- 4 about --- */
+.two { display: grid; grid-template-columns: 1fr 1.25fr; gap: 72px; align-items: start; }
+.two > * { min-width: 0; }
+.does { display: flex; flex-direction: column; gap: 18px; }
+.does p { margin: 0; font-size: 24px; line-height: 1.45; color: var(--muted); }
+.does p b { color: var(--fg); font-weight: 600; }
+.reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; }
+.reason { display: flex; flex-direction: column; gap: 6px; }
+.reason h4 { margin: 0; font-family: var(--display); font-stretch: 85%; font-size: 28px; font-weight: 700; line-height: 1.1; }
+.reason p { margin: 0; font-size: 18px; line-height: 1.45; color: var(--muted); }
+
+/* --- 5 student --- */
+.story { display: flex; flex-direction: column; gap: 26px; }
+.story .t { font-family: var(--mono); font-size: 24px; color: var(--danger); letter-spacing: .08em; }
+.story p { margin: 0; font-family: var(--display); font-stretch: 85%; font-weight: 600; font-size: 60px; line-height: 1.08; max-width: 24ch; }
+.story p.dim { color: var(--muted); font-weight: 400; }
+.slide.active .story > * { animation: rise 1s ease both; animation-delay: calc(var(--i) * 900ms + 200ms); }
+
+/* --- pipeline --- */
+.pipe { display: flex; align-items: stretch; gap: 0; }
+.node { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.node.stage-n { border-color: var(--accent); }
+.node .k { font-family: var(--mono); font-size: 14px; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; }
+.node.stage-n .k { color: var(--accent); }
+.node h4 { margin: 0; font-size: 23px; font-weight: 600; line-height: 1.2; }
+.node p { margin: 0; font-size: 15px; color: var(--muted); line-height: 1.4; }
+.node .ms { margin-top: auto; font-family: var(--mono); font-size: 24px; color: var(--saffron); }
+.arrow { flex: none; width: 30px; display: grid; place-items: center; color: var(--faint); font-size: 22px; }
+.totals { display: flex; gap: 72px; align-items: flex-end; }
+.stat { display: flex; flex-direction: column; gap: 6px; }
+.stat .v { font-family: var(--display); font-weight: 800; font-stretch: 75%; font-size: 96px; line-height: .9; }
+.stat .l { font-size: 18px; color: var(--muted); max-width: 24ch; line-height: 1.35; }
+
+/* --- tables --- */
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 21px; }
+th { text-align: left; font-family: var(--mono); font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: .1em; color: var(--faint); padding: 0 18px 12px; border-bottom: 1px solid var(--line); }
+td { padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr.pick td { background: rgba(47, 211, 232, .09); }
+tr.pick td:first-child { color: var(--accent); font-weight: 600; }
+tr.out td { color: var(--faint); }
+.tag { font-family: var(--mono); font-size: 13px; padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; margin-left: 10px; vertical-align: 2px; }
+.good { color: var(--ok); } .bad { color: var(--danger); } .warn { color: var(--saffron); }
+.takeaway { font-size: 24px; line-height: 1.45; margin: 0; max-width: 70ch; color: var(--muted); }
+.takeaway b { color: var(--fg); }
+
+/* --- improvement slides --- */
+.imp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center; flex: 1; }
+.imp > * { min-width: 0; }
+.imp .what { font-size: 24px; line-height: 1.5; color: var(--muted); margin: 0; }
+.imp .what b { color: var(--fg); }
+.bigstats { display: flex; flex-direction: column; gap: 34px; }
+.bigstats .stat .v { font-size: 110px; }
+.bars { display: flex; flex-direction: column; gap: 24px; }
+.bar { display: grid; grid-template-columns: 340px 1fr 110px; align-items: center; gap: 20px; font-size: 22px; }
+.bar .track { height: 48px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); width: var(--w); border-radius: 3px; }
+.bar.base .fill { background: var(--faint); }
+.slide.active .bar .fill { animation: grow 1s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 160ms + 300ms); }
+@keyframes grow { from { width: 0; } }
+.bar .v { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- end --- */
+.end { display: grid; grid-template-columns: 1fr 470px; gap: 64px; align-items: center; height: 100%; }
+.end > * { min-width: 0; }
+.end figure { margin: 0; height: 760px; position: relative; }
+.end img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; border-radius: 4px; filter: grayscale(.35) contrast(1.05); }
+.end figcaption { position: absolute; bottom: -26px; right: 0; font-family: var(--mono); font-size: 12px; color: var(--faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.active { transition: none; }
+  .slide.active * { animation: none !important; }
+}
+</style>
+
+<div class="viewport">
+<div class="stage" id="stage">
+
+<!-- 1 · problem statement -->
+<section class="slide" data-title="Problem">
+  <div class="eyebrow rv">The problem statement</div>
+  <h2 class="rv" style="--i:1;max-width:15ch">Turn raw video into answers. On one consumer GPU.</h2>
+  <div class="stages">
+    <div class="stagecard rv" style="--i:2"><span class="k">Stage 1</span><h3>Summarise</h3><p>A vision-language model describes what happens in the video, in plain words.</p></div>
+    <div class="stagecard rv" style="--i:3"><span class="k">Stage 2</span><h3>Classify</h3><p>The summary is labelled: fighting, person down, crowd incident, weapon, suspicious activity.</p></div>
+    <div class="stagecard rv" style="--i:4"><span class="k">Stage 3</span><h3>Chat</h3><p>Ask questions about everything that was seen, and get answers grounded in real events.</p></div>
+  </div>
+  <div class="rules rv" style="--i:5">
+    <span class="chip">Open-source models only</span><span class="chip">No paid cloud APIs</span><span class="chip">React + FastAPI</span><span class="chip">4-bit / 8-bit quantization</span><span class="chip">Speculative decoding</span><span class="chip hot">Judged on total execution time</span>
+  </div>
+</section>
+
+<!-- 2 · the climate -->
+<section class="slide" data-title="Climate">
+  <div class="eyebrow rv">India, 2026</div>
+  <h2 class="rv" style="--i:1">Video already decides who gets blamed.</h2>
+  <div class="clips">
+    <article class="clip rv" style="--i:2"><div class="meta"><b>The Week</b><span>22 Jul 2026</span></div><h4>Why Delhi HC asked police to keep video evidence of CJP protest at Jantar Mantar: ‘Not isolated incidents’</h4><p>The court ordered CCTV and other footage preserved.</p></article>
+    <article class="clip rv" style="--i:3"><div class="meta"><b>IANS</b><span>21 Jul 2026</span></div><h4>Delhi protest clashes: Police analyse 250 videos to identify miscreants</h4><p>Phone, CCTV, drone and bodycam footage, reviewed by hand.</p></article>
+    <article class="clip rv" style="--i:4"><div class="meta"><b>Newslaundry</b><span>22 Jul 2026</span></div><h4>Fact check shows Delhi police used baton with nails at Jantar Mantar</h4><p>Police called the clips unrelated. Metadata and geolocation placed them on 20 July.</p></article>
+    <article class="clip rv" style="--i:5"><div class="meta"><b>The Quint</b><span>3 Aug 2026</span></div><h4>Old Visuals Falsely Shared as Those of ‘New’ Ongoing Protests at Jantar Mantar</h4><p>June and July clips recirculated as August footage.</p></article>
+    <article class="clip rv" style="--i:6"><div class="meta"><b>LiveLaw</b><span>19 Feb 2020</span></div><h4>‘Photographs Disclose Policemen Pelting Stones On The Crowd’, Karnataka HC Grants Bail To Anti-CAA Protesters</h4><p>The CCTV said to show the accused was never produced.</p></article>
+    <article class="clip rv" style="--i:7"><div class="meta"><b>The Quint</b><span>2016</span></div><h4>JNU Row: Forensic Test Finds Two Videos of Feb 9 Event Doctored</h4><p>Two of seven clips aired on TV had been manipulated.</p></article>
+  </div>
+  <p class="punch rv" style="--i:8">The cameras are already there. What's missing is an <span class="cy">honest record</span> of what they show.</p>
+</section>
+
+<!-- 3 · and that's why we built -->
+<section class="slide center" data-title="Why">
+  <div class="why"><span style="--i:0">And</span> <span style="--i:1">that's</span> <span style="--i:2">why</span> <span style="--i:3">we</span> <span style="--i:4">built</span></div>
+  <div class="word" aria-label="AEQUITAS"><span style="--i:0">A</span><span style="--i:1">E</span><span style="--i:2">Q</span><span style="--i:3">U</span><span style="--i:4">I</span><span style="--i:5">T</span><span style="--i:6">A</span><span style="--i:7">S</span></div>
+  <div class="beam" aria-hidden="true"></div>
+  <div class="gloss">aequitas · Latin · fairness, equal treatment</div>
+</section>
+
+<!-- 4 · aequitas -->
+<section class="slide" data-title="Aequitas">
+  <div class="eyebrow rv">What we built</div>
+  <h2 class="rv" style="--i:1;max-width:20ch">A second pair of eyes that writes down only what it sees.</h2>
+  <div class="two">
+    <div class="does">
+      <p class="rv" style="--i:2">It watches <b>CCTV, police bodycams and citizen uploads</b>.</p>
+      <p class="rv" style="--i:3">It writes a <b>plain summary of every four seconds</b> and flags possible incidents.</p>
+      <p class="rv" style="--i:4">An <b>officer confirms or dismisses</b> each one, and every decision is logged.</p>
+      <p class="rv" style="--i:5">Anyone with access can <b>ask questions</b> and gets answers that point to the exact clip and minute.</p>
+    </div>
+    <div class="reasons">
+      <div class="reason rv" style="--i:3"><h4>Runs on one laptop, offline</h4><p>Footage never leaves the station. Nothing to leak and no cloud bill.</p></div>
+      <div class="reason rv" style="--i:4"><h4>Describes, never identifies</h4><p>No face recognition. No sorting people by religion, caste, party, flags or clothes.</p></div>
+      <div class="reason rv" style="--i:5"><h4>A protest is not an incident</h4><p>A peaceful gathering at Jantar Mantar is a right. Aequitas never flags it.</p></div>
+      <div class="reason rv" style="--i:6"><h4>A human decides</h4><p>The AI flags. An officer confirms. The record shows who decided what.</p></div>
+      <div class="reason rv" style="--i:7"><h4>Evidence you can check</h4><p>Every event keeps its key frame, timestamp, camera and a file hash.</p></div>
+      <div class="reason rv" style="--i:8"><h4>For citizens too</h4><p>Report an incident in English, Hindi or Kannada, from a phone.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · student -->
+<section class="slide center" data-title="Student">
+  <div class="story">
+    <span class="t" style="--i:0">11:40 PM · OUTER RING ROAD</span>
+    <p style="--i:1">A student is attacked on the walk back to the hostel.</p>
+    <p class="dim" style="--i:2">No patrol nearby. No camera flagged it.<br>Calling it in feels like it won't change anything.</p>
+    <p class="cy" style="--i:3;font-size:44px">Here's what reporting it could look like.</p>
+  </div>
+</section>
+
+<!-- 6 · demo -->
+<section class="slide center" data-title="Demo">
+  <div class="eyebrow rv">Live demo</div>
+  <h1 class="huge rv" style="--i:1">Let's run it.</h1>
+  <div class="rules rv" style="--i:2"><span class="chip">Citizen portal</span><span class="chip">Officer's queue</span><span class="chip">Live CCTV</span><span class="chip">Bodycam review</span><span class="chip">Ask Aequitas</span></div>
+</section>
+
+<!-- 7 · under the hood -->
+<section class="slide center" data-title="Under the hood">
+  <h1 class="huge rv">So what's actually<br><span class="cy">under the hood?</span></h1>
+</section>
+
+<!-- 8 · pipeline -->
+<section class="slide" data-title="Pipeline">
+  <div class="eyebrow rv">The pipeline · times from the six faculty clips, warm run</div>
+  <h2 class="rv" style="--i:1">Three stages, each timed on its own.</h2>
+  <div class="pipe rv" style="--i:2">
+    <div class="node"><span class="k">Input</span><h4>4-second window</h4><p>4 frames as a 2×2 grid, from any camera or upload</p><span class="ms">4 fps</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><span class="k">Gate</span><h4>Scene check</h4><p>SigLIP skips calm street scenes</p><span class="ms">44 ms</span></div>
+    <div class="arrow">→</div>
+    <div class="node stage-n"><span class="k">Stage 1</span><h4>Summarise</h4><p>Gemma 4 E2B, 4-bit, with speculative decoding</p><span class="ms">0.58 s</span></div>
+    <div class="arrow">→</div>
+    <div class="node stage-n"><span class="k">Stage 2</span><h4>Classify</h4><p>One label from the summary text only</p><span class="ms">0.32 s</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><span class="k">Check</span><h4>Second signal</h4><p>Violence model votes; two windows must agree</p><span class="ms">90 ms</span></div>
+    <div class="arrow">→</div>
+    <div class="node stage-n"><span class="k">Stage 3</span><h4>Chat</h4><p>Answers cite event IDs, streamed</p><span class="ms">0.45 s</span></div>
+  </div>
+  <div class="totals">
+    <div class="stat rv" style="--i:3"><span class="v num">25 s</span><span class="l">to analyse all six faculty clips, 39 s of footage in total</span></div>
+    <div class="stat rv" style="--i:4"><span class="v num">0.91 s</span><span class="l">per window for summarise and classify together (p50)</span></div>
+    <div class="stat rv" style="--i:5"><span class="v num">6 GB</span><span class="l">laptop GPU (RTX 4050). Everything runs locally.</span></div>
+  </div>
+</section>
+
+<!-- 9 · filler -->
+<section class="slide center" data-title="Options">
+  <h1 class="rv" style="max-width:16ch">Before rushing into anything, we wanted to find our <span class="sa">best options</span>.</h1>
+</section>
+
+<!-- 10 · model choice -->
+<section class="slide" data-title="Model">
+  <div class="eyebrow rv">Choosing the vision-language model</div>
+  <h2 class="rv" style="--i:1">Five models, same 60 test videos.</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Model</th><th class="n">Incidents found</th><th class="n">Precision</th><th class="n">Time per video</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Gemma 4 E2B<span class="tag">chosen</span></td><td class="n">15 %</td><td class="n">0.86</td><td class="n">1.8 s</td><td>Fastest, and fits our 6 GB GPU</td></tr>
+        <tr><td>Gemma 4 E4B</td><td class="n">18 %</td><td class="n">0.88</td><td class="n">2.7 s</td><td>1.5× slower for one more hit</td></tr>
+        <tr><td>Gemma 4 12B</td><td class="n">70 %</td><td class="n">0.82</td><td class="n">5.1 s</td><td class="warn">Best eyes, 3× slower, too big for 6 GB</td></tr>
+        <tr class="out"><td>Qwen3-VL 4B</td><td class="n">0 %</td><td class="n">–</td><td class="n">6.6 s</td><td>Never named an incident</td></tr>
+        <tr class="out"><td>Qwen3-VL 8B</td><td class="n">0 %</td><td class="n">–</td><td class="n">12.5 s</td><td>Never named an incident</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway rv" style="--i:3">Latency is judged hardest, so we took <b>the fastest model that fits</b>. Then we closed the accuracy gap with a <b>second signal</b> rather than a bigger model, and taught E2B from 12B (incidents found <b>20 % → 60 %</b> on the same dataset).</p>
+  <div class="src">SCVD, 60 clips (fight / weapon / normal), faculty clips excluded · Kaggle T4, Ollama · results/model_compare, results/finetune</div>
+</section>
+
+<!-- 11 · quantization -->
+<section class="slide" data-title="Quantization">
+  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit</div>
+  <h2 class="rv" style="--i:1">On a 6 GB GPU, only 4-bit fits.</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Precision</th><th class="n">Gemma 4 E2B weights</th><th>Fits our 6 GB?</th><th class="n">Accuracy, 12B on GSM8K</th><th class="n">Speed vs BF16</th></tr></thead>
+      <tbody>
+        <tr><td>BF16 (full)</td><td class="n">~10 GB</td><td class="bad">No</td><td class="n">0.964</td><td class="n">1.00×</td></tr>
+        <tr><td>8-bit (FP8)</td><td class="n">~5 GB</td><td class="warn">Too tight with the image encoder and cache</td><td class="n">0.967</td><td class="n">1.10×</td></tr>
+        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M)<span class="tag">used</span></td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n">0.961 *</td><td class="n">–</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway rv" style="--i:3">Published benchmarks show <b>8-bit and 4-bit cost almost no accuracy</b> on Gemma 4 (within 0.3 points of full precision). Google's own 4-bit release cuts memory by about <b>72 %</b>. For us the choice was made by memory: <b>4-bit is the only version that runs</b> on the laptop.</p>
+  <div class="src">Accuracy and speed: AxionML Gemma-4-12B FP8 / NVFP4 model cards (GSM8K, one Blackwell GPU). * NVFP4, a different 4-bit format from ours · memory: Google blog, Gemma 4 QAT</div>
+</section>
+
+<!-- 12 · detector -->
+<section class="slide" data-title="Detector">
+  <div class="eyebrow rv">Choosing the person detector</div>
+  <h2 class="rv" style="--i:1">CCTV people are tiny. Most detectors miss them.</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Detector</th><th class="n">Accuracy (AP50)</th><th class="n">People under 30 px found</th><th class="n">Time per frame</th></tr></thead>
+      <tbody>
+        <tr class="out"><td>YOLO11n (where we started)</td><td class="n">0.10</td><td class="n">3 %</td><td class="n">12 ms</td></tr>
+        <tr><td>YOLO26-L, 960 px</td><td class="n">0.34</td><td class="n">20 %</td><td class="n">30 ms</td></tr>
+        <tr class="pick"><td>RF-DETR Small<span class="tag">chosen</span></td><td class="n">0.43</td><td class="n">48 %</td><td class="n">26 ms</td></tr>
+        <tr><td>RF-DETR Medium</td><td class="n">0.48</td><td class="n">51 %</td><td class="n">32 ms</td></tr>
+        <tr><td>D-FINE X</td><td class="n">0.52</td><td class="n">75 %</td><td class="n">75 ms</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway rv" style="--i:3">RF-DETR Small finds <b>16× more small people</b> than where we started, at 26 ms a frame and with an open Apache-2.0 licence. On the CAVIAR incident clips, alarms triggered went from <b>0 of 6 to 3 of 6</b>.</p>
+  <div class="src">CAVIAR, 1,048 frames, 2,035 hand-labelled people (median height 22 px) · RTX 4050 laptop · docs/DETECTION.md</div>
+</section>
+
+<!-- 13 · filler -->
+<section class="slide center" data-title="Improve">
+  <h1 class="rv" style="max-width:15ch">Then we made it <span class="cy">faster</span>, and <span class="sa">harder to fool</span>.</h1>
+</section>
+
+<!-- 14 · scene gate -->
+<section class="slide" data-title="Scene gate">
+  <div class="eyebrow rv">Improvement 1 · Scene gate (SigLIP)</div>
+  <h2 class="rv" style="--i:1">Don't ask the big model about an empty road.</h2>
+  <div class="imp">
+    <p class="what rv" style="--i:2">A small image–text model compares each window with descriptions of normal and incident scenes in <b>44 ms</b>. Calm street scenes skip Gemma. It never skips the first window of a camera, never when the violence model is worried, and Gemma still looks at least every 30 s.</p>
+    <div class="bigstats">
+      <div class="stat rv" style="--i:3"><span class="v num cy">−28 %</span><span class="l">Gemma time on 21 demo clips (113.9 s → 81.7 s)</span></div>
+      <div class="stat rv" style="--i:4"><span class="v num">0 / 39</span><span class="l">incident windows skipped (threshold set on these windows)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · violence model -->
+<section class="slide" data-title="Violence model">
+  <div class="eyebrow rv">Improvement 2 · Violence clip model</div>
+  <h2 class="rv" style="--i:1">Never trust one model's word.</h2>
+  <div class="imp">
+    <p class="what rv" style="--i:2">Gemma described the faculty fights as people <b>standing and sitting</b>. A small video model (r3d-18, trained on 8,000 clips) watches motion instead. It votes with Gemma, and alone it needs a score of 0.9. It runs on the <b>CPU in 90 ms</b>, next to the GPU, so it adds almost nothing to the wait.</p>
+    <div class="bigstats">
+      <div class="stat rv" style="--i:3"><span class="v num"><span class="bad">0</span> → <span class="good">4</span> / 5</span><span class="l">faculty fights confirmed (Gemma alone vs with the second signal)</span></div>
+      <div class="stat rv" style="--i:4"><span class="v num">77 %</span><span class="l">of fights caught on 300 unseen real CCTV clips, with 14 % false alarms</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · MTP -->
+<section class="slide" data-title="Speculative decoding">
+  <div class="eyebrow rv">Improvement 3 · Speculative decoding (MTP)</div>
+  <h2 class="rv" style="--i:1">A 98 MB drafter guesses ahead. Gemma checks the guesses.</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Drafted tokens</th><th class="n">Summary, tokens/s</th><th class="n">Chat, tokens/s</th><th class="n">Time per window</th><th class="n">Chat answer</th><th class="n">Labels right</th></tr></thead>
+      <tbody>
+        <tr><td>0 (off)</td><td class="n">82</td><td class="n">89</td><td class="n">1.28 s</td><td class="n">0.58 s</td><td class="n">44 / 72</td></tr>
+        <tr><td>1</td><td class="n">98</td><td class="n">125</td><td class="n">1.19 s</td><td class="n">0.47 s</td><td class="n">44–45 / 72</td></tr>
+        <tr class="pick"><td>3<span class="tag">used</span></td><td class="n">106</td><td class="n">165</td><td class="n">1.16 s</td><td class="n">0.45 s</td><td class="n">44–45 / 72</td></tr>
+        <tr class="out"><td>6</td><td class="n">84</td><td class="n">133</td><td class="n">1.17 s</td><td class="n">0.44 s</td><td class="n">44–45 / 72</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="takeaway rv" style="--i:3">Decoding is <b>1.3× faster for summaries and 1.85× for chat</b>. A window gets only 9.5 % faster, because most of its time goes to reading the image. Chat answers get <b>22 % faster</b>, and no label changed in a way that matters (0 / 33 false alarms at every setting).</p>
+</section>
+
+<!-- 17 · every lever -->
+<section class="slide" data-title="Time saved">
+  <div class="eyebrow rv">Where the time went · 80 s test video, 20 windows</div>
+  <h2 class="rv" style="--i:1">33 seconds down to 5.</h2>
+  <div class="bars">
+    <div class="bar base rv" style="--i:2"><span>Baseline, one window at a time</span><div class="track"><div class="fill" style="--w:100%;--i:2"></div></div><span class="v">33.1 s</span></div>
+    <div class="bar rv" style="--i:3"><span>+ 8 windows in flight</span><div class="track"><div class="fill" style="--w:60.7%;--i:3"></div></div><span class="v">20.1 s</span></div>
+    <div class="bar rv" style="--i:4"><span>+ short, capped summaries</span><div class="track"><div class="fill" style="--w:45.3%;--i:4"></div></div><span class="v">15.0 s</span></div>
+    <div class="bar rv" style="--i:5"><span>+ skip static windows</span><div class="track"><div class="fill" style="--w:16.3%;--i:5"></div></div><span class="v">5.4 s</span></div>
+  </div>
+  <p class="takeaway rv" style="--i:6"><b>6.1× faster</b> in total. On top of this, the laptop adds the scene gate (−28 % Gemma time) and speculative decoding (−9.5 % per window, −22 % per chat answer).</p>
+  <div class="src">Kaggle T4, vLLM, Qwen3-VL-2B FP16, warm server · results/ablation</div>
+</section>
+
+<!-- 18 · accuracy & latency -->
+<section class="slide" data-title="Results">
+  <div class="eyebrow rv">Accuracy and latency, task by task · RTX 4050 laptop</div>
+  <h2 class="rv" style="--i:1">What it gets right, and how fast.</h2>
+  <div class="tablewrap rv" style="--i:2">
+    <table>
+      <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td>Faculty clips, end to end</td><td>4 of 5 fights confirmed · 1 wrong label (weapon clip called “chase”)</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
+        <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
+        <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
+        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
+        <tr><td>Bodycam recording summary</td><td>Key points tied to real timestamps</td><td class="n">1.6 s</td></tr>
+        <tr><td>Citizen report, Hindi / Kannada → English</td><td>6 / 6 sample reports kept every fact</td><td class="n">0.31 / 0.34 s</td></tr>
+        <tr><td>21 Bengaluru demo clips</td><td>7 / 10 incidents confirmed · 1 false alarm</td><td class="n">1 min 48 s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="src">Faculty clips were never used for training or tuning. The scene-gate and 0.9 thresholds were set on our demo clips, so the demo-clip rows are demo settings, not held-out accuracy.</div>
+</section>
+
+<!-- 19 · thank you -->
+<section class="slide" data-title="Thank you" style="padding-block:70px">
+  <div class="end">
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <div class="eyebrow rv">Aequitas · Roman goddess of fairness</div>
+      <h1 class="huge rv" style="--i:1">Thank you.</h1>
+      <p class="lede rv" style="--i:2">She holds the scales level. We built a system that keeps <b>a fair record</b>, and leaves the judgement to people.</p>
+      <div class="rv" style="--i:3;font-family:var(--display);font-stretch:110%;font-weight:800;font-size:40px;letter-spacing:.04em">Cyber<span class="sa">SIege</span></div>
+    </div>
+    <figure class="rv" style="--i:1"><img src="assets/aequitas.jpg" alt="Marble statue of Aequitas holding up a pair of scales, by Francis Harwood, 1758"><figcaption>Francis Harwood, Aequitas, 1758 · photo Sailko, CC BY 3.0</figcaption></figure>
+  </div>
+</section>
+
+</div>
+</div>
+
+<button class="navbtn prev" id="prev" aria-label="Previous slide">‹</button>
+<button class="navbtn next" id="next" aria-label="Next slide">›</button>
+<div class="brand">AEQUITAS · CYBERSIEGE</div>
+<div class="counter num" id="counter"></div>
+<div class="progress"><i id="bar"></i></div>
+
+<script>
+(function () {
+  var stage = document.getElementById("stage");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var cur = 0;
+  function fit() {
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = "translate(-50%, -50%) scale(" + s + ")";
+  }
+  function show(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides[cur].classList.remove("active");
+    void slides[i].offsetWidth; // restart this slide's animations
+    slides[i].classList.add("active");
+    cur = i;
+    document.getElementById("counter").textContent = (i + 1) + " / " + slides.length;
+    document.getElementById("bar").style.width = ((i + 1) / slides.length * 100) + "%";
+    try { history.replaceState(null, "", "#s" + (i + 1)); } catch (e) {}
+  }
+  var m = /^#s(\d+)$/.exec(location.hash);
+  slides[0].classList.add("active");
+  show(m ? parseInt(m[1], 10) - 1 : 0);
+  fit();
+  window.addEventListener("resize", fit);
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight", "PageDown", " ", "Enter"].indexOf(e.key) >= 0) { e.preventDefault(); show(cur + 1); }
+    else if (["ArrowLeft", "PageUp", "Backspace"].indexOf(e.key) >= 0) { e.preventDefault(); show(cur - 1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key === "f" || e.key === "F") {
+      try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(function () {}); } catch (err) {}
+    }
+  });
+  document.getElementById("next").addEventListener("click", function () { show(cur + 1); });
+  document.getElementById("prev").addEventListener("click", function () { show(cur - 1); });
+  var x0 = null;
+  document.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1));
+  });
+})();
+</script>

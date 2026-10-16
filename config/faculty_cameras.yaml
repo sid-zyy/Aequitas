@@ -1,0 +1,8 @@
+# The six faculty sample clips (the held-out test; never used for tuning). One camera per clip, periodic mode.
+cameras:
+  - {camera_id: fac-v001, name: "fac-v001", source: data/footage/faculty/v001.mp4, realtime: false, start_time: "2026-10-16T09:00:00"}
+  - {camera_id: fac-v003, name: "fac-v003", source: data/footage/faculty/v003.mp4, realtime: false, start_time: "2026-10-16T09:01:00"}
+  - {camera_id: fac-v006, name: "fac-v006", source: data/footage/faculty/v006.mp4, realtime: false, start_time: "2026-10-16T09:02:00"}
+  - {camera_id: fac-v011, name: "fac-v011", source: data/footage/faculty/v011.mp4, realtime: false, start_time: "2026-10-16T09:03:00"}
+  - {camera_id: fac-v026, name: "fac-v026", source: data/footage/faculty/v026.mp4, realtime: false, start_time: "2026-10-16T09:04:00"}
+  - {camera_id: fac-w001, name: "fac-w001", source: data/footage/faculty/w001.mp4, realtime: false, start_time: "2026-10-16T09:05:00"}
