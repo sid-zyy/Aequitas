@@ -1,18 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { api, openCitizenPortal, User } from "../api";
 
 export function BrandMark({ size = 34 }: { size?: number }) {
-  // A shield with a saffron/green edge: public-safety cue without using any official emblem.
+  // A circular seal: navy and gold rings, the scales of justice (Aequitas: fairness), saffron and green laurel arcs.
+  // Deliberately not the State Emblem or any police crest: their use is restricted by law.
+  const id = useId().replace(/:/g, "");
+  const ring = size >= 48; // the lettered ring is only legible at larger sizes
   return (
-    <div className="brand-mark" style={{ width: size, height: size }}>
-      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6l-8-3Z" fill="#0e1a4d" stroke="#fff" strokeWidth="1.4" />
-        <path d="M8 12.2 11 15l5-6" stroke="#2fd3e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M4 5.5 12 2.5" stroke="#ff9933" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M12 21.5c4.6-1.4 8-5 8-10" stroke="#1e9e3a" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-    </div>
+    <svg className="brand-mark" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Aequitas seal">
+      <circle cx="50" cy="50" r="48" fill="#0b2a6f" stroke="#c9a349" strokeWidth="2.5" />
+      {ring && (
+        <>
+          <path id={`seal-${id}`} d="M50,50 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0" fill="none" />
+          <text fontSize="8.2" fontWeight="700" letterSpacing="1.6" fill="#f3e3b5" fontFamily="Georgia, 'Times New Roman', serif">
+            <textPath href={`#seal-${id}`} startOffset="50%" textAnchor="middle">AEQUITAS ★ PUBLIC SAFETY ★ BENGALURU ★</textPath>
+          </text>
+        </>
+      )}
+      <circle cx="50" cy="50" r={ring ? 33 : 40} fill="#fff" stroke="#c9a349" strokeWidth="1.6" />
+      <g transform={ring ? "translate(50 50) scale(0.82) translate(-50 -50)" : undefined}>
+        <path d="M22 66 Q14 48 27 30" fill="none" stroke="#ff9933" strokeWidth="3" strokeLinecap="round" />
+        <path d="M78 66 Q86 48 73 30" fill="none" stroke="#138808" strokeWidth="3" strokeLinecap="round" />
+        <g stroke="#0b2a6f" strokeLinecap="round" fill="#0b2a6f">
+          <line x1="50" y1="30" x2="50" y2="68" strokeWidth="3.4" />
+          <circle cx="50" cy="27.5" r="3" stroke="none" />
+          <line x1="33" y1="37" x2="67" y2="37" strokeWidth="3.4" />
+          <path d="M33 37 L26 53 M33 37 L40 53 M67 37 L60 53 M67 37 L74 53" strokeWidth="1.5" fill="none" />
+          <path d="M24.5 53 Q33 62 41.5 53 Z M58.5 53 Q67 62 75.5 53 Z" stroke="none" />
+          <rect x="39" y="67" width="22" height="4.5" rx="1.5" stroke="none" />
+        </g>
+      </g>
+    </svg>
   );
 }
 

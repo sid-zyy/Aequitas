@@ -69,24 +69,40 @@ export default function CitizenReport() {
     }
   }
 
+  const second = lang === "en" ? STRINGS.kn : STRINGS.en; // masthead shows the name in two languages
   return (
-    <>
+    <div className="gov" lang={lang}>
+      <a className="skip" href="#main">{t.navReport}</a>
       <Tricolour />
-      <div className="portal" lang={lang}>
-        <div className="brand" style={{ marginBottom: 22, flexWrap: "wrap" }}>
-          <BrandMark size={40} />
-          <div>
-            <div className="brand-name" style={{ fontSize: 18 }}>AEQUITAS · {t.portal}</div>
-            <div className="brand-sub">{t.tagline} · <b lang="kn">ಸುರಕ್ಷಿತ ಬೆಂಗಳೂರು</b></div>
-          </div>
+      <div className="gov-util">
+        <div className="gov-wrap">
+          <span>{t.demo}</span>
           <div className="lang-switch" role="group" aria-label={t.language}>
             {LANGS.map((l) => (
-              <button key={l.id} type="button" lang={l.id} className={"btn" + (lang === l.id ? " navy" : " ghost")}
+              <button key={l.id} type="button" lang={l.id} className={"lang-btn" + (lang === l.id ? " on" : "")}
                 aria-pressed={lang === l.id} onClick={() => setLang(l.id)}>{l.name}</button>
             ))}
           </div>
         </div>
-
+      </div>
+      <header className="gov-mast">
+        <div className="gov-wrap">
+          <BrandMark size={72} />
+          <div className="gov-names">
+            <div className="gov-title">{t.site}</div>
+            <div className="gov-title-2" lang={lang === "en" ? "kn" : "en"}>{second.site}</div>
+            <div className="gov-org">{t.org}</div>
+          </div>
+          <div className="gov-emergency"><span className="gov-112 mono">112</span><span>{t.emergencyBar}</span></div>
+        </div>
+      </header>
+      <nav className="gov-nav" aria-label={t.site}>
+        <div className="gov-wrap">
+          <a href="#main">{t.navReport}</a>
+          <a href="#track">{t.navTrack}</a>
+        </div>
+      </nav>
+      <main className="portal" id="main">
         {!done && <EmergencyChat lang={lang} onUrgent={setUrgent} />}
 
         {done ? (
@@ -149,7 +165,7 @@ export default function CitizenReport() {
           </form>
         )}
 
-        <form className="card card-body" style={{ marginTop: 16 }} onSubmit={check}>
+        <form className="card card-body" id="track" style={{ marginTop: 16 }} onSubmit={check}>
           <div className="card-title" style={{ marginBottom: 10 }}>{t.checkTitle}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10 }}>
             <input className="input" placeholder={t.reportId} value={checkId} onChange={(e) => setCheckId(e.target.value)} />
@@ -158,8 +174,13 @@ export default function CitizenReport() {
           </div>
           {checkResult && <p style={{ marginBottom: 0 }}>{checkResult}</p>}
         </form>
-        <p className="note" style={{ marginTop: 18 }}>{t.demo}</p>
-      </div>
-    </>
+      </main>
+      <footer className="gov-foot">
+        <div className="gov-wrap">
+          <div className="gov-foot-numbers mono">{t.footerNumbers}</div>
+          <div>{t.org} · {t.demo}</div>
+        </div>
+      </footer>
+    </div>
   );
 }

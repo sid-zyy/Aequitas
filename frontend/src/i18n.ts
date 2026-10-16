@@ -7,6 +7,12 @@ export const LANGS: { id: Lang; name: string }[] = [
 export const LANG_NAME: Record<string, string> = { en: "English", hi: "Hindi", kn: "Kannada" };
 
 const en = {
+  site: "Citizen Reporting Portal",
+  org: "Aequitas · Public Safety, Bengaluru",
+  navReport: "Report an incident",
+  navTrack: "Track a report",
+  emergencyBar: "In an emergency, dial 112",
+  footerNumbers: "Emergency 112 · Police 100 · Fire 101 · Ambulance 108 · Women's helpline 1091",
   portal: "Citizen report",
   tagline: "Report harassment or an incident to the police",
   title: "Report an incident",
@@ -48,6 +54,12 @@ const en = {
 type Strings = typeof en;
 
 const hi: Strings = {
+  site: "नागरिक रिपोर्टिंग पोर्टल",
+  org: "एक्विटास · जन सुरक्षा, बेंगलुरु",
+  navReport: "घटना की सूचना दें",
+  navTrack: "रिपोर्ट की स्थिति देखें",
+  emergencyBar: "आपातकाल में 112 डायल करें",
+  footerNumbers: "आपातकाल 112 · पुलिस 100 · अग्निशमन 101 · एम्बुलेंस 108 · महिला हेल्पलाइन 1091",
   portal: "नागरिक रिपोर्ट",
   tagline: "उत्पीड़न या किसी घटना की सूचना पुलिस को दें",
   title: "घटना की रिपोर्ट करें",
@@ -88,6 +100,12 @@ const hi: Strings = {
 };
 
 const kn: Strings = {
+  site: "ನಾಗರಿಕ ವರದಿ ಪೋರ್ಟಲ್",
+  org: "ಏಕ್ವಿಟಾಸ್ · ಸಾರ್ವಜನಿಕ ಸುರಕ್ಷತೆ, ಬೆಂಗಳೂರು",
+  navReport: "ಘಟನೆ ವರದಿ ಮಾಡಿ",
+  navTrack: "ವರದಿಯ ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಿ",
+  emergencyBar: "ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ 112 ಡಯಲ್ ಮಾಡಿ",
+  footerNumbers: "ತುರ್ತು 112 · ಪೊಲೀಸ್ 100 · ಅಗ್ನಿಶಾಮಕ 101 · ಆಂಬ್ಯುಲೆನ್ಸ್ 108 · ಮಹಿಳಾ ಸಹಾಯವಾಣಿ 1091",
   portal: "ನಾಗರಿಕ ವರದಿ",
   tagline: "ಕಿರುಕುಳ ಅಥವಾ ಘಟನೆಯ ಬಗ್ಗೆ ಪೊಲೀಸರಿಗೆ ವರದಿ ಮಾಡಿ",
   title: "ಘಟನೆಯನ್ನು ವರದಿ ಮಾಡಿ",
