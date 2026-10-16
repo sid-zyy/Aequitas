@@ -125,7 +125,8 @@ Per frame:
    Confidence comes from agreement, not the VLM's self-report.
 
 Tracking choice is measured in docs/TRACKING.md: on CAVIAR ground truth the tracker moves IDF1 by ≤ 0.02,
-while the detector moves it 3×. DeepSORT was rejected.
+while the detector moves it 3×. DeepSORT was rejected. Detector choice is measured in docs/DETECTION.md: RF-DETR-Small
+finds 16× more small CAVIAR people than YOLO11n (AP50 0.425 vs 0.102) for ~15 ms more per frame; not integrated yet.
 
 **Why periodic is the main mode now:** on low-resolution CCTV the rules found 0 of 6 CAVIAR incidents
 (docs/EVAL_CAVIAR.md). YOLO11n misses small, high-angle people, so the rules never fire. Periodic mode doesn't

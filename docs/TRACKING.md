@@ -123,7 +123,8 @@ rows (same detections, 15 s buffer):
 - **Done: migrated off `supervision.ByteTrack`** to Ultralytics' `BYTETracker` (above). supervision is now used
   only for `sv.Detections`. The `<0.31` pin in `pyproject.toml` can go once 0.31 is tested.
 - **Spend the latency budget on detection, not association.**
-  - YOLO11m at 960 px tripled IDF1 on CAVIAR. Time it on the 4050 first.
+  - YOLO11m at 960 px tripled IDF1 on CAVIAR. The full detector comparison (docs/DETECTION.md) favours
+    RF-DETR-Small: IDF1 0.05 → 0.22 at untuned thresholds, AP50 4.2×.
   - Run triggered-mode detection above 4 fps only where the rules need IDs.
 - **For bodycam tracking later,** use BoT-SORT for its camera-motion compensation, without ReID.
 
