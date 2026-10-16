@@ -1,0 +1,105 @@
+{
+  "label": "warmup",
+  "view": "cctv",
+  "run": "2026-10-16T17:59:35",
+  "n_videos": 5,
+  "total_execution_s": 27.98,
+  "per_video_s": {
+    "p50": 3.569,
+    "p95": 11.617,
+    "mean": 5.597
+  },
+  "classification": {
+    "n": 5,
+    "accuracy": 0.0,
+    "macro_f1": 0.0,
+    "valid": 5,
+    "per_class_f1": {
+      "fighting": 0.0
+    },
+    "incident_precision": 1.0,
+    "incident_recall": 1.0,
+    "confusion": {
+      "arrest": {},
+      "chase": {},
+      "fighting": {
+        "arrest": 3,
+        "chase": 2
+      }
+    }
+  },
+  "summary_rougeL_mean": null,
+  "categories": {
+    "harassment": "a person follows, blocks, touches, gropes, grabs or threatens another person who tries to move away or resist (stalking, eve-teasing, molestation)",
+    "fighting": "two or more people hit, kick, push or grapple with each other (assault, brawl)",
+    "riot": "a group acts violently: throwing stones or objects, damaging property, or clashing with police",
+    "weapon": "a person holds or uses a weapon such as a knife, gun, sword, or a stick or rod raised to strike",
+    "fire": "uncontrolled fire, flames or thick smoke, such as a burning vehicle, shop or building, also while firefighters or police work at it (not a stove, lamp, candle or cooking flame)",
+    "arrest": "police or officers (people in uniform) restrain, handcuff, hold the arms of, detain or escort a person who is being held. Officers who only stand, talk, work or direct traffic are not an arrest",
+    "chase": "one person or vehicle runs after or pursues another at speed",
+    "person_down": "a person has fallen or is lying on the ground and stays down",
+    "accident": "a road accident: vehicles collide, or a vehicle hits a person or overturns",
+    "theft": "a person snatches, grabs or takes someone's belongings and moves away quickly",
+    "vandalism": "a person deliberately breaks, damages or defaces property without a crowd clash",
+    "crowd_incident": "an area is dangerously overcrowded, or a crowd suddenly runs or scatters (stampede)",
+    "tailgating": "two or more people pass through an entrance one right behind the other",
+    "suspicious_activity": "a person lingers in one place for a long time, or a bag is left unattended"
+  },
+  "rows": [
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence858.avi",
+      "gold": "fighting",
+      "pred": "arrest",
+      "summary": "Several people fall to the ground after a sudden impact, while others attempt to restrain and handcuff one individual. The scene involves a chaotic struggle and a collapse.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 12.637,
+      "classify_s": 0.844,
+      "video_total_s": 13.572
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence712.avi",
+      "gold": "fighting",
+      "pred": "chase",
+      "summary": "A person walks from the left to the right of the frame, then sits at the table. Another person walks from the right to the left of the frame, then sits at the table.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.861,
+      "classify_s": 0.849,
+      "video_total_s": 3.798
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence904.avi",
+      "gold": "fighting",
+      "pred": "arrest",
+      "summary": "A man pushes a woman to the ground, then handcuffs her. A police officer assists with the restraint.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.605,
+      "classify_s": 0.88,
+      "video_total_s": 3.569
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence630.avi",
+      "gold": "fighting",
+      "pred": "arrest",
+      "summary": "Two men push and shove each other in the cell, while a police officer handcuffs one of them.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.574,
+      "classify_s": 0.85,
+      "video_total_s": 3.51
+    },
+    {
+      "video": "/kaggle/input/datasets/toluwaniaremu/smartcity-cctv-violence-detection-dataset-scvd/SCVD/SCVD_converted_sec_split/Train/Violence/Violence913.avi",
+      "gold": "fighting",
+      "pred": "chase",
+      "summary": "A person is running towards the camera, then stops and walks away. A second person is standing still.",
+      "reference": null,
+      "rougeL": null,
+      "summarize_s": 2.614,
+      "classify_s": 0.827,
+      "video_total_s": 3.535
+    }
+  ]
+}
