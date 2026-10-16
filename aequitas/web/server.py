@@ -556,7 +556,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         language: str = Form("en", max_length=5),
         urgent: bool = Form(False),
     ):
-        """Anyone can report: a video and what happened. Returns a report ID and a tracking code."""
+        """Anyone can report: a video and what happened. Returns the report ID used to check the status."""
         if not consent:
             raise HTTPException(400, "Please confirm the video may be shared with the police")
         ip = request.client.host if request.client else ""
@@ -601,19 +601,20 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "created_at": int(time.time() * 1000),
         })
         lang = detect_language(description, language)
-        report_id, code = reports.create(upload_id, cam_id, description.strip(), sha.hexdigest(),
+        report_id = reports.create(upload_id, cam_id, description.strip(), sha.hexdigest(),
                                          location.strip() or None, when, contact.strip() or None, lang, urgent)
         auth.audit(None, "report_submitted", report_id, {"sha256": sha.hexdigest(), "bytes": written}, ip)
         jobs.submit(upload_id)
         threading.Thread(target=_check_authenticity, args=(report_id, dest.as_posix()), daemon=True).start()
-        return {"report_id": report_id, "tracking_code": code, "status": PUBLIC_STATUS["received"],
-                "message": "Keep the report ID and tracking code to check the status. The code is shown only once."}
+        return {"report_id": report_id, "status": PUBLIC_STATUS["received"],
+                "message": "Keep the report ID to check the status."}
 
     @app.get("/api/citizen/reports/{report_id}")
-    def citizen_status(report_id: str, code: str = Query(..., min_length=4, max_length=40)):
-        r = reports.check_code(report_id, code)
+    def citizen_status(report_id: str):
+        """Public: the status and dates only, never the description, video or notes."""
+        r = reports.get(report_id.strip().upper())
         if r is None:
-            raise HTTPException(404, "No report with that ID and tracking code")
+            raise HTTPException(404, "No report with that ID")
         return {"report_id": r["report_id"], "status": PUBLIC_STATUS[r["status"]],
                 "submitted_at": r["created_at"], "updated_at": r["updated_at"]}
 

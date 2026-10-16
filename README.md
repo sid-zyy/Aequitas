@@ -58,7 +58,7 @@ writes it to the audit log. It's for a laptop demo only: the server listens on 1
   or dismiss (audited), a whole-recording overview, a printable report marked as an AI draft, and the total and
   per-stage time.
 - **All reports:** the citizen-report archive.
-- **Citizen portal** (`/report`): public upload with a tracking code.
+- **Citizen portal** (`/report`): public upload, and a separate tab to track a report by its ID.
 - **Analyst chat:** streamed, grounded answers.
 
 The React app lives in `frontend/` (Vite + TypeScript); its build in `aequitas/web/frontend_dist/` is committed.

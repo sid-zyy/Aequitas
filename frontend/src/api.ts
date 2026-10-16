@@ -123,7 +123,7 @@ export const api = {
   assist: (body: { lang: string; message?: string; choice?: "yes" | "no" }) =>
     request<AssistTurn>("/api/citizen/assist", json(body)),
   submitReport: (form: FormData) =>
-    request<{ report_id: string; tracking_code: string; status: string; message: string }>(
+    request<{ report_id: string; status: string; message: string }>(
       "/api/citizen/reports", { method: "POST", body: form }),
   recordings: () => request<Recording[]>("/api/bodycam"),
   recording: (id: string) => request<RecordingDetail>(`/api/bodycam/${id}`),
@@ -139,9 +139,9 @@ export const api = {
     request<BodyEvent>(`/api/reports/${id}/events/${eventId}/review`, json({ decision })),
   askReport: (id: string, question: string, history: History) =>
     request<VideoAnswer>(`/api/reports/${id}/ask`, json({ question, history })),
-  reportStatus: (id: string, code: string) =>
+  reportStatus: (id: string) =>
     request<{ report_id: string; status: string; submitted_at: number; updated_at: number }>(
-      `/api/citizen/reports/${encodeURIComponent(id)}?code=${encodeURIComponent(code)}`),
+      `/api/citizen/reports/${encodeURIComponent(id)}`),
 };
 
 export type StreamEvent =

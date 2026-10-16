@@ -109,16 +109,18 @@ def test_session_tokens_are_not_stored_in_plain_text(app_client):
 
 # ---------- citizen reports ----------
 
-def test_citizen_report_flow_with_tracking_code(app_client):
+def test_citizen_report_status_by_report_id(app_client):
     c = app_client
     r = _report(c, c.tmp, location="MG Road bus stop", incident_at="2026-10-15T18:30")
     assert r.status_code == 200
-    rid, code = r.json()["report_id"], r.json()["tracking_code"]
-    st = c.get(f"/api/citizen/reports/{rid}", params={"code": code}).json()
-    assert st["status"] == "Received" and "description" not in st and "notes" not in st
-    assert c.get(f"/api/citizen/reports/{rid}", params={"code": "wrong-code"}).status_code == 404
+    rid = r.json()["report_id"]
+    assert "tracking_code" not in r.json()
+    st = c.get(f"/api/citizen/reports/{rid}").json()
+    assert st["status"] == "Received" and "description" not in st and "notes" not in st and "contact" not in st
+    assert c.get(f"/api/citizen/reports/{rid.lower()}").json()["report_id"] == rid  # typed in lower case
+    assert c.get("/api/citizen/reports/RNOTREAL").status_code == 404
     row = c.store._conn.execute("SELECT * FROM reports").fetchone()
-    assert row["tracking_hash"] != code and len(row["sha256"]) == 64 and row["status"] == "received"
+    assert len(row["sha256"]) == 64 and row["status"] == "received"
 
 
 def test_citizen_input_is_validated(app_client, tmp_path):

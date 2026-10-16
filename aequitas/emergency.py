@@ -39,14 +39,14 @@ TEXT = {
     },
     "report": {
         "en": "Okay. You can file a report with the form on this page: add the video (the original file from "
-              "your phone), say what happened, and where and when if you know. You will get a report ID and a "
-              "tracking code to check the status. If it becomes an emergency, call 112.",
+              "your phone), say what happened, and where and when if you know. You will get a report ID to "
+              "check the status. If it becomes an emergency, call 112.",
         "hi": "ठीक है। आप इस पेज के फ़ॉर्म से रिपोर्ट दर्ज कर सकते हैं: वीडियो जोड़ें (अपने फ़ोन की मूल फ़ाइल), "
-              "बताएँ कि क्या हुआ, और अगर पता हो तो कहाँ और कब। स्थिति देखने के लिए आपको एक रिपोर्ट आईडी और "
-              "ट्रैकिंग कोड मिलेगा। अगर आपात स्थिति बन जाए, तो 112 पर कॉल करें।",
+              "बताएँ कि क्या हुआ, और अगर पता हो तो कहाँ और कब। स्थिति देखने के लिए आपको एक "
+              "रिपोर्ट आईडी मिलेगी। अगर आपात स्थिति बन जाए, तो 112 पर कॉल करें।",
         "kn": "ಸರಿ. ಈ ಪುಟದ ಫಾರ್ಮ್ ಬಳಸಿ ನೀವು ವರದಿ ಸಲ್ಲಿಸಬಹುದು: ವೀಡಿಯೊ ಸೇರಿಸಿ (ನಿಮ್ಮ ಫೋನ್‌ನ ಮೂಲ ಫೈಲ್), "
               "ಏನಾಯಿತು ಎಂದು ತಿಳಿಸಿ, ಮತ್ತು ಗೊತ್ತಿದ್ದರೆ ಎಲ್ಲಿ ಮತ್ತು ಯಾವಾಗ ಎಂದು ಬರೆಯಿರಿ. ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಲು "
-              "ನಿಮಗೆ ವರದಿ ಐಡಿ ಮತ್ತು ಟ್ರ್ಯಾಕಿಂಗ್ ಕೋಡ್ ಸಿಗುತ್ತದೆ. ತುರ್ತು ಪರಿಸ್ಥಿತಿ ಎದುರಾದರೆ 112 ಗೆ ಕರೆ ಮಾಡಿ.",
+              "ನಿಮಗೆ ವರದಿ ಐಡಿ ಸಿಗುತ್ತದೆ. ತುರ್ತು ಪರಿಸ್ಥಿತಿ ಎದುರಾದರೆ 112 ಗೆ ಕರೆ ಮಾಡಿ.",
     },
     "unclear": {
         "en": "Sorry, I did not understand. Do you need emergency help right now? Please answer yes or no.",

@@ -1,13 +1,13 @@
 """Citizen reports: a video plus a description, analysed by the normal pipeline and reviewed by the police.
 
-Citizens have no account: they get a report ID and a one-time tracking code (only its hash is kept).
+Citizens have no account: they get a report ID, which is all they need to check the status (the public status
+lookup shows the status and dates only).
 Every file is fingerprinted (sha256) on arrival so later tampering is detectable, and an identical file
 uploaded again is linked to the first report instead of creating unrelated work."""
 
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import secrets
 import time
@@ -18,9 +18,6 @@ PUBLIC_STATUS = {  # what the citizen sees
     "closed": "Closed", "rejected": "Closed without action",
 }
 
-
-def _hash(code: str) -> str:
-    return hashlib.sha256(code.encode()).hexdigest()
 
 
 class ReportStore:
@@ -36,18 +33,17 @@ class ReportStore:
 
     def create(self, upload_id: str, camera_id: str, description: str, sha256: str, location: str | None = None,
                incident_at: int | None = None, contact: str | None = None, language: str = "en",
-               urgent: bool = False) -> tuple[str, str]:
-        """Returns (report_id, tracking_code). The code is shown to the citizen once and not stored."""
+               urgent: bool = False) -> str:
+        """Returns the report ID, the only thing the citizen needs to check the status."""
         report_id = "R" + secrets.token_hex(4).upper()
-        code = secrets.token_urlsafe(9)
         dup = self._q("SELECT report_id FROM reports WHERE sha256=? ORDER BY created_at LIMIT 1", (sha256,))
         now = int(time.time() * 1000)
         self._q("INSERT INTO reports(report_id, tracking_hash, upload_id, camera_id, description, location, "
                 "incident_at, contact, sha256, duplicate_of, status, created_at, updated_at, language, urgent) "
                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (report_id, _hash(code), upload_id, camera_id, description, location, incident_at, contact, sha256,
+                (report_id, "", upload_id, camera_id, description, location, incident_at, contact, sha256,
                  dup[0]["report_id"] if dup else None, "received", now, now, language, int(urgent)), commit=True)
-        return report_id, code
+        return report_id
 
     def get(self, report_id: str) -> dict | None:
         rows = self._q("SELECT * FROM reports WHERE report_id=?", (report_id,))
@@ -59,12 +55,6 @@ class ReportStore:
         else:
             rows = self._q("SELECT * FROM reports ORDER BY created_at DESC LIMIT ?", (limit,))
         return [self._row(r) for r in rows]
-
-    def check_code(self, report_id: str, code: str) -> dict | None:
-        rows = self._q("SELECT * FROM reports WHERE report_id=?", (report_id,))
-        if not rows or not hmac.compare_digest(rows[0]["tracking_hash"], _hash(code or "")):
-            return None
-        return self._row(rows[0])
 
     def update(self, report_id: str, status: str | None = None, notes: str | None = None) -> None:
         if status is not None and status not in STATUSES:
