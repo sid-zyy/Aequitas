@@ -12,6 +12,8 @@ export default function Live() {
   });
   const [state, setState] = useState<LiveState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The laptop webcam (source: browser) stays closed until asked for, so the page never pops a camera prompt.
+  const [webcamOpen, setWebcamOpen] = useState(false);
 
   useEffect(() => {
     api.localities().then((l) => {
@@ -34,7 +36,7 @@ export default function Live() {
   }, [selected]);
 
   const stats = useMemo(() => {
-    const cams = state?.cameras ?? [];
+    const cams = (state?.cameras ?? []).filter((c) => webcamOpen || !c.browser_camera);
     const latest = cams.map((c) => c.latest).filter(Boolean);
     const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
     return {
@@ -43,10 +45,11 @@ export default function Live() {
       window: avg(latest.map((w) => ((w!.summarize_ms ?? 0) + (w!.classify_ms ?? 0)) / 1000)),
       behind: avg(cams.map((c) => c.behind_live_s).filter((x): x is number => x != null)),
     };
-  }, [state]);
+  }, [state, webcamOpen]);
 
   const locName = state?.locality.name ?? localities.find((l) => l.id === selected)?.name ?? "";
-  const cams = state?.cameras ?? [];
+  const cams = (state?.cameras ?? []).filter((c) => !c.browser_camera);
+  const webcams = (state?.cameras ?? []).filter((c) => c.browser_camera);
 
   return (
     <main className="page">
@@ -86,6 +89,18 @@ export default function Live() {
             {cams.map((c) => <CameraTile key={c.id} cam={c} running={!!state?.running} />)}
           </div>
           {!cams.length && !error && <div className="card empty">Loading cameras…</div>}
+          {webcams.length > 0 && (
+            <div className="webcam-drawer">
+              <button className="btn" onClick={() => setWebcamOpen((o) => !o)} aria-expanded={webcamOpen}>
+                {webcamOpen ? "▾ Hide laptop webcam" : "▸ Laptop webcam (off)"}
+              </button>
+              {webcamOpen && (
+                <div className="cam-grid">
+                  {webcams.map((c) => <CameraTile key={c.id} cam={c} running={!!state?.running} />)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <aside className="sidebar">
