@@ -132,7 +132,10 @@ def frame_classifier(model_id: str, gpu_min_free_gb: float = 1.5):
     if model_id not in _CLASSIFIERS:
         from transformers import pipeline
 
-        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id, device=_device(gpu_min_free_gb))
+        # float32: transformers 5 loads the checkpoint's own half precision by default, which fails on the CPU
+        # ("Float and Half") whenever the GPU is busy with the VLM and the detector falls back
+        _CLASSIFIERS[model_id] = pipeline("image-classification", model=model_id, device=_device(gpu_min_free_gb),
+                                          dtype="float32")
     return _CLASSIFIERS[model_id]
 
 

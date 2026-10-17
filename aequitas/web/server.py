@@ -673,9 +673,10 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
 
     def _resume_authenticity() -> None:
         """A check runs in a thread, so a restart mid-check left the report 'checking…' forever.
-        Re-run any report that has no result yet, one at a time."""
+        Re-run any report that has no result yet, or whose frame check crashed, one at a time."""
         for r in reports.list(limit=500):
-            if r.get("authenticity"):
+            a = r.get("authenticity")
+            if a and not ((a.get("frames") or {}).get("error")):
                 continue
             up = store.upload(r["upload_id"]) or {}
             if up.get("path") and Path(up["path"]).exists():
