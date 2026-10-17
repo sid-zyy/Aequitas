@@ -7,6 +7,7 @@ const SAVED = "aequitas.locality";
 
 export default function Live() {
   const [localities, setLocalities] = useState<Locality[]>([]);
+  const [allConcerns, setAllConcerns] = useState(false);
   const [selected, setSelected] = useState<string>(() => {
     try { return localStorage.getItem(SAVED) ?? ""; } catch { return ""; }
   });
@@ -104,30 +105,30 @@ export default function Live() {
         </div>
 
         <aside className="sidebar">
-          <section className="card">
+          <AnalystChat localityName={locName} />
+          <section className="card concerns">
             <div className="card-head">
-              <span className="card-title">⚠ Concerns feed</span>
-              <span className="card-sub">{locName} · unconfirmed until an officer checks</span>
+              <span className="card-title">⚠ Concerns <span className="count">{state?.concerns.length ?? 0}</span></span>
+              <span className="card-sub">officer checks each one</span>
             </div>
             <div className="feed">
               {!state?.concerns.length && <div className="empty">No concerns yet.</div>}
-              {state?.concerns.map((ev) => (
-                <div key={ev.id} className="concern">
+              {state?.concerns.slice(0, allConcerns ? undefined : 3).map((ev) => (
+                <div key={ev.id} className="concern" title={ev.summary ?? ""}>
                   <img src={ev.keyframe_url} alt="" loading="lazy" />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="concern-meta">
-                      <span className="badge incident">{label(ev.category)}</span>
-                      <span className={"badge " + (ev.status === "confirmed" ? "status" : "unverified")}>{ev.status}</span>
-                      <span className="mono">{timeOf(ev.start_ts)}</span>
-                    </div>
-                    <div style={{ fontWeight: 600, marginTop: 3 }}>{ev.camera_name}</div>
-                    <p>{ev.summary}</p>
-                  </div>
+                  <span className="c-label">{label(ev.category)}</span>
+                  <span className="c-place">{ev.camera_name}</span>
+                  <span className="mono c-time">{timeOf(ev.start_ts).slice(0, 5)}</span>
+                  {ev.status !== "confirmed" && <span className="c-dot" title="unverified" />}
                 </div>
               ))}
+              {(state?.concerns.length ?? 0) > 3 && (
+                <button className="c-more" onClick={() => setAllConcerns((x) => !x)}>
+                  {allConcerns ? "Show fewer" : `Show all ${state!.concerns.length}`}
+                </button>
+              )}
             </div>
           </section>
-          <AnalystChat localityName={locName} />
         </aside>
       </div>
     </main>

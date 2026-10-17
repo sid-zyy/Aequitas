@@ -501,3 +501,18 @@ html:has(.gov), html:has(.gov) body, html:has(.gov) #root { background: #f2f4f8;
 .msg.bot.weak .ev-card, .msg.bot.weak .moment { opacity: .55; }
 .weak-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(255,176,32,.12);
   border: 1px solid rgba(255,176,32,.4); color: #ffd58a; }
+
+/* sidebar: the chat leads, concerns are a compact list */
+.sidebar .chat { border: 1px solid rgba(47,211,232,.45); box-shadow: 0 0 0 1px rgba(47,211,232,.12), 0 10px 30px rgba(47,211,232,.08); }
+.sidebar .chat > .card-head { background: linear-gradient(90deg, rgba(47,211,232,.14), transparent); }
+.sidebar .chat .card-title { font-size: 15px; color: #e9fbfe; }
+.concerns .count { margin-left: 4px; padding: 0 7px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; }
+.concerns .feed { max-height: 260px; }
+.concerns .concern { display: grid; grid-template-columns: 44px auto 1fr auto auto; align-items: center; gap: 8px; padding: 6px 14px; }
+.concerns .concern img { width: 44px; height: 26px; border-radius: 4px; }
+.c-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #ff8a95; }
+.c-place { font-size: 12.5px; color: #d0dce4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.c-time { font-size: 11.5px; color: var(--faint); }
+.c-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+.c-more { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; color: var(--muted); padding: 7px; font-size: 12px; cursor: pointer; }
+.c-more:hover { color: var(--text); }
