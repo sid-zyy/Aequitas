@@ -294,3 +294,15 @@ def test_a_description_that_matches_nothing_never_hides_the_filtered_events(stor
 def test_words_of_the_named_camera_are_not_a_description():
     cams = [c.model_dump() | {"aliases": c.aliases} for c in CAMS]
     assert content_terms("any fights at the lobby", cams, DEFAULT_CATEGORIES, ["cam1"]) == []
+
+
+def test_per_video_chat_keeps_the_windows_that_match_the_question():
+    from aequitas.chat.video_qa import video_prompt
+
+    windows = [{"id": i, "t": i * 4.0, "label": "none", "summary": f"Officer walks along street {i}."}
+               for i in range(300)]
+    windows[250]["summary"] = "A man drops a ladder near the gate."
+    p = video_prompt("was there a ladder?", windows, [], None, relevant=[250])
+    assert "Windows most related to the question (found by meaning):\n16:40 A man drops a ladder" in p
+    assert p.count("ladder near the gate") == 2  # also kept in the thinned timeline
+    assert "ladder near the gate" not in video_prompt("was there a ladder?", windows, [], None)  # thinned away

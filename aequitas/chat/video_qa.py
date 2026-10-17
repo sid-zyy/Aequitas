@@ -18,7 +18,9 @@ CITE = re.compile(r"\[(\d{1,2}:\d{2}(?::\d{2})?)\]")
 
 
 def video_prompt(question: str, windows: list[dict], events: list[dict], summary: dict | None,
-                 citizen_text: str | None = None, history: list[dict] | None = None) -> str:
+                 citizen_text: str | None = None, history: list[dict] | None = None,
+                 relevant: list[int] = ()) -> str:
+    """relevant: IDs of this video's windows closest in meaning to the question (Qdrant), best first."""
     def decision(e: dict) -> str:
         return {"confirmed": "confirmed by an officer", "dismissed": "dismissed by an officer"}.get(
             e.get("review"), "not reviewed")
@@ -46,7 +48,11 @@ def video_prompt(question: str, windows: list[dict], events: list[dict], summary
     if events:
         parts.append("Key moments the AI flagged:\n" + "\n".join(
             f"{mmss(e['t'])} {cat_label(e['category'])} ({decision(e)}): {e.get('summary') or ''}" for e in events))
-    lines = timeline_lines(windows)
+    near = [w for i in relevant for w in windows if w.get("id") == i and w.get("summary")][:5]
+    if near:
+        parts.append("Windows most related to the question (found by meaning):\n" + "\n".join(
+            f"{mmss(w['t'])} {w['summary'].strip()}" for w in near))
+    lines = timeline_lines(windows, set(relevant))
     parts.append("Timeline, every analysed 4 s window:\n" + ("\n".join(lines) if lines else "(no window was analysed)"))
     for turn in (history or [])[-MAX_HISTORY:]:
         parts.append(f"Earlier question: {turn.get('q', '')}\nYour earlier answer: {turn.get('a', '')}")
@@ -66,10 +72,10 @@ def cited_times(text: str, duration_s: float) -> list[float]:
 
 def answer_video(llm, question: str, windows: list[dict], events: list[dict], summary: dict | None,
                  duration_s: float, citizen_text: str | None = None,
-                 history: list[dict] | None = None) -> dict:
+                 history: list[dict] | None = None, relevant: list[int] = ()) -> dict:
     """-> {"answer", "cited_s", "ms"}. Raises if the model fails (the route turns that into a 503)."""
     t0 = time.perf_counter()
-    prompt = video_prompt(question, windows, events, summary, citizen_text, history)
+    prompt = video_prompt(question, windows, events, summary, citizen_text, history, relevant)
     text = "".join(llm.stream_text([{"role": "user", "content": prompt}], max_tokens=256)).strip()
     if not text:
         raise RuntimeError("empty answer")

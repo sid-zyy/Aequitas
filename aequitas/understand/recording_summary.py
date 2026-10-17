@@ -45,9 +45,9 @@ def parse_mmss(text: str) -> float | None:
     return None
 
 
-def timeline_lines(windows: list[dict]) -> list[str]:
+def timeline_lines(windows: list[dict], keep_ids=()) -> list[str]:
     """'mm:ss [label] summary' per window; runs of identical windows merged, so long recordings fit."""
-    lines, prev = [], None
+    lines, prev, pinned = [], None, set()
     for w in windows:
         if not w.get("summary"):
             continue
@@ -59,9 +59,11 @@ def timeline_lines(windows: list[dict]) -> list[str]:
         if label != "none" and w.get("violence") is not None and (w.get("source") or "").startswith("clip_model"):
             # the violence model saw the fight in the motion even when the description missed it: say so
             label += f"; violence model {w['violence']:.2f}"
+        if w.get("id") in keep_ids:  # matched the question in the vector search: never thinned out
+            pinned.add(len(lines))
         lines.append(f"{mmss(w['t'])} [{label}] {w['summary'].strip()}")
     if len(lines) > MAX_LINES:  # keep every incident line, thin the rest evenly
-        inc = [i for i, ln in enumerate(lines) if "[none]" not in ln]
+        inc = [i for i, ln in enumerate(lines) if "[none]" not in ln or i in pinned]
         rest = [i for i in range(len(lines)) if i not in set(inc)]
         room = max(0, MAX_LINES - len(inc))
         keep = set(inc[:MAX_LINES]) | set(rest[:: max(1, len(rest) // room)][:room] if room else [])

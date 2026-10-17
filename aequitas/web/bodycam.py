@@ -39,7 +39,7 @@ def timeline(upload: dict, windows: list[dict], events: list[dict]) -> dict:
 
     t0 = upload["start_ts"]
     tl = {
-        "windows": [{"t": round((w["start_ts"] - t0) / 1000, 2), "end": round((w["end_ts"] - t0) / 1000, 2),
+        "windows": [{"id": w.get("id"), "t": round((w["start_ts"] - t0) / 1000, 2), "end": round((w["end_ts"] - t0) / 1000, 2),
                      "label": w["label"], "summary": w["summary"], "source": w["source"],
                      "violence": w["violence"]} for w in windows],
         "events": [{"id": e["event_id"], "t": round((e["start_ts"] - t0) / 1000, 2),
