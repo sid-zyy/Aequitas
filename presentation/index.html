@@ -589,24 +589,24 @@ table.dense td { padding: 8px 18px; }
 
 <!-- 11 · quantization -->
 <section class="slide" data-title="Quantization">
-  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · same 72 windows · Gemma on a Kaggle T4, Qwen on our laptop</div>
+  <div class="eyebrow rv">Quantization · 4-bit vs 8-bit vs 16-bit · same 72 windows</div>
   <h2 class="rv" style="--i:1">Measured, not assumed: 4-bit wins.</h2>
   <div class="tablewrap rv" style="--i:2">
     <table class="dense">
-      <thead><tr><th>Gemma 4 E2B · the model we use</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
+      <thead><tr><th>Gemma 4 E2B · Kaggle T4 GPU</th><th class="n">GPU memory</th><th>Fits our 6 GB?</th><th class="n">Incidents flagged</th><th class="n">False alarms</th><th class="n">Time per window</th></tr></thead>
       <tbody>
         <tr><td>16-bit (BF16)</td><td class="n">5.5 GB</td><td class="bad">No room left for the scene gate</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n bad">4.11 s</td></tr>
         <tr><td>8-bit (Q8_0)</td><td class="n">3.5 GB</td><td class="good">Yes</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n">2.06 s</td></tr>
         <tr><td>4-bit QAT</td><td class="n">2.5 GB</td><td class="good">Yes</td><td class="n">18 / 39</td><td class="n">0 / 33</td><td class="n">1.89 s</td></tr>
-        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M) + MTP<span class="tag">used</span></td><td class="n">2.7 GB</td><td class="good">Yes</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n good">1.84 s</td></tr>
-        <tr><td colspan="6" class="group" style="padding:14px 18px 6px">Qwen3-VL 2B · the runner-up · on our laptop</td></tr>
+        <tr class="pick"><td style="white-space:nowrap">4-bit (Q4_K_M) + MTP<span class="tag">used</span></td><td class="n">2.7 GB</td><td class="good">Yes</td><td class="n">20 / 39</td><td class="n">0 / 33</td><td class="n good">1.84 s<br><span style="font-size:15px;color:var(--ok)">1.16 s on our laptop</span></td></tr>
+        <tr><td colspan="6" class="group" style="padding:14px 18px 6px">Qwen3-VL 2B · our laptop (RTX 4050, a faster GPU)</td></tr>
         <tr><td>16-bit (BF16)</td><td class="n">4.7 GB</td><td class="bad">No: a fifth runs on the CPU</td><td class="n">33 / 39</td><td class="n">0 / 33</td><td class="n bad">9.64 s</td></tr>
         <tr><td>8-bit (Q8_0)</td><td class="n">2.5 GB</td><td class="good">Yes</td><td class="n">34 / 39</td><td class="n">0 / 33</td><td class="n">1.74 s</td></tr>
         <tr><td>4-bit (Q4_K_M)</td><td class="n">1.9 GB</td><td class="good">Yes</td><td class="n">33 / 39</td><td class="n">2 / 33</td><td class="n good">1.60 s</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="takeaway rv" style="--i:3">On Gemma, going from 16-bit to 4-bit <b>lost no detections</b>: the same 20 / 39 incident windows, 0 false alarms. 16-bit is <b>2.2× slower</b> than 8-bit; 4-bit is <b>8 % faster</b> than 8-bit on its own (QAT) and <b>11 %</b> with the MTP drafter, and it named the most fights and fires correctly.</p>
+  <p class="takeaway rv" style="--i:3">Head to head on our laptop, same 72 windows: <b>Gemma 4-bit 1.16 s</b> per window vs Qwen 4-bit 1.60 s. On Gemma, going from 16-bit to 4-bit <b>lost no detections</b>: the same 20 / 39 incident windows, 0 false alarms. 16-bit is <b>2.2× slower</b> than 8-bit; 4-bit is <b>8 % faster</b> than 8-bit on its own (QAT) and <b>11 %</b> with the MTP drafter, and it named the most fights and fires correctly.</p>
 </section>
 
 <!-- 12 · detector -->
