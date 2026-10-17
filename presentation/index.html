@@ -665,6 +665,20 @@ table.dense td { padding: 8px 18px; }
   <p class="takeaway rv" style="--i:3">RF-DETR Small finds <b>16× more small people</b> than where we started, at 26 ms a frame and with an open Apache-2.0 licence. On the CAVIAR incident clips, alarms triggered went from <b>0 of 6 to 3 of 6</b>.</p>
 </section>
 
+<!-- 12b · chatbot -->
+<section class="slide" data-title="Chatbot">
+  <div class="eyebrow rv">Stage 3 · the chatbot · SQL + Qdrant vector database</div>
+  <h2 class="rv" style="--i:1;max-width:24ch">Ask in plain words. Every answer points at the footage.</h2>
+  <div class="whygrid">
+    <div class="whycard rv" style="--i:2"><span class="k">Search by meaning</span><span class="v num good">20–60 ms</span><p>to find the answer. SQL keeps the place, time and type; <b>Qdrant</b> ranks every summary by meaning and BM25 by exact words. "Anyone near the train tracks?" finds moments that were never incidents.</p></div>
+    <div class="whycard rv" style="--i:3"><span class="k">Off the GPU</span><span class="v num">CPU</span><p>embeddings (bge-base, 10–25 ms a question), so search never competes with Gemma for the 6 GB. New summaries are indexed in the background every 3 s.</p></div>
+    <div class="whycard rv" style="--i:4"><span class="k">Grounded or nothing</span><span class="v num good">0</span><p>invented events. The list comes from the database, and the written answer is dropped if it cites anything that wasn't found. Every <b>[#id]</b> opens the key frame and the video.</p></div>
+    <div class="whycard rv" style="--i:5"><span class="k">Reads the question</span><span class="v num good">20 / 20</span><p>held-out questions understood (Gemma alone 15 / 20). Localities, misspellings like "Kormangala" or "fire incdent", and times like "the last hour".</p></div>
+    <div class="whycard rv" style="--i:6"><span class="k">A conversation</span><span class="v num">0 calls</span><p>to the model for follow-ups. "And yesterday?", "only unconfirmed", "the second one", "events like #12" are read by rules, so they cost no wait.</p></div>
+    <div class="whycard rv" style="--i:7"><span class="k">Fast, and honest</span><span class="v num good">0.45 s</span><p>for a written answer with the MTP drafter. When nothing matches closely, it says so and shows the nearest results greyed out instead of guessing.</p></div>
+  </div>
+</section>
+
 <!-- 13 · filler -->
 <section class="slide center" data-title="Improve">
   <h1 class="split" style="max-width:15ch">Then we made it <span class="cy">faster</span>.</h1>
@@ -757,7 +771,7 @@ table.dense td { padding: 8px 18px; }
       </div>
       <ul class="more">
         <li><b>Live CCTV</b> by Bengaluru locality</li>
-        <li><b>Chat that knows places</b>: "fights in Indiranagar"</li>
+        <li><b>Chat with a vector database</b>: "fights in Indiranagar", "anyone near the tracks?"</li>
         <li><b>Bodycam review</b> with key moments</li>
         <li><b>AI-generated video check</b> on uploads</li>
         <li><b>Scene gate</b> and <b>RF-DETR</b> detector</li>
