@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response as RawResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -140,6 +140,15 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         auth.create_user("admin", "admin", "admin", allow_weak=True)
         log.warning("no accounts yet: created demo account admin/admin (change it: aequitas create-user)")
     app.state.auth = auth
+    started_at = time.time()
+
+    def _require_admin(request: Request) -> None:
+        """Admin-only pages (the audit log). With sign-in switched off (development), anyone may see them."""
+        user = request.state.user
+        if user is None and not settings.auth.required:
+            return
+        if user is None or user["role"] != "admin":
+            raise HTTPException(403, "Only an admin can see this")
 
     @app.middleware("http")
     async def guard_and_revalidate(request: Request, call_next):
@@ -215,6 +224,29 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "sample_fps": settings.sample_fps,
         }
 
+    @app.get("/api/health")
+    def health():
+        """Control-room view of the system: model server, GPU, live lag, queue, audit chain, storage."""
+        from aequitas.web.health import collect
+
+        return collect(settings, store, auth, getattr(app.state, "live", None), started_at)
+
+    # ---------- audit log (admin) ----------
+
+    @app.get("/api/audit")
+    def audit_log(request: Request, limit: int = Query(200, ge=1, le=1000), action: str | None = None,
+                  user: str | None = None, target: str | None = Query(None, max_length=100),
+                  before_id: int | None = None):
+        _require_admin(request)
+        return {"entries": auth.audit_log(limit, action, user, target, before_id), "actions": auth.audit_actions()}
+
+    @app.get("/api/audit/verify")
+    def audit_verify(request: Request):
+        _require_admin(request)
+        t0 = time.perf_counter()
+        res = auth.verify_chain()
+        return {**res, "ms": round((time.perf_counter() - t0) * 1000, 1)}
+
     @app.get("/api/stats")
     def stats():
         day0 = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -253,6 +285,26 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         if r is None or not Path(r["keyframe_path"]).is_file():
             raise HTTPException(404, "keyframe not found")
         return FileResponse(r["keyframe_path"], media_type="image/jpeg")
+
+    @app.get("/api/events/{event_id}/evidence")
+    def evidence(event_id: int, request: Request):
+        """The incident as a self-checking ZIP: key frame, original video, manifest, hashes, audit trail."""
+        from aequitas.evidence import build_package
+
+        user = request.state.user
+        try:
+            data, manifest = build_package(store, auth, event_id, user["username"] if user else None)
+        except LookupError:
+            raise HTTPException(404, "event not found")
+        digest = hashlib.sha256(data).hexdigest()
+        auth.audit(user["user_id"] if user else None, "evidence_exported", f"event/{event_id}",
+                   {"package_sha256": digest, "bytes": len(data), "files": sorted(manifest["files"]),
+                    "audit_head": manifest["audit"]["chain_at_export"].get("head")},
+                   request.client.host if request.client else "")
+        name = f"aequitas-evidence-{event_id}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.zip"
+        return RawResponse(data, media_type="application/zip",
+                           headers={"Content-Disposition": f'attachment; filename="{name}"',
+                                    "X-Evidence-SHA256": digest})
 
     # ---------- chat ----------
 

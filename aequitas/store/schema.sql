@@ -126,7 +126,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
   target        TEXT,
   detail        TEXT,
   ip            TEXT,
-  created_at    INTEGER NOT NULL
+  created_at    INTEGER NOT NULL,
+  prev_hash     TEXT,                       -- hash chain: the previous entry's hash ('0'*64 for the first)
+  hash          TEXT                        -- HMAC-SHA256 (key in data/audit.key) over this entry and prev_hash
 );
 CREATE INDEX IF NOT EXISTS ix_audit_target ON audit_log(target);
 

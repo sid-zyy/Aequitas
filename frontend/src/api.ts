@@ -100,6 +100,24 @@ export type RecordingDetail = Recording & { windows: BodyWindow[]; events: BodyE
 export type VideoAnswer = { answer: string; cited_s: number[]; ms: number; model: string };
 type History = { q: string; a: string }[];
 
+export type HealthCheck = { name: string; status: "ok" | "warn" | "down"; detail: string };
+export type Health = {
+  status: "ok" | "warn" | "down"; checked_at: number; uptime_s: number; checks: HealthCheck[];
+  vlm: { backend: string; model: string; online: boolean; ping_ms: number | null; loaded: { model: string; vram_mb: number }[] };
+  gpu: { name: string; memory_used_mb: number; memory_total_mb: number; utilization_pct: number; temperature_c: number } | null;
+  pipeline: { windows: number; failed: number; summarize_ms_p50: number | null; classify_ms_p50: number | null;
+    lag_s_p50: number | null; dropped_15min: number; sample_fps: number; mode: string };
+  audit: AuditVerify; storage: { free_gb: number; db_mb: number };
+};
+export type AuditVerify = { ok: boolean; checked: number; broken_at: number | null; reason: string | null; head?: string; head_id?: number | null; ms?: number };
+export type AuditEntry = {
+  id: number; action: string; target: string | null; detail: unknown; ip: string | null; created_at: number;
+  hash: string | null; username: string | null; role: string | null;
+};
+
+/** Download URL for an incident's evidence package (a ZIP; the server records the export in the audit log). */
+export const evidenceUrl = (eventId: number) => `/api/events/${eventId}/evidence`;
+
 export function openCitizenPortal() {
   const w = window.open("/report", "aequitas-citizen-portal", "popup,width=560,height=900");
   if (w) w.focus();
@@ -139,6 +157,12 @@ export const api = {
     request<BodyEvent>(`/api/reports/${id}/events/${eventId}/review`, json({ decision })),
   askReport: (id: string, question: string, history: History) =>
     request<VideoAnswer>(`/api/reports/${id}/ask`, json({ question, history })),
+  health: () => request<Health>("/api/health"),
+  audit: (q: { action?: string; user?: string; target?: string; before_id?: number; limit?: number } = {}) => {
+    const p = new URLSearchParams(Object.entries(q).filter(([, v]) => v != null && v !== "").map(([k, v]) => [k, String(v)]));
+    return request<{ entries: AuditEntry[]; actions: string[] }>(`/api/audit?${p}`);
+  },
+  verifyAudit: () => request<AuditVerify>("/api/audit/verify"),
   reportStatus: (id: string) =>
     request<{ report_id: string; status: string; submitted_at: number; updated_at: number }>(
       `/api/citizen/reports/${encodeURIComponent(id)}`),

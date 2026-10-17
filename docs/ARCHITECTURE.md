@@ -314,6 +314,23 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
 | Citizen portal (`/report`) | public upload and a separate "Track a report" tab (report ID only, shows status and dates); English / हिन्दी / ಕನ್ನಡ switch; emergency assistant |
 | Analyst chat | streamed, grounded answers with `[#id]` links |
 
+### 12.1 Evidence, audit and health (production features)
+
+- **Tamper-evident audit log** (`auth.py`): every entry's HMAC-SHA256 covers its fields and the previous
+  entry's hash, keyed by `data/audit.key` (created on first start, outside the database). Editing, deleting or
+  reordering an entry breaks the chain from there; `GET /api/audit/verify` recomputes it. Entries written before
+  the chain existed are sealed once on the first start. Tamper-evident, not tamper-proof: someone with both the
+  key and the database could rewrite it, so the chain head is also written into every evidence export.
+  Admin-only page **Audit log** (`/audit`, `GET /api/audit`): filter by action, user, target.
+- **Evidence package** (`evidence.py`, `GET /api/events/{id}/evidence`, the "Evidence" button on each key
+  moment): a ZIP with the key frame, the original video byte for byte (≤ 512 MB), `manifest.json` (AI output,
+  officer decision, models, stage timings, source SHA-256 and, for citizen reports, whether it still matches the
+  hash taken on arrival, the incident's audit entries, the chain state), `SHA256SUMS` and a `README.txt` with a
+  draft Section 63 BSA certificate for the officer to complete. The export itself is audited with the package hash.
+- **System health** (`web/health.py`, `GET /api/health`, page **System**): model server (ping, models in
+  memory), GPU (nvidia-smi: memory, load, temperature), live lag and stage p50s over 15 min, failed answers,
+  upload queue, audit chain, disk. Each check is ok / warn / down.
+
 ## 13. Products on the same core
 
 - **Live CCTV (Part 3, public order):** periodic mode on looping street footage standing in for cameras, plus

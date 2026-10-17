@@ -105,6 +105,8 @@ export default function Header({ user, onSignOut }: { user: User; onSignOut: () 
           </NavLink>
           <NavLink to="/bodycam" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>Bodycam review</NavLink>
           <NavLink to="/reports" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>All reports</NavLink>
+          <NavLink to="/system" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>System</NavLink>
+          {user.role === "admin" && <NavLink to="/audit" className={({ isActive }) => "tab" + (isActive ? " active" : "")}>Audit log</NavLink>}
         </nav>
         <div className="topbar-right">
           <AiSwitch />

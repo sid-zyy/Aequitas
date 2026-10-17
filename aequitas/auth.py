@@ -4,7 +4,11 @@
   for the password, so it never appears in shell history or config files.
 - Sessions: a random token in an HttpOnly cookie; only its sha256 is stored.
 - Lockout: too many failed logins for a username from one address blocks it for a while.
-- Audit: sign-ins and report actions are recorded (who, what, when, from where)."""
+- Audit: sign-ins and report actions are recorded (who, what, when, from where). Entries form a hash chain:
+  each one's HMAC-SHA256 covers its fields and the previous entry's hash, keyed by a secret file next to the
+  database (data/audit.key). Editing, deleting or reordering an entry breaks the chain from that entry on, and
+  without the key the chain can't be recomputed. It is tamper-evident, not tamper-proof: whoever holds the key
+  and the database could rewrite both, so the latest hash is also written into every evidence export."""
 
 from __future__ import annotations
 
@@ -13,10 +17,13 @@ import hashlib
 import hmac
 import json
 import secrets
+import os
 import threading
 import time
+from pathlib import Path
 
 ROLES = ("admin", "officer")
+GENESIS = "0" * 64  # prev_hash of the first audit entry
 MIN_PASSWORD = 10
 _N, _R, _P = 2**14, 8, 1
 
@@ -44,13 +51,32 @@ def _token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _load_key(path: Path | None) -> bytes:
+    """The audit chain's HMAC key: 32 random bytes in a file created on first use (owner-only where the OS
+    allows). In-memory databases (tests) get a fresh key per run."""
+    if path is None:
+        return secrets.token_bytes(32)
+    path = Path(path)
+    if path.is_file():
+        return path.read_bytes()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    key = secrets.token_bytes(32)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as f:
+        f.write(key)
+    return key
+
+
 class LockedOut(Exception):
     pass
 
 
 class Auth:
-    def __init__(self, store, session_hours: float = 12, max_failures: int = 5, lockout_s: float = 900):
+    def __init__(self, store, session_hours: float = 12, max_failures: int = 5, lockout_s: float = 900,
+                 key_path: str | Path | None = None):
         self.store = store
+        self._key = _load_key(key_path or (None if str(store.path) == ":memory:" else store.path.parent / "audit.key"))
+        self._seal_legacy()
         self.session_s = session_hours * 3600
         self.max_failures = max_failures
         self.lockout_s = lockout_s
@@ -132,10 +158,73 @@ class Auth:
 
     # ---------- audit ----------
 
+    def _entry_hash(self, prev: str, r) -> str:
+        msg = json.dumps([prev, r["id"], r["user_id"], r["action"], r["target"], r["detail"], r["ip"],
+                          r["created_at"]], separators=(",", ":"), ensure_ascii=False)
+        return hmac.new(self._key, msg.encode(), hashlib.sha256).hexdigest()
+
+    def _chain_locked(self, entry_id: int) -> None:
+        """Seal one entry onto the chain. The caller holds the store lock inside a transaction."""
+        conn = self.store._conn
+        last = conn.execute("SELECT hash FROM audit_log WHERE id<? AND hash IS NOT NULL ORDER BY id DESC LIMIT 1",
+                            (entry_id,)).fetchone()
+        prev = last["hash"] if last else GENESIS
+        row = conn.execute("SELECT * FROM audit_log WHERE id=?", (entry_id,)).fetchone()
+        conn.execute("UPDATE audit_log SET prev_hash=?, hash=? WHERE id=?", (prev, self._entry_hash(prev, row), entry_id))
+
+    def _seal_legacy(self) -> None:
+        """Entries written before the chain existed get sealed once, in order, on the first start."""
+        with self.store._lock, self.store._conn:
+            ids = [r["id"] for r in self.store._conn.execute("SELECT id FROM audit_log WHERE hash IS NULL ORDER BY id")]
+            for i in ids:
+                self._chain_locked(i)
+
     def audit(self, user_id: int | None, action: str, target: str | None = None, detail=None, ip: str = "") -> None:
-        self._q("INSERT INTO audit_log(user_id, action, target, detail, ip, created_at) VALUES (?,?,?,?,?,?)",
+        with self.store._lock, self.store._conn:
+            cur = self.store._conn.execute(
+                "INSERT INTO audit_log(user_id, action, target, detail, ip, created_at) VALUES (?,?,?,?,?,?)",
                 (user_id, action, target, json.dumps(detail) if detail is not None else None, ip,
-                 int(time.time() * 1000)), commit=True)
+                 int(time.time() * 1000)))
+            self._chain_locked(cur.lastrowid)
+
+    def verify_chain(self) -> dict:
+        """Recompute the whole chain. ok=False names the first entry that doesn't match: edited, deleted
+        (its successor's prev_hash no longer points at anything), inserted or reordered."""
+        rows = self._q("SELECT * FROM audit_log ORDER BY id")
+        prev = GENESIS
+        for r in rows:
+            if r["prev_hash"] != prev:
+                return {"ok": False, "checked": len(rows), "broken_at": r["id"],
+                        "reason": "the link to the previous entry is broken (an entry was deleted or inserted)"}
+            if r["hash"] is None or not hmac.compare_digest(r["hash"], self._entry_hash(prev, r)):
+                return {"ok": False, "checked": len(rows), "broken_at": r["id"],
+                        "reason": "this entry was changed after it was written"}
+            prev = r["hash"]
+        return {"ok": True, "checked": len(rows), "broken_at": None, "reason": None,
+                "head": prev, "head_id": rows[-1]["id"] if rows else None}
+
+    def audit_log(self, limit: int = 200, action: str | None = None, user: str | None = None,
+                  target: str | None = None, before_id: int | None = None) -> list[dict]:
+        sql = ("SELECT a.id, a.action, a.target, a.detail, a.ip, a.created_at, a.hash, u.username, u.role "
+               "FROM audit_log a LEFT JOIN users u USING(user_id) WHERE 1=1")
+        params: list = []
+        if action:
+            sql += " AND a.action=?"
+            params.append(action)
+        if user:
+            sql += " AND u.username=?"
+            params.append(user)
+        if target:
+            sql += " AND a.target LIKE ?"
+            params.append(f"{target}%")
+        if before_id:
+            sql += " AND a.id<?"
+            params.append(before_id)
+        rows = self._q(sql + " ORDER BY a.id DESC LIMIT ?", (*params, limit))
+        return [{**dict(r), "detail": json.loads(r["detail"]) if r["detail"] else None} for r in rows]
+
+    def audit_actions(self) -> list[str]:
+        return [r[0] for r in self._q("SELECT DISTINCT action FROM audit_log ORDER BY action")]
 
     def audit_trail(self, target: str) -> list[dict]:
         rows = self._q("SELECT a.action, a.detail, a.created_at, u.username FROM audit_log a "
