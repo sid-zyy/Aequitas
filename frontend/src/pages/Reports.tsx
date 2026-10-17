@@ -63,7 +63,6 @@ export default function Reports() {
                 <span className="badge status">{label(r.status)}</span>
                 {r.language !== "en" && <span className="badge status">{LANG_NAME[r.language] ?? r.language}</span>}
                 {r.authenticity?.verdict === "likely_ai" && <span className="badge incident">likely AI</span>}
-                {r.duplicate_of && <span className="badge unverified">duplicate</span>}
                 <span className="note" style={{ marginLeft: "auto" }}>{day(r.created_at)}</span>
               </div>
               <div lang={r.language} style={{ color: "#cfdbe3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.description}</div>
