@@ -20,11 +20,13 @@ from pydantic import BaseModel, ValidationError
 from aequitas.config import LlmEndpoint
 from aequitas.understand.prompts import (
     CHOICES,
+    RefocusAnswer,
     SummaryAnswer,
     VlmAnswer,
     classify_prompt,
     classify_text_prompt,
     label_model,
+    refocus_prompt,
     summarize_prompt,
 )
 from aequitas.taxonomy import choices as label_choices
@@ -95,6 +97,13 @@ class LlmClient:
             SummaryAnswer,
             max_tokens=self.cfg.summary_max_tokens + (48 if self.cfg.guided_checks else 0),
         )
+        return ans, (time.perf_counter() - t0) * 1000
+
+    def refocus(self, grid_jpeg: bytes, label: str, definition: str) -> tuple[RefocusAnswer | None, float]:
+        """Second look at a window the clip model flagged (prompts.refocus_prompt)."""
+        t0 = time.perf_counter()
+        ans = self.structured([{"role": "user", "content": refocus_prompt(label, definition),
+                                "images": [grid_jpeg]}], RefocusAnswer, max_tokens=self.cfg.summary_max_tokens)
         return ans, (time.perf_counter() - t0) * 1000
 
     def _choose(self, prompt: str, choices: list[str]) -> tuple[str, float | None]:

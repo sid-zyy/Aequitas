@@ -538,7 +538,8 @@ def test_fuse_window_rules():
     vague = VlmAnswer(category="none", summary="People are gathered in an outdoor area.")
     ans, src = fuse_window(vague, 0.93, 0.6)
     assert ans.category == "fighting" and ans.confidence == 0.93 and src == "clip_model"
-    assert ans.summary == vague.summary  # the description is kept; only the label is upgraded
+    # the description is kept, after a lead-in that says where the label came from
+    assert ans.summary == "Violent motion detected (0.93). People are gathered in an outdoor area."
     fight = VlmAnswer(category="fighting", summary="Two men exchange punches.")
     assert fuse_window(fight, 0.9, 0.6) == (fight, "both")
     assert fuse_window(fight, 0.1, 0.6) == (fight, "vlm")  # a fight the VLM saw is never downgraded

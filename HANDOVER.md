@@ -59,7 +59,7 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 
 ## 3. What exists today
 
-Repo: https://github.com/sid-zyy/Aequitas. **278 tests pass** (`pytest`; synthetic data, no model downloads).
+Repo: https://github.com/sid-zyy/Aequitas. **283 tests pass** (`pytest`; synthetic data, no model downloads).
 
 | Area | Status | Where |
 |---|---|---|
@@ -158,6 +158,10 @@ numbers in the docs.
   latency slide
 
 ### Accuracy (in progress)
+- [x] Clip-model-only "fighting" windows: the summary now starts "Violent motion detected (0.98)." so it explains
+  the label (the VLM's words follow unchanged). A label-aware second look (`analysis.refocus`) was measured on the 10
+  stored clip-model fighting key frames: gemma4:e2b saw the fight in 0/10, +1.2–2.0 s each, so it is off. Try it
+  with the E4B escalation model or larger tiles
 - [x] Fine-tune run 2 on Kaggle: results/finetune/README.md (in-domain gain; Ollama import failed, timed in
   transformers; notebook now falls back to `--quantize int4`)
 - [ ] Serve the fine-tuned adapter (vLLM `--enable-lora`, results/finetune/lora/) and evaluate base vs fine-tuned
