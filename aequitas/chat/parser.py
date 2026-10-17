@@ -326,6 +326,24 @@ def reconcile(lf: LlmFilter, kw: LlmFilter, question: str) -> LlmFilter:
     })
 
 
+# "what happened ...", "show all events ...": nothing for an LLM to add once places and times are read.
+_GENERAL = re.compile(r"^\s*(what|anything|any incidents?|show (me )?(all|every)|list (all|every)|all (events|incidents)"
+                      r"|how many (incidents|events)|where\b)")
+
+
+def _keywords_suffice(kw: LlmFilter, question: str) -> bool:
+    """Skip the LLM when the keyword parse already has the question: it names an incident type, or it is a
+    general "what happened" question. Saves a model call (1-3 s while live analysis shares the GPU) on most
+    questions; the keyword parser alone scores 48/48 on the chat test sets (results/chat_eval/README.md).
+    The LLM still reads a time the keywords can't ("since 2 pm") and words they couldn't place ("parking lot")."""
+    q = question.lower()
+    if _TIME_HINT.search(q) and not (kw.start or kw.end):
+        return False
+    if kw.text:
+        return False
+    return bool(kw.categories or kw.subtypes or _GENERAL.search(q))
+
+
 class QuestionParser:
     def __init__(self, llm=None, tz: tzinfo | None = None, categories: dict[str, str] | None = None):
         self.llm = llm  # a VlmClient, or None for keyword-only
@@ -337,15 +355,16 @@ class QuestionParser:
 
     def parse(self, question: str, cameras: list[dict], now: datetime | None = None) -> ParseResult:
         now = now or self.now()
-        if self.llm is not None:
+        kw = keyword_filter(question, now, cameras, self.categories)
+        if self.llm is not None and not _keywords_suffice(kw, question):
             prompt = _prompt(question, now, cameras, self.categories)
             lf = self.llm.structured([{"role": "user", "content": prompt}], LlmFilter)
             if lf is not None:
-                lf = reconcile(lf, keyword_filter(question, now, cameras, self.categories), question)
+                lf = reconcile(lf, kw, question)
                 res = finalize(lf, now, cameras, self.categories)
                 res.method = "llm"
                 return res
             log.warning("LLM parse failed, using keyword parser")
-        res = finalize(keyword_filter(question, now, cameras, self.categories), now, cameras, self.categories)
+        res = finalize(kw, now, cameras, self.categories)
         res.method = "keywords"
         return res

@@ -30,7 +30,8 @@ export default function CameraTile({ cam, running }: { cam: LiveCamera; running:
         ) : cam.live_source ? (
           <img src={cam.video_url} alt={`${cam.name} live`} />
         ) : (
-          <video src={cam.video_url} autoPlay muted loop playsInline />
+          // the poster shows at once; the clip takes over as soon as the browser can decode it
+          <video src={cam.video_url} poster={cam.poster_url ?? undefined} preload="auto" autoPlay muted loop playsInline />
         )}
         {cam.has_footage && (
           <div className="video-overlay"><span className="rec" /> {cam.live_source ? "LIVE" : "DEMO FEED"}</div>
