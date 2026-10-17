@@ -58,7 +58,7 @@ export default function AnalystChat({ localityName }: { localityName: string }) 
             {m.role === "bot" && !!m.events?.length && (
               <div className="refs">
                 {m.events.slice(0, 5).map((ev) => (
-                  <span key={ev.id}>[#{ev.id}] {timeOf(ev.start_ts)} · {ev.camera_name} · <b>{label(ev.category)}</b></span>
+                  <span key={ev.id}>[#{ev.id}] {timeOf(ev.start_ts)} · {ev.camera_name}{ev.area ? `, ${ev.area}` : ""} · <b>{label(ev.category)}</b></span>
                 ))}
               </div>
             )}

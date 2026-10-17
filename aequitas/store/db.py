@@ -67,6 +67,8 @@ MIGRATIONS = [
     ("reports", "language", "TEXT"),        # en | hi | kn: the language the citizen wrote in (text kept as written)
     ("reports", "urgent", "INTEGER"),       # 1: the citizen told the portal's assistant they need help now
     ("reports", "translation_json", "TEXT"),  # officer-requested English translation {text, ms, model}
+    ("cameras", "area", "TEXT"),            # locality the camera is in (chat: "fights in Indiranagar")
+    ("cameras", "area_aliases", "TEXT"),    # JSON list of other names for the locality
     ("audit_log", "prev_hash", "TEXT"),     # hash chain (aequitas/auth.py): the previous entry's hash
     ("audit_log", "hash", "TEXT"),          # HMAC-SHA256 over this entry and prev_hash
 ]
@@ -125,16 +127,20 @@ class EventStore:
     def upsert_camera(self, cam: CameraCfg) -> None:
         with self._lock, self._conn:
             self._conn.execute(
-                "INSERT INTO cameras(camera_id, name, aliases, source_uri, zones) VALUES (?,?,?,?,?) "
+                "INSERT INTO cameras(camera_id, name, aliases, source_uri, zones, area, area_aliases) VALUES (?,?,?,?,?,?,?) "
                 "ON CONFLICT(camera_id) DO UPDATE SET name=excluded.name, aliases=excluded.aliases, "
-                "source_uri=excluded.source_uri, zones=excluded.zones",
-                (cam.camera_id, cam.name, json.dumps(cam.aliases), cam.source, cam.zones.model_dump_json()),
+                "source_uri=excluded.source_uri, zones=excluded.zones, area=excluded.area, "
+                "area_aliases=excluded.area_aliases",
+                (cam.camera_id, cam.name, json.dumps(cam.aliases), cam.source, cam.zones.model_dump_json(),
+                 cam.area, json.dumps(cam.area_aliases)),
             )
 
     def cameras(self) -> list[dict]:
         with self._lock:
-            rows = self._conn.execute("SELECT camera_id, name, aliases FROM cameras ORDER BY camera_id").fetchall()
-        return [{"camera_id": r["camera_id"], "name": r["name"], "aliases": json.loads(r["aliases"])} for r in rows]
+            rows = self._conn.execute(
+                "SELECT camera_id, name, aliases, area, area_aliases FROM cameras ORDER BY camera_id").fetchall()
+        return [{"camera_id": r["camera_id"], "name": r["name"], "aliases": json.loads(r["aliases"]),
+                 "area": r["area"], "area_aliases": json.loads(r["area_aliases"] or "[]")} for r in rows]
 
     def insert_event(self, ev: EventRecord, timings: Timings | None = None) -> int:
         t0 = time.perf_counter()
@@ -274,7 +280,7 @@ class EventStore:
     def event(self, event_id: int) -> dict | None:
         with self._lock:
             r = self._conn.execute(
-                "SELECT e.*, c.name AS camera_name FROM events e LEFT JOIN cameras c USING(camera_id) "
+                "SELECT e.*, c.name AS camera_name, c.area AS camera_area FROM events e LEFT JOIN cameras c USING(camera_id) "
                 "WHERE e.event_id=?", (event_id,),
             ).fetchone()
         if r is None:

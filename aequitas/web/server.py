@@ -104,6 +104,7 @@ def _event_json(r: dict, store: EventStore) -> dict:
         "id": r["event_id"],
         "camera_id": r["camera_id"],
         "camera_name": r.get("camera_name") or r["camera_id"],
+        "area": r.get("camera_area"),
         "start_ts": r["start_ts"],
         "end_ts": r["end_ts"],
         "category": r["category"],

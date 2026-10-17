@@ -39,6 +39,7 @@ class LiveCamera(BaseModel):
 class Locality(BaseModel):
     id: str
     name: str
+    aliases: list[str] = []  # other names people use for the area (the chat matches these, and close misspellings)
     cameras: list[LiveCamera]
 
 
@@ -65,7 +66,7 @@ class LiveManager:
         for loc in localities:  # register the camera points so events and chat know their names
             for c in loc.cameras:
                 store.upsert_camera(CameraCfg(camera_id=c.id, name=c.name, aliases=[f"{loc.name} {c.name}"],
-                                              source=c.source or c.file or ""))
+                                              area=loc.name, area_aliases=loc.aliases, source=c.source or c.file or ""))
 
     def has_footage(self, camera_id: str) -> bool:
         c = self.cameras.get(camera_id)
@@ -81,7 +82,9 @@ class LiveManager:
                 return
             self._stop_locked()
             loc = self.localities[locality_id]
-            cams = [CameraCfg(camera_id=c.id, name=c.name, source=c.source or c.file, realtime=True,
+            # the pipeline re-registers its cameras: keep the names the chat uses (alias, locality)
+            cams = [CameraCfg(camera_id=c.id, name=c.name, aliases=[f"{loc.name} {c.name}"], area=loc.name,
+                              area_aliases=loc.aliases, source=c.source or c.file, realtime=True,
                               loop=not c.is_live, view=c.view, window_s=c.window_s)
                     for c in loc.cameras if self.has_footage(c.id)]
             self.active, self.error, self.started_at = locality_id, None, time.time()

@@ -83,7 +83,7 @@ def build_sql(f: QueryFilter, count: bool = False) -> tuple[str, list]:
         "confidence": "e.confidence DESC, e.start_ts DESC",
     }[f.sort]
     sql = (
-        "SELECT e.*, c.name AS camera_name FROM events e "
+        "SELECT e.*, c.name AS camera_name, c.area AS camera_area FROM events e "
         f"LEFT JOIN cameras c ON c.camera_id = e.camera_id{clause} ORDER BY {order} LIMIT ?"
     )
     return sql, params + [f.limit]

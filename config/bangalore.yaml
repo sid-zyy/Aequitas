@@ -9,6 +9,7 @@
 localities:
   - id: koramangala
     name: Koramangala
+    aliases: ["Kormangala", "Koramangla"]
     cameras:
       - {id: kor-sony-world, name: Sony World Junction, file: data/footage/koramangala/sony-world.mp4}
       - {id: kor-forum, name: Forum Mall, Hosur Road, file: data/footage/koramangala/forum.mp4}
@@ -17,6 +18,7 @@ localities:
       - {id: kor-5th-block, name: 5th Block Cafe Terrace, file: data/footage/faculty/v001.mp4}
   - id: indiranagar
     name: Indiranagar
+    aliases: ["Indira Nagar", "Indra Nagar"]
     cameras:
       - {id: ind-100ft, name: 100 Feet Road, file: data/footage/indiranagar/100ft-road.mp4}
       - {id: ind-cmh, name: CMH Road Metro, file: data/footage/indiranagar/cmh-metro.mp4}
@@ -24,6 +26,7 @@ localities:
       - {id: ind-double-road, name: Double Road Restaurant, file: data/footage/faculty/v011.mp4}
   - id: whitefield
     name: Whitefield
+    aliases: ["White Field"]
     cameras:
       - {id: wf-itpl, name: ITPL Main Road, file: data/footage/whitefield/itpl.mp4}
       - {id: wf-phoenix, name: Phoenix Marketcity, file: data/footage/whitefield/phoenix.mp4}
@@ -32,6 +35,7 @@ localities:
       - {id: wf-epip, name: EPIP Zone Hostel Corridor, file: data/footage/faculty/v026.mp4}
   - id: mg-road
     name: MG Road
+    aliases: ["M G Road", "Mahatma Gandhi Road"]
     cameras:
       - {id: mg-kumble, name: Anil Kumble Circle, file: data/footage/mg-road/kumble-circle.mp4}
       - {id: mg-brigade, name: Brigade Road Junction, file: data/footage/mg-road/brigade-road.mp4}
@@ -40,6 +44,7 @@ localities:
       - {id: mg-mayo-hall, name: Mayo Hall Court Complex, file: data/footage/faculty/w001.mp4}
   - id: majestic
     name: Majestic
+    aliases: ["Majestic Area"]
     cameras:
       - {id: maj-ksr, name: KSR Railway Station, file: data/footage/majestic/ksr-station.mp4}
       - {id: maj-kbs, name: Kempegowda Bus Station, file: data/footage/majestic/kbs.mp4}
@@ -48,6 +53,7 @@ localities:
       - {id: maj-ksr-security, name: KSR Station Security Check, file: data/footage/faculty/v006.mp4}
   - id: electronic-city
     name: Electronic City
+    aliases: ["E-City", "Ecity", "Electronics City"]
     cameras:
       - {id: ec-flyover, name: Electronic City Flyover, file: data/footage/electronic-city/flyover.mp4}
       - {id: ec-phase1, name: Phase 1 Main Gate, file: data/footage/electronic-city/phase1.mp4}

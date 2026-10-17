@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS cameras (
   name          TEXT NOT NULL,
   aliases       TEXT NOT NULL DEFAULT '[]',
   source_uri    TEXT NOT NULL,
-  zones         TEXT NOT NULL DEFAULT '{}'
+  zones         TEXT NOT NULL DEFAULT '{}',
+  area          TEXT,                       -- locality the camera is in (Live CCTV), so the chat knows where it is
+  area_aliases  TEXT                        -- JSON list of other names for that locality
 );
 
 CREATE TABLE IF NOT EXISTS events (

@@ -40,7 +40,7 @@ export type LiveCamera = {
 };
 
 export type EventItem = {
-  id: number; camera_id: string; camera_name: string; start_ts: number; end_ts: number; category: string;
+  id: number; camera_id: string; camera_name: string; area?: string | null; start_ts: number; end_ts: number; category: string;
   status: string; confidence: number; summary: string | null; keyframe_url: string;
   video: { url: string; offset_s: number } | null;
 };
