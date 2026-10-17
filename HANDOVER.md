@@ -59,7 +59,7 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 
 ## 3. What exists today
 
-Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthetic data, no model downloads).
+Repo: https://github.com/sid-zyy/Aequitas. **277 tests pass** (`pytest`; synthetic data, no model downloads).
 
 | Area | Status | Where |
 |---|---|---|
@@ -67,6 +67,8 @@ Repo: https://github.com/sid-zyy/Aequitas. **187 tests pass** (`pytest`; synthet
 | **Three separate stages** with their own timings | Done | `understand/stages.py`, `prompts.py`, `vlm_client.py` |
 | Stage 2: configurable categories (14 police labels + none), previous-window context, vLLM `choice` decoding + logprob confidence | Done | `taxonomy.py`, `vlm_client.py` |
 | Stage 3: chat with LLM form + keyword reconcile, grounded `[#id]` answers, **SSE streaming** | Done | `aequitas/chat/`, `/api/ask/stream` |
+| **Chat vector DB** (faculty request, 2026-10-17): every event and window summary embedded (bge-base, CPU) into embedded Qdrant; hybrid search (Qdrant meaning + FTS5 BM25, RRF) inside the SQL filter; camera moments `[W id]`; detail / similar-event modes; rule-based follow-ups with context; weak-match honesty | Done; thresholds from synthetic sentences only | `chat/vectors.py`, `chat/followup.py`, `chat/answer.py`, docs/ARCHITECTURE.md §9 |
+| **Interactive analyst chat UI**: clickable citations, event cards (key frame, similarity, Details / Similar / Play), moments, follow-up chips, context pill, per-step timing chips, stop / new / history, expanded view | Done | `components/AnalystChat.tsx` |
 | Periodic mode with blank / static skips, **SigLIP scene gate**, concurrency, in-order results | Done | `pipeline.py`, `understand/gate.py` |
 | Triggered mode: YOLO11n + ByteTrack + 6 rules + fusion | Done; weak on low-res CCTV | `vision/`, `triggers/` |
 | Violence clip model (r3d_18 ONNX), clip votes | Done, in use (`models/violence_clip/`, not in git) | `vision/violence.py` |
@@ -131,6 +133,9 @@ numbers in the docs.
 
 ### Faculty requirements (R5): do these first
 - [x] Three separate stages, timed separately; streamed chat
+- [x] **Chatbot uses a vector DB and is more interactive** (faculty request, 2026-10-17): Qdrant + bge-base,
+  hybrid search, follow-ups, detail / similar, moments; docs/ARCHITECTURE.md §9. Retrieval 20–60 ms on the laptop.
+  Not yet measured: a labelled retrieval test set for the chat (only synthetic calibration so far)
 - [x] React frontend + FastAPI; no notebooks in the deliverable (`kaggle/*.ipynb` are build artefacts of
   `.py` files, used only on Kaggle)
 - [x] Per-stage timings and total time per upload shown in the UI

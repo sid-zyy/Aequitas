@@ -34,7 +34,9 @@ flowchart LR
   V[Violence clip model<br/>r3d_18 ONNX] -.second signal.-> FU
   S2 --> FU[Fusion / cross-window agreement]
   FU --> DB[(SQLite<br/>events, windows, timings, FTS5)]
-  DB --> S3[Stage 3 CHATBOT<br/>question to filter to SQL<br/>grounded streamed answer]
+  DB --> VDB[(Qdrant vector DB<br/>every summary embedded<br/>bge-base on CPU)]
+  DB --> S3[Stage 3 CHATBOT<br/>filter in SQL, rank by meaning<br/>grounded streamed answer]
+  VDB --> S3
   DB --> UI[React app via FastAPI]
   S3 --> UI
 ```
@@ -58,7 +60,7 @@ The design rests on four decisions:
 |---|---|---|---|---|
 | 1 Summarise | 2×2 key-frame grid (JPEG) → `{summary ≤ 35 words, visible_evidence ≤ 8 words}` | `understand/stages.py`, `vlm_client.summarize`, `prompts.summarize_prompt` | `gemma4:e2b` (`vlm:`) | 0.8 s |
 | 2 Classify | summary text (+ evidence, + previous window's summary) → one label from the category list or `none`, + confidence on vLLM | `vlm_client.classify_text`, `prompts.classify_text_prompt` | the same model unless `classifier:` overrides it | 0.38 s |
-| 3 Chatbot | question → structured filter → SQL → grounded, streamed answer citing `[#id]` | `aequitas/chat/` | the same model unless `chat:` overrides it | ~0.7 s per question parse with Gemma |
+| 3 Chatbot | question → structured filter (SQL) + vector search over every summary (Qdrant) → grounded, streamed answer citing `[#id]` events and `[W id]` moments | `aequitas/chat/` | the same model unless `chat:` overrides it; embeddings `BAAI/bge-base-en-v1.5` on the CPU | retrieval 20–60 ms (embed 12–27 ms, Qdrant 3–12 ms); first word ~0.3–0.5 s |
 
 One window takes **1.2 s** for both stages (warm p50, docs/DESIGN.md §4.4). `Understanding` keeps
 `summarize_ms` and `classify_ms` apart. They are stored per window and per event, and shown on every camera
@@ -241,13 +243,44 @@ The LLM never writes SQL and never lists events. The flow:
      Answers show "camera, area", and "Where is ...?" is answered from the camera list (tests/test_places.py).
    - Result: 28/28 on dev questions and 20/20 held out, where Gemma alone got 19/28 and 15/20
      (results/chat_eval/README.md).
-2. **Retrieve** (`store/query.py`). `QueryFilter` → parameterised SQL, plus SQLite FTS5 on summaries.
-   Confirmed events only, unless the question asks for unconfirmed ones.
-3. **Answer** (`chat/answer.py`). The event list comes from the database rows, each with an `[#id]`.
-   - An optional short LLM summary is kept only if every ID it cites was retrieved (`is_grounded`); otherwise
-     it's dropped.
-   - `POST /api/ask/stream` streams it over SSE in this order: `retrieved` (rows + parse and query time),
-     tokens, then `done` (TTFT, total).
+2. **Retrieve** (`store/query.py`, `chat/vectors.py`). `QueryFilter` → parameterised SQL. Confirmed events only,
+   unless the question asks for unconfirmed ones. Then one of four modes (`ChatService`):
+   - **filter**: a purely structured question ("fights in Indiranagar today"): SQL alone.
+   - **hybrid**: the question also describes something ("was anyone carrying a ladder?"). `content_terms` strips
+     question, time and place words and category keywords; whatever is left is the description. SQL picks the
+     events the filter allows; **Qdrant** ranks them by meaning (cosine, bge-base embeddings) and **SQLite FTS5
+     BM25** by exact words; reciprocal rank fusion merges the two. The same search runs over every analysed
+     **window** (incident or not) inside the camera/time filter, so the chat also answers about things that
+     were never incidents ("camera moments", cited `[W12]`). The question and its descriptive words are both
+     embedded; each summary keeps its better score. One bar for events and moments: at least `min_score`
+     (0.56) and within `margin` (0.08) of the best match anywhere. If nothing reaches `strong_score` (0.62) and
+     no word matches, the answer says nothing matched closely and shows the nearest summaries dimmed, with no
+     LLM call. Thresholds were set on synthetic sentences (`scripts/vector_calibrate.py`: 0.56 keeps 19/23
+     relevant pairs and passes 6/417 irrelevant ones; 0.62 passes none), not on the faculty clips.
+   - **detail**: "tell me more about #12", "the second one": that event, any status, plus the windows its camera
+     analysed 20 s either side.
+   - **similar**: "events similar to #12": the nearest event summaries in Qdrant, any status or camera.
+   - With the index on, the LLM parse is skipped unless the question has a time phrase the keyword parser can't
+     read: the vector search already handles the descriptive words the LLM used to copy (1.3–1.9 s → ~10 ms on
+     such questions).
+3. **Follow-ups** (`chat/followup.py`, no model call). Each answer returns a `context` (its filter and event IDs);
+   the client sends it with the next question. "What about Koramangala?", "and yesterday?", "only confirmed",
+   "show them" keep the previous filter and replace only what the new question names; "#12", "the second one"
+   and "it" resolve against the previous answer's events. Each answer also returns follow-up `suggestions`
+   built from the result, phrased so these rules read them.
+4. **Answer** (`chat/answer.py`). The event list comes from the database rows, each with an `[#id]`.
+   - An optional short LLM summary is kept only if every ID it cites was retrieved (`is_grounded`, events and
+     moments); otherwise it's dropped.
+   - `POST /api/ask/stream` streams it over SSE in this order: `retrieved` (rows, moments, mode, suggestions,
+     context, and parse / embed / vector / SQL time), tokens, `summary`, then `done` (TTFT, total).
+
+**The vector database** (`chat/vectors.py`). Embedded, on-disk Qdrant in `data/vectors/` (one process; a second
+process gets an in-memory copy), or a Qdrant server via `chat.vector.url`, same code. One collection per
+embedding model. One point per summary: the vector plus kind (event / window), SQLite ID, camera and times.
+SQLite stays the source of truth: a background thread embeds new summaries every 3 s (`sync`), and drops the
+vectors of windows SQLite has pruned, so the index can be deleted and is rebuilt on the next start (117
+summaries: 5 s). The embedder runs on the CPU (fastembed ONNX), so it never competes with Gemma for the 6 GB
+GPU; `embedder: ollama` uses an Ollama embedding model forced onto the CPU instead.
 
 ## 10. Serving and models
 
@@ -278,6 +311,7 @@ COLUMN` if missing).
 |---|---|
 | `cameras` | id, name, aliases, source, view |
 | `events` + `events_fts` | events (§8) and a full-text index on summaries |
+| (Qdrant, `data/vectors/`) | the chat's vector index of every event and window summary; derived from SQLite, rebuilt if deleted (§9) |
 | `event_timings` | per-event stage timings |
 | `windows` | every analysed periodic window (summary, label, timings, violence score, source) |
 | `stage_timings` | per-run record of every window: analysed, gated, skipped, blank. Used for each upload's latency panel. |
@@ -293,7 +327,7 @@ Key frames are JPEGs under `data/keyframes/<camera>/<day>/`.
 **Backend** (`aequitas/web/server.py`, FastAPI, binds to 127.0.0.1). The full API is at `/api/docs`. Groups:
 - auth: `/api/auth/*`
 - events, cameras, stats, categories
-- chat: `/api/ask`, `/api/ask/stream`
+- chat: `/api/ask`, `/api/ask/stream` (both take an optional `context` for follow-ups), `/api/chat/index` (vector DB stats)
 - uploads: `/api/uploads*`, with the background `JobManager` running one job at a time through the normal
   pipeline
 - live: `/api/live/*`, through `LiveManager`. Selecting a locality starts a periodic pipeline on its cameras
@@ -316,7 +350,7 @@ Police endpoints need a signed-in session. Citizen endpoints never do.
 | Bodycam review | upload → timeline of 4 s summaries, key moments to Confirm/Dismiss (audited), whole-recording overview, printable report marked as an AI draft, **total and per-stage time** |
 | All reports | the citizen-report archive with each analysis's total time |
 | Citizen portal (`/report`) | public upload and a separate "Track a report" tab (report ID only, shows status and dates); English / हिन्दी / ಕನ್ನಡ switch; emergency assistant |
-| Analyst chat | streamed, grounded answers with `[#id]` links |
+| Analyst chat | streamed, grounded answers: `[#id]` / `[W id]` citations jump to the cited card; event cards with key frame, similarity bar, Details / Similar / ▶ Play; camera moments; follow-up chips and a "follow-ups use" context pill; per-answer parse / embed / vector / SQL / first-word / total chips; stop, new chat, ↑ history; expandable to a large panel |
 
 ### 12.1 Evidence, audit and health (production features)
 
@@ -439,7 +473,8 @@ aequitas/
   understand/          prompts, vlm_client (Ollama / OpenAI-compatible), stages (1 + 2, InOrder), keyframes,
                        gate (SigLIP), fusion, periodic (WindowAggregator), recording_summary
   store/               schema.sql, db (EventStore), query (QueryFilter -> SQL)
-  chat/                parser (LLM form + keywords + reconcile), answer (grounded, streamed)
+  chat/                parser (LLM form + keywords + reconcile), answer (modes, hybrid ranking, grounded, streamed),
+                       vectors (Qdrant index + embedders), followup (context, references)
   web/                 server (FastAPI), jobs (uploads), live (localities), bodycam
   auth.py reports.py authenticity.py
   eval/                spike, bench, classify_eval, chat_eval, dataset (faculty adapter), report

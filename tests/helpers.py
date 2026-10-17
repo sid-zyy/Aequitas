@@ -21,3 +21,26 @@ def run(engine, scenes):
         cands.extend(out.candidates)
         ongoing.extend(out.ongoing)
     return cands, ongoing
+
+
+class WordEmbedder:
+    """A stand-in for the sentence-embedding model: hashed bag of word stems, unit length. Sentences that share
+    words come out close, so vector-search tests run against real Qdrant with no model download."""
+
+    name = "test-words"
+    dim = 256
+
+    def _vec(self, text):
+        import re
+
+        v = [0.0] * self.dim
+        for w in re.findall(r"[a-z]{3,}", text.lower()):
+            v[sum(map(ord, w[:5])) % self.dim] += 1.0
+        n = sum(x * x for x in v) ** 0.5 or 1.0
+        return [x / n for x in v]
+
+    def embed_docs(self, texts):
+        return [self._vec(t) for t in texts]
+
+    def embed_query(self, text):
+        return self._vec(text)

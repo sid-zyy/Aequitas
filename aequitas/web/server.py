@@ -44,8 +44,20 @@ VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}
 MAX_UPLOAD_BYTES = 4 * 1024**3
 
 
+class ChatContext(BaseModel):
+    """What the previous answer was about, sent back by the client so follow-ups work ("and yesterday?")."""
+
+    filter: dict | None = None
+    event_ids: list[int] = Field(default_factory=list, max_length=100)
+    mode: str | None = Field(default=None, max_length=20)
+
+
 class AskBody(BaseModel):
     question: str = Field(min_length=1, max_length=500)
+    context: ChatContext | None = None
+
+    def ctx(self) -> dict | None:
+        return self.context.model_dump() if self.context and self.context.filter else None
 
 
 class AiSwitch(BaseModel):
@@ -120,7 +132,21 @@ def _event_json(r: dict, store: EventStore) -> dict:
         "models": r.get("model_versions", {}),
         "keyframe_url": f"/api/events/{r['event_id']}/keyframe",
         "video": video,
+        "relevance": r.get("relevance"),  # cosine similarity to the question (vector search), if ranked by it
+        "matched": r.get("matched"),      # meaning | words | meaning+words
     }
+
+
+def _moment_json(w: dict, store: EventStore) -> dict:
+    """An analysed window the chat found by meaning: what a camera saw, incident or not."""
+    upload = store.upload_for_event(w["camera_id"], w["start_ts"])
+    video = None
+    if upload:
+        video = {"url": f"/api/uploads/{upload['upload_id']}/video",
+                 "offset_s": max(0.0, (w["start_ts"] - upload["start_ts"]) / 1000)}
+    return {"id": w["id"], "camera_id": w["camera_id"], "camera_name": w.get("camera_name") or w["camera_id"],
+            "area": w.get("camera_area"), "start_ts": w["start_ts"], "end_ts": w["end_ts"],
+            "summary": w.get("summary"), "label": w.get("label"), "relevance": w.get("relevance"), "video": video}
 
 
 def create_app(settings: Settings, service: ChatService, camera_cfgs: list[CameraCfg]) -> FastAPI:
@@ -136,6 +162,20 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     device = resolve_device(settings.device)
 
     app = FastAPI(title="Aequitas", docs_url="/api/docs", redoc_url=None)
+
+    if settings.chat.vector.enabled and service.index is None and not getattr(service, "_index_loading", False):
+        service._index_loading = True
+
+        def _open_index():  # loading the embedding model takes seconds: don't hold up the server start
+            from aequitas.chat.vectors import open_index
+
+            idx = open_index(settings.chat.vector, store, settings.data_dir, settings.vlm.host)
+            if idx is not None:
+                service.index = idx
+                idx.start_background_sync(settings.chat.vector.sync_s)
+                log.info("vector index ready: %s", idx.stats())
+
+        threading.Thread(target=_open_index, name="vector-open", daemon=True).start()
 
     auth = Auth(store, settings.auth.session_hours, settings.auth.max_failures, settings.auth.lockout_s)
     if settings.auth.demo_admin and not auth.users():
@@ -314,9 +354,14 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     def ask(body: AskBody):
         t0 = time.perf_counter()
         with GATE.interactive():  # live analysis waits while an officer's question is answered
-            ans = service.ask(body.question.strip())
+            ans = service.ask(body.question.strip(), body.ctx())
         f = ans.parsed.filter if ans.parsed else None
         return {
+            "mode": ans.mode,
+            "weak": ans.weak,
+            "moments": [_moment_json(w, store) for w in ans.moments],
+            "suggestions": ans.suggestions,
+            "context": ans.context,
             "text": ans.text,
             "summary": ans.summary,
             "total": ans.total,
@@ -329,6 +374,14 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             "timings": ans.timings,
         }
 
+    @app.get("/api/chat/index")
+    def chat_index():
+        """The chatbot's vector database: engine, embedding model, how many summaries it holds."""
+        idx = service.index
+        if idx is None:
+            return {"enabled": settings.chat.vector.enabled, "ready": False}
+        return {"enabled": True, "ready": True, **idx.stats()}
+
     @app.post("/api/ask/stream")
     def ask_stream(body: AskBody):
         """Server-sent events: `retrieved` (the event list, from the database), `token` (summary text
@@ -340,14 +393,18 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
                 yield from _stream()
 
         def _stream():
-            for ev in service.ask_stream(body.question.strip()):
+            for ev in service.ask_stream(body.question.strip(), body.ctx()):
                 if ev["type"] == "retrieved":
                     p = ev["parsed"]
                     f = p.filter
                     ev = {"type": "retrieved", "total": ev["total"], "head": ev["head"], "tail": ev["tail"],
                           "intent": f.intent, "warnings": p.warnings, "parsed_with": p.method,
                           "filter": f.model_dump(mode="json"), "retrieve_ms": ev["retrieve_ms"],
-                          "parse_ms": ev["parse_ms"], "query_ms": ev["query_ms"],
+                          "parse_ms": ev["parse_ms"], "query_ms": ev.get("query_ms"),
+                          "embed_ms": ev.get("embed_ms"), "vector_ms": ev.get("vector_ms"),
+                          "mode": ev["mode"], "kept": ev["kept"], "weak": ev["weak"], "suggestions": ev["suggestions"],
+                          "context": ev["context"],
+                          "moments": [_moment_json(w, store) for w in ev["moments"]],
                           "events": [_event_json(r, store) for r in ev["rows"]]}
                 yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n"
 

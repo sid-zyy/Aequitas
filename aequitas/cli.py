@@ -32,7 +32,15 @@ def _service(settings, use_llm: bool):
             logging.warning("chat model %s not reachable at %s; using the keyword parser", llm.model, llm.cfg.host)
             llm = None
     parser = QuestionParser(llm, _tz(settings.chat.timezone), settings.categories)
-    return ChatService(EventStore(settings.db_path), parser, summarize=settings.chat.summarize)
+    return ChatService(EventStore(settings.db_path), parser, summarize=settings.chat.summarize,
+                       vector_cfg=settings.chat.vector)
+
+
+def _attach_index(settings, service) -> None:
+    """Open the chatbot's vector database (Qdrant) and fill it from the event store."""
+    from aequitas.chat.vectors import open_index
+
+    service.index = open_index(settings.chat.vector, service.store, settings.data_dir, settings.vlm.host)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -153,7 +161,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "ask":
-        print(_service(settings, not args.no_llm).ask(args.question).text)
+        service = _service(settings, not args.no_llm)
+        _attach_index(settings, service)
+        print(service.ask(args.question).text)
         return 0
 
     if args.cmd in ("web", "ui"):

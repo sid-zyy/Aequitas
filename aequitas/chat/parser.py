@@ -331,7 +331,7 @@ _GENERAL = re.compile(r"^\s*(what|anything|any incidents?|show (me )?(all|every)
                       r"|how many (incidents|events)|where\b)")
 
 
-def _keywords_suffice(kw: LlmFilter, question: str) -> bool:
+def _keywords_suffice(kw: LlmFilter, question: str, semantic: bool = False) -> bool:
     """Skip the LLM when the keyword parse already has the question: it names an incident type, or it is a
     general "what happened" question. Saves a model call (1-3 s while live analysis shares the GPU) on most
     questions; the keyword parser alone scores 48/48 on the chat test sets (results/chat_eval/README.md).
@@ -339,6 +339,8 @@ def _keywords_suffice(kw: LlmFilter, question: str) -> bool:
     q = question.lower()
     if _TIME_HINT.search(q) and not (kw.start or kw.end):
         return False
+    if semantic:  # the vector index matches the descriptive words by meaning; the LLM would only copy them
+        return True
     if kw.text:
         return False
     return bool(kw.categories or kw.subtypes or _GENERAL.search(q))
@@ -353,10 +355,12 @@ class QuestionParser:
     def now(self) -> datetime:
         return datetime.now(self.tz) if self.tz else datetime.now().astimezone()
 
-    def parse(self, question: str, cameras: list[dict], now: datetime | None = None) -> ParseResult:
+    def parse(self, question: str, cameras: list[dict], now: datetime | None = None,
+              semantic: bool = False) -> ParseResult:
+        """semantic=True: the chat has a vector index, so only a time phrase the keywords can't read needs the LLM."""
         now = now or self.now()
         kw = keyword_filter(question, now, cameras, self.categories)
-        if self.llm is not None and not _keywords_suffice(kw, question):
+        if self.llm is not None and not _keywords_suffice(kw, question, semantic):
             prompt = _prompt(question, now, cameras, self.categories)
             lf = self.llm.structured([{"role": "user", "content": prompt}], LlmFilter)
             if lf is not None:

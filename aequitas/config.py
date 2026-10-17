@@ -108,9 +108,33 @@ class EscalationCfg(EndpointOverride):
     violence_band_low: float = 0.35  # also re-check when the clip model scores at least this
 
 
+class VectorCfg(BaseModel):
+    """The chatbot's vector database (aequitas/chat/vectors.py): every stage-1 summary, embedded and stored in
+    Qdrant, so questions are matched by meaning and not only by keyword."""
+
+    enabled: bool = True
+    url: str | None = None  # a Qdrant server (http://127.0.0.1:6333); None = embedded Qdrant in data_dir/vectors
+    # fastembed runs the embedding model on the CPU (ONNX), so it never competes with the VLM for the GPU.
+    # ollama: any Ollama embedding model (embeddinggemma, nomic-embed-text), forced onto the CPU too.
+    embedder: Literal["fastembed", "ollama"] = "fastembed"
+    model: str = "BAAI/bge-base-en-v1.5"  # fastembed name, or the Ollama tag with embedder: ollama
+    threads: int = Field(default=2, ge=1, le=16)  # CPU threads for fastembed
+    cache_dir: Path = Path("models/fastembed")  # downloaded fastembed models (bge-base: ~210 MB, once)
+    # A summary counts as a match when its cosine similarity is at least min_score and within margin of the best
+    # match. Set on synthetic sentences (scripts/vector_calibrate.py), not on the faculty clips: with bge-base, 0.56
+    # keeps 19/23 relevant pairs and passes 6/417 irrelevant ones; 0.62 passes none but keeps only 14/23.
+    min_score: float = Field(default=0.56, ge=0, le=1)
+    # Below this best score (and with no keyword hit) the answer says nothing matched closely and shows the nearest
+    # summaries as weak matches, without an LLM summary. 0.62: no irrelevant synthetic pair reached it.
+    strong_score: float = Field(default=0.62, ge=0, le=1)
+    margin: float = Field(default=0.08, ge=0, le=1)
+    sync_s: float = Field(default=3.0, ge=0.5)  # how often new summaries are embedded in the background
+
+
 class ChatCfg(EndpointOverride):
     summarize: bool = True  # add an LLM-written summary that may only cite retrieved event IDs
     timezone: str | None = None  # IANA name; None = system local time
+    vector: VectorCfg = VectorCfg()
 
 
 class AnalysisCfg(BaseModel):
