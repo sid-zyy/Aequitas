@@ -288,16 +288,20 @@ table.dense td { padding: 8px 18px; }
 .whycard p b { color: var(--fg); font-weight: 600; }
 
 /* --- scorecard --- */
-.score { display: grid; grid-template-columns: 1fr 1.25fr; gap: 56px; align-items: start; }
+.score { display: grid; grid-template-columns: 0.72fr 1.6fr; gap: 56px; align-items: start; }
 .score > * { min-width: 0; }
 .score .colh { font-family: var(--mono); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
-.score .colh.sa { color: var(--saffron); }
+.score .colh.sa { color: var(--saffron); margin-bottom: 16px; }
 .req { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.req li { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 20px; }
+.req li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 21px; }
 .req li::before { content: "✓"; color: var(--ok); font-weight: 800; font-size: 22px; }
-.req li .m { font-family: var(--mono); font-size: 16px; color: var(--saffron); white-space: nowrap; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.herocard { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--saffron); border-radius: 6px; padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; }
+.herocard .hk { font-family: var(--mono); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--saffron); }
+.herocard b { font-family: var(--display); font-stretch: 85%; font-size: 27px; font-weight: 700; line-height: 1.1; }
+.herocard p { margin: 0; font-size: 16px; line-height: 1.4; color: var(--muted); }
 .more { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; list-style: none; margin: 0; padding: 0; }
-.more li { padding: 9px 0 9px 24px; border-bottom: 1px solid var(--line); font-size: 17px; line-height: 1.35; color: var(--muted); position: relative; }
+.more li { padding: 7px 0 7px 24px; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.35; color: var(--muted); position: relative; }
 .more li::before { content: "+"; position: absolute; left: 2px; color: var(--saffron); font-weight: 800; }
 .more li b { color: var(--fg); font-weight: 600; }
 
@@ -727,60 +731,38 @@ table.dense td { padding: 8px 18px; }
   </div>
 </section>
 
-<!-- 18 · accuracy & latency -->
-<section class="slide" data-title="Results">
-  <div class="eyebrow rv">Accuracy and latency, task by task · RTX 4050 laptop</div>
-  <h2 class="rv" style="--i:1">What it gets right, and how fast.</h2>
-  <div class="tablewrap rv" style="--i:2">
-    <table class="dense">
-      <thead><tr><th>Task</th><th>Accuracy</th><th class="n">Latency (p50)</th></tr></thead>
-      <tbody>
-        <tr class="pick"><td>Test clips, end to end</td><td><b class="good">6 / 6 flagged as incidents</b> · right label confirmed on 4</td><td class="n" style="white-space:nowrap">25 s · 39 s of video</td></tr>
-        <tr><td>1 · Summarise a window</td><td>Describes the scene; the fight is caught by the second signal</td><td class="n">0.58 s</td></tr>
-        <tr><td>2 · Classify the summary</td><td>0.98 on 57 labelled summaries</td><td class="n">0.32 s</td></tr>
-        <tr><td>3 · Chat: understand the question</td><td>48 / 48 questions turned into the right search</td><td class="n">0.45 s answer</td></tr>
-        <tr><td>Bodycam recording summary</td><td>Key points tied to real timestamps</td><td class="n">1.6 s</td></tr>
-        <tr><td>Citizen report, Hindi / Kannada → English</td><td>6 / 6 sample reports kept every fact</td><td class="n">0.31 / 0.34 s</td></tr>
-        <tr><td>21 Bengaluru demo clips</td><td>7 / 10 incidents confirmed · 1 false alarm</td><td class="n">1 min 48 s</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
 <!-- 18c · scorecard -->
 <section class="slide" data-title="Scorecard">
   <div class="eyebrow rv">Scorecard · what the brief asked for, and what we added</div>
   <h2 class="rv" style="--i:1">Everything the brief asked for. And more.</h2>
   <div class="score">
     <div class="rv" style="--i:2">
-      <div class="colh">Required · all delivered</div>
+      <div class="colh">The brief · all delivered</div>
       <ul class="req">
-        <li><span>Stage 1 · summarise the video</span><span class="m">0.58 s</span></li>
-        <li><span>Stage 2 · classify the summary</span><span class="m">0.32 s</span></li>
-        <li><span>Stage 3 · chatbot over the results</span><span class="m">0.45 s</span></li>
-        <li><span>Speculative decoding + MTP, measured</span><span class="m">chat −22 %</span></li>
-        <li><span>4-bit vs 8-bit quantization, compared</span><span class="m">4-bit wins</span></li>
-        <li><span>React + FastAPI, no notebooks</span><span class="m">✓</span></li>
-        <li><span>Every stage timed, total on screen</span><span class="m">25 s · 6 clips</span></li>
+        <li><span>Stage 1 · summarise the video</span></li>
+        <li><span>Stage 2 · classify the summary</span></li>
+        <li><span>Stage 3 · chatbot over the results</span></li>
+        <li><span>React + FastAPI, no notebooks</span></li>
+        <li><span>Every stage timed, total on screen</span></li>
       </ul>
     </div>
     <div class="rv" style="--i:3">
       <div class="colh sa">And more</div>
+      <div class="hero">
+        <div class="herocard"><span class="hk">Two signals, not one</span><b>Fights the VLM misses, caught</b><p>A motion model votes with Gemma: 6 / 6 test clips flagged, where Gemma alone saw 0.</p></div>
+        <div class="herocard"><span class="hk">Citizens</span><b>Report from a chat, in 3 languages</b><p>Attach a video, answer a few questions in English, Hindi or Kannada. Urgent cases see the helplines.</p></div>
+        <div class="herocard"><span class="hk">Evidence</span><b>A record that holds up</b><p>One-click evidence package with SHA-256 hashes, and an audit log that shows any edit.</p></div>
+        <div class="herocard"><span class="hk">One laptop</span><b>Speculative decoding + 4-bit</b><p>Gemma's MTP drafter and a measured 16 / 8 / 4-bit study: fast and offline on a 6 GB GPU.</p></div>
+      </div>
       <ul class="more">
-        <li><b>Citizen portal</b> in English, Hindi and Kannada</li>
-        <li><b>Report from the chat</b>: attach a video, answer a few questions</li>
-        <li><b>Emergency assistant</b> with the official helplines</li>
-        <li><b>Live CCTV</b> by Bengaluru locality, plus a webcam</li>
-        <li><b>Bodycam review</b>: key moments and a printable report</li>
-        <li><b>Violence model</b> as a second signal</li>
-        <li><b>Scene gate</b>: 28 % less Gemma time</li>
-        <li><b>RF-DETR</b> finds 16× more small people</li>
+        <li><b>Live CCTV</b> by Bengaluru locality</li>
+        <li><b>Chat that knows places</b>: "fights in Indiranagar"</li>
+        <li><b>Bodycam review</b> with key moments</li>
         <li><b>AI-generated video check</b> on uploads</li>
-        <li><b>Translation</b> Hindi / Kannada → English</li>
-        <li><b>Evidence package</b> with hashes, ready to hand on</li>
-        <li><b>Tamper-evident audit log</b> of every decision</li>
-        <li><b>System health</b> page for the control room</li>
+        <li><b>Scene gate</b> and <b>RF-DETR</b> detector</li>
+        <li><b>System health</b> for the control room</li>
         <li><b>Guardrails</b>: no face recognition, a human decides</li>
+        <li><b>Protests are never flagged</b></li>
       </ul>
     </div>
   </div>
