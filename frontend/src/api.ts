@@ -189,7 +189,7 @@ export const api = {
 export type StreamEvent =
   | {
       type: "retrieved"; total: number; head: string[]; tail: string[]; events: EventItem[]; moments: Moment[];
-      mode: "filter" | "hybrid" | "detail" | "similar"; kept: string[]; weak: boolean; suggestions: string[]; context: ChatContext;
+      mode: "filter" | "hybrid" | "detail" | "similar"; kept: string[]; weak: boolean; earlier: boolean; suggestions: string[]; context: ChatContext;
       intent: string; parsed_with: string | null; warnings: string[];
       parse_ms: number; query_ms: number | null; embed_ms: number | null; vector_ms: number | null; retrieve_ms: number;
     }

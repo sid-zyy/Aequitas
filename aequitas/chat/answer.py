@@ -63,6 +63,7 @@ class ChatAnswer:
     suggestions: list[str] = field(default_factory=list)
     context: dict = field(default_factory=dict)  # sent back with the next question (follow-ups)
     weak: bool = False  # vector search found only distant summaries (shown as weak matches, no LLM summary)
+    earlier: bool = False  # nothing in the asked time range; rows are the latest matches outside it
 
 
 @dataclass
@@ -77,6 +78,7 @@ class Retrieval:
     mode: str = "filter"
     kept: list[str] = field(default_factory=list)  # parts of the previous filter a follow-up kept
     weak: bool = False
+    earlier: bool = False
     asked_about: list[dict] = field(default_factory=list)  # similar mode: the event compared against (LLM may cite it)
 
     @property
@@ -321,17 +323,25 @@ class ChatService:
         if f.camera_ids and not f.categories and re.match(r"\s*where\b", question, re.I):
             head.append(where_answer(f, cameras))
         rows: list[dict] = []
+        earlier = False
         if f.intent == "count":
             head.append(f"{total} {desc}.")
         elif not total:
             head.append(f"No {desc}.")
+            if f.start or f.end:  # "nothing in the last hour" alone hides the incident from 10:41
+                rows = self.store.query(f.model_copy(update={"start": None, "end": None, "limit": 3,
+                                                             "sort": "newest"}))
+                if rows:
+                    earlier = True
+                    head.append("The latest outside that time:")
+                    tail.extend(format_row(r, self.parser.tz) for r in rows)
         else:
             rows = self.store.query(f)
             shown = f" (showing {len(rows)})" if total > len(rows) else ""
             tail.append(f"Found {total} {desc}{shown}:")
             tail.extend(format_row(r, self.parser.tz) for r in rows)
         timings["query_ms"] = round((time.perf_counter() - t1) * 1000)
-        return Retrieval(parsed, total, rows, head, tail, timings, kept=kept)
+        return Retrieval(parsed, total, rows, head, tail, timings, kept=kept, earlier=earlier)
 
     def _hybrid(self, question: str, parsed: ParseResult, terms: list[str], timings: dict, kept: list[str],
                 cameras: list[dict], inherited: bool = False) -> Retrieval:
@@ -463,11 +473,11 @@ class ChatService:
                          asked_about=self.store.events_by_ids([ref]))
 
     def _wants_summary(self, ret: Retrieval) -> bool:
-        return bool(ret.rows or ret.moments) and not ret.weak and self.summarize and self.parser.llm is not None
+        return bool(ret.rows or ret.moments) and not (ret.weak or ret.earlier) and self.summarize and self.parser.llm is not None
 
     def _extras(self, ret: Retrieval) -> dict:
         f = ret.parsed.filter
-        shown = [] if ret.weak else ret.rows  # don't offer "tell me more" about an unrelated nearest match
+        shown = [] if ret.weak or ret.earlier else ret.rows  # don't offer "tell me more" about an unrelated nearest match
         return {"suggestions": suggestions(ret.mode, f, shown, ret.total, self.index is not None),
                 "context": {"filter": f.model_dump(mode="json"), "event_ids": [r["event_id"] for r in ret.rows],
                             "mode": ret.mode}}
@@ -485,7 +495,7 @@ class ChatService:
         mid = [summary, ""] if summary else []
         ex = self._extras(ret)
         return ChatAnswer("\n".join(ret.head + mid + ret.tail), ret.rows, ret.parsed, ret.total, summary, timings,
-                          ret.moments, ret.mode, ex["suggestions"], ex["context"], ret.weak)
+                          ret.moments, ret.mode, ex["suggestions"], ex["context"], ret.weak, ret.earlier)
 
     def ask_stream(self, question: str, context: dict | None = None) -> Iterator[dict]:
         """The same answer as ask(), as events for streaming:
@@ -502,7 +512,7 @@ class ChatService:
         rows, timings = ret.rows, ret.timings
         retrieve_ms = (time.perf_counter() - t0) * 1000
         yield {"type": "retrieved", "parsed": ret.parsed, "total": ret.total, "rows": rows, "head": ret.head,
-               "tail": ret.tail, "moments": ret.moments, "mode": ret.mode, "kept": ret.kept, "weak": ret.weak,
+               "tail": ret.tail, "moments": ret.moments, "mode": ret.mode, "kept": ret.kept, "weak": ret.weak, "earlier": ret.earlier,
                "retrieve_ms": round(retrieve_ms), **timings, **self._extras(ret)}
         summary_ms = ttft_ms = None
         if self._wants_summary(ret):
