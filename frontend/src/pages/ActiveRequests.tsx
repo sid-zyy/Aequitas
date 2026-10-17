@@ -109,7 +109,7 @@ export default function ActiveRequests() {
                   return (
                     <Fragment key={r.report_id}>
                     <tr className={(fresh.has(r.report_id) ? "fresh" : "") + (open === r.report_id ? " expanded" : "")}>
-                      <td><b className="mono">{r.report_id}</b>{r.urgent && <div><span className="badge incident">urgent</span></div>}{r.duplicate_of && <div><span className="badge unverified">duplicate</span></div>}</td>
+                      <td><b className="mono">{r.report_id}</b>{r.urgent && <div><span className="badge incident">urgent</span></div>}</td>
                       <td className="mono">{age(r.created_at)}</td>
                       <td><span className="badge status">{label(r.status)}</span></td>
                       <td className="desc"><ReportText reportId={r.report_id} text={r.description} language={r.language}
