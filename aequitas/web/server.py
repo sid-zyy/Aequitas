@@ -864,10 +864,18 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     def _ask_video(u: dict, body: VideoAskBody, request: Request, target: str, citizen_text: str | None) -> dict:
         d = _video_detail(u)
         llm = _translator()
+        relevant: list[int] = []
+        if service.index is not None:  # this video's windows nearest in meaning to the question (Qdrant)
+            try:
+                hits = service.index.search(service.index.embed_query(body.question), "window",
+                                            store.window_ids([u["camera_id"]]), limit=5)
+                relevant = [h.ref_id for h in hits if h.score >= settings.chat.vector.min_score]
+            except Exception as e:
+                log.warning("vector search for %s failed: %s", target, e)
         try:
             with GATE.interactive():
                 res = answer_video(llm, body.question, d["windows"], d["events"], d["summary"], d["duration_s"],
-                                   citizen_text, [h.model_dump() for h in body.history])
+                                   citizen_text, [h.model_dump() for h in body.history], relevant)
         except Exception as e:
             log.warning("video question failed for %s: %s", target, e)
             raise HTTPException(503, f"The chat model ({llm.model}) did not answer. Is it running?")
