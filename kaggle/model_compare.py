@@ -11,8 +11,10 @@
 #
 # The faculty's 6 sample clips (v001, v003, v006, v011, v026, w001) are skipped, so they stay a clean test set.
 #
-# `SET` picks the line-up: "small" (default) compares models of Gemma 4 E2B's size, the ones that fit the demo
-# laptop's 6 GB GPU at 4-bit; "large" is the first run (E2B against E4B, 12B and Qwen3-VL 4B/8B).
+# `SET` picks the line-up: "e2b" (default) re-measures Gemma 4 E2B alone on 60 clips per class (180), for a
+# steadier number than the 40 incident clips of earlier runs (E2B scored 15 % and 25 % on two draws);
+# "small" compares models of Gemma 4 E2B's size, the ones that fit the demo laptop's 6 GB GPU at 4-bit;
+# "large" is the first run (E2B against E4B, 12B and Qwen3-VL 4B/8B).
 # Cascade rows (a fast model + a bigger re-checker) are computed from the saved per-video results: the
 # re-checker's verdict replaces the fast model's only on videos the fast model flagged.
 
@@ -29,12 +31,15 @@ from pathlib import Path
 WORK = Path("/kaggle/working")
 OUT = WORK / "model_compare"  # the zip is named after it
 OUT.mkdir(parents=True, exist_ok=True)
-QUICK = True  # True: 20 videos per class (~60 videos per model). False: 60 per class.
+SET = "e2b"
+QUICK = SET != "e2b"  # True: 20 videos per class (~60 videos per model). False: 60 per class.
 PER_CLASS = 20 if QUICK else 60
 # qwen3-vl's default tags are the thinking variants: with a JSON schema they returned empty answers on Kaggle
 # (run 1: 0/60 valid). The -instruct tags answer directly.
-SET = "small"
-if SET == "small":  # about 2-4 B parameters, 4-bit in Ollama, each fits 6 GB
+if SET == "e2b":
+    MODELS = ["gemma4:e2b"]
+    CASCADES = []
+elif SET == "small":  # about 2-4 B parameters, 4-bit in Ollama, each fits 6 GB
     MODELS = ["gemma4:e2b", "qwen3-vl:2b-instruct", "qwen2.5vl:3b", "gemma3:4b", "granite3.2-vision:2b",
               "llava-phi3:3.8b"]
     CASCADES = []
@@ -93,10 +98,11 @@ for root in Path("/kaggle/input").glob("*"):
         lab = LABEL_MAP.get(it.label.strip().lower().replace(" ", "_"))
         if lab:
             by_class.setdefault(lab, []).append(Item(it.path, lab))
-ITEMS = []
+ITEMS, WARM = [], []
 for lab, items in sorted(by_class.items()):
     rng.shuffle(items)
     ITEMS += items[:PER_CLASS]
+    WARM += items[PER_CLASS:PER_CLASS + 2]  # warm-up clips outside the test set: Ollama caches repeated images
 print({k: len(v) for k, v in by_class.items()}, "-> evaluating", len(ITEMS), "videos per model")
 assert ITEMS, "No SCVD videos found: add the dataset via Add Input"
 
@@ -125,7 +131,7 @@ for model in MODELS:
         s.vlm = s.vlm.model_copy(update={"backend": "ollama", "host": "http://127.0.0.1:11434", "model": model})
         client = make_client(s.vlm)
         # load the model before timing anything; give up early if it cannot answer at all
-        probe = run_dataset_eval(client, client, ITEMS[:5], s.categories, label="warmup", out_dir=OUT / "reports")
+        probe = run_dataset_eval(client, client, (WARM or ITEMS)[:5], s.categories, label="warmup", out_dir=OUT / "reports")
         if probe["classification"]["valid"] == 0:
             raise RuntimeError(f"{model}: 0 of 5 probe videos gave a valid answer, skipped")
         rep = run_dataset_eval(client, client, ITEMS, s.categories, label=model.replace(":", "_"), out_dir=OUT / "reports")
@@ -159,7 +165,13 @@ def score(rows, preds, times):
     inc_p = [p in INCIDENT for p in preds]
     det = sum(a == b for a, b in zip(inc_g, inc_p)) / len(gold)
     ts = sorted(times)
-    return {"accuracy": m["accuracy"], "macro_f1": m["macro_f1"], "incident_detected_acc": round(det, 3),
+    # 'alert' = any label other than none, which is what raises a concern in the app
+    inc = [p for g, p in zip(gold, preds) if g != "none"]
+    nor = [p for g, p in zip(gold, preds) if g == "none"]
+    alert_recall = sum(p not in (None, "none") for p in inc) / max(len(inc), 1)
+    false_alarms = sum(p not in (None, "none") for p in nor) / max(len(nor), 1)
+    return {"alert_recall": round(alert_recall, 3), "false_alarm_rate": round(false_alarms, 3),
+            "accuracy": m["accuracy"], "macro_f1": m["macro_f1"], "incident_detected_acc": round(det, 3),
             "incident_recall": m["incident_recall"], "incident_precision": m["incident_precision"],
             "time_per_video_p50_s": round(ts[len(ts) // 2], 2), "time_per_video_mean_s": round(sum(ts) / len(ts), 2)}
 
