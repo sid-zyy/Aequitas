@@ -67,6 +67,8 @@ MIGRATIONS = [
     ("reports", "language", "TEXT"),        # en | hi | kn: the language the citizen wrote in (text kept as written)
     ("reports", "urgent", "INTEGER"),       # 1: the citizen told the portal's assistant they need help now
     ("reports", "translation_json", "TEXT"),  # officer-requested English translation {text, ms, model}
+    ("audit_log", "prev_hash", "TEXT"),     # hash chain (aequitas/auth.py): the previous entry's hash
+    ("audit_log", "hash", "TEXT"),          # HMAC-SHA256 over this entry and prev_hash
 ]
 
 
@@ -367,6 +369,34 @@ class EventStore:
                 "UPDATE uploads SET status='failed', error='interrupted by restart' "
                 "WHERE status IN ('queued','processing','verifying')"
             ).rowcount
+
+    def event_timings(self, event_id: int) -> dict | None:
+        with self._lock:
+            r = self._conn.execute("SELECT * FROM event_timings WHERE event_id=?", (event_id,)).fetchone()
+        return dict(r) if r else None
+
+    def window_stats(self, since_ms: int) -> dict:
+        """Live analysis since a moment: windows analysed, failed, and p50 stage times and lag (health page)."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT label, summarize_ms, classify_ms, lag_ms FROM windows WHERE created_at>=?", (since_ms,)
+            ).fetchall()
+
+        def p50(key):
+            v = sorted(r[key] for r in rows if r[key] is not None)
+            return round(v[len(v) // 2], 1) if v else None
+
+        return {"windows": len(rows), "failed": sum(r["label"] is None for r in rows),
+                "summarize_ms_p50": p50("summarize_ms"), "classify_ms_p50": p50("classify_ms"),
+                "lag_ms_p50": p50("lag_ms")}
+
+    def upload_counts(self) -> dict:
+        with self._lock:
+            return dict(self._conn.execute("SELECT status, COUNT(*) FROM uploads GROUP BY status").fetchall())
+
+    def dropped_since(self, since_ms: int) -> int:
+        with self._lock:
+            return self._conn.execute("SELECT COUNT(*) FROM dropped_candidates WHERE ts>=?", (since_ms,)).fetchone()[0]
 
     def timings(self) -> list[dict]:
         with self._lock:

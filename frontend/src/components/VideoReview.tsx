@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { BodyEvent, isIncident, label, RecordingDetail, VideoAnswer } from "../api";
+import { BodyEvent, evidenceUrl, isIncident, label, RecordingDetail, VideoAnswer } from "../api";
 
 // One video reviewed in depth: AI summary, player with a 4 s window timeline, key moments with keyframes that an
 // officer confirms or dismisses, the full window log, and a chat that answers only about this video.
@@ -62,6 +62,7 @@ function Moment({ ev, active, seek, review }: {
           {ev.review !== "confirmed" && <button className="btn" onClick={() => review("confirmed")}>Confirm</button>}
           {ev.review !== "dismissed" && <button className="btn ghost" onClick={() => review("dismissed")}>Dismiss</button>}
           {ev.review && <button className="btn ghost" onClick={() => review(null)}>Undo</button>}
+          <a className="btn ghost" href={evidenceUrl(ev.id)} download title="Key frame, original video, AI output, officer decision, hashes and audit trail, as one ZIP">Evidence ⤓</a>
         </div>
       </div>
     </div>

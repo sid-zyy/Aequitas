@@ -171,6 +171,9 @@ numbers in the docs.
 - [ ] Hazard detector training (fire/smoke/weapons; D-Fire class order still to verify)
 
 ### Product (after the faculty items)
+- [x] **Production features** (2026-10-17, docs/ARCHITECTURE.md §12.1): tamper-evident audit log (HMAC hash chain,
+  admin Audit log page), per-incident evidence package (ZIP with original video, manifest, SHA256SUMS, draft
+  certificate), System health page. Tests: tests/test_production.py
 - [ ] Bodycam: speech transcript (Whisper small ~0.5 GB, ask before downloading; Indic ASR for Kannada after a
   licence check), blurring bystander faces and number plates
 - [ ] Per-frame inference table and timeline lanes (docs/ROADMAP.md)
