@@ -25,6 +25,7 @@ from aequitas.understand.fusion import fuse, fuse_window
 from aequitas.understand.gate import should_skip
 from aequitas.understand.keyframes import encode_jpeg, make_grid, window_detail, window_motion
 from aequitas.understand.periodic import WindowAggregator
+from aequitas.understand.priority import GATE
 from aequitas.understand.stages import InOrder, Understanding, escalate, needs_escalation, understand
 
 log = logging.getLogger(__name__)
@@ -486,6 +487,7 @@ class Pipeline:
                 if cameras_done.is_set() and len(self.queue) == 0:
                     return
                 continue
+            GATE.wait_turn()  # an officer's question goes first (aequitas/understand/priority.py)
             queue_ms = (time.perf_counter_ns() - job.enqueued_ns) / 1e6
             try:
                 if job.cand is not None:

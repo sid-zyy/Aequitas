@@ -115,7 +115,9 @@ def test_chat_service_end_to_end(store, monkeypatch):
     ans = ChatService(store, parser).ask("Show all tailgating events from camera 2 today")
     assert ans.total == 1
     assert "Two people enter" in ans.text
-    assert ans.parsed.method == "llm"
+    assert ans.parsed.method == "keywords"  # fully read by the keywords: no model call needed
+    ans = ChatService(store, parser).ask("Was someone sneaking in behind another person on camera 2 today?")
+    assert ans.parsed.method == "llm" and ans.total == 1  # words the keywords can't map go to the LLM
 
 
 def test_chat_falls_back_to_keywords_when_llm_fails(store, monkeypatch):

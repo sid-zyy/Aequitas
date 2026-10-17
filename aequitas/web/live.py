@@ -156,6 +156,7 @@ class LiveManager:
                 "view": c.view, "browser_camera": c.source == "browser",
                 # files play in a <video>; live sources stream the frames the pipeline reads (MJPEG)
                 "video_url": f"/api/live/cameras/{c.id}/{'mjpeg' if c.is_live else 'video'}{self._version(c)}",
+                "poster_url": None if c.is_live else f"/api/live/cameras/{c.id}/poster.jpg{self._version(c)}",
                 "latest": latest, "recent": recent,
                 "behind_live_s": round(latest["lag_ms"] / 1000, 1) if latest and latest["lag_ms"] else None,
             })

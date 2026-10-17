@@ -31,6 +31,7 @@ from aequitas.reports import PUBLIC_STATUS, ReportStore
 from aequitas.taxonomy import label
 from aequitas.translate import LANGUAGES, detect_language, translate_to_english
 from aequitas.types import Status
+from aequitas.understand.priority import GATE
 from aequitas.web.bodycam import ReviewBody, make_summary, reviewed, timeline
 from aequitas.web.jobs import JobManager, frames_expected, probe_video
 from aequitas.web.live import LiveManager, load_localities
@@ -312,7 +313,8 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
     @app.post("/api/ask")
     def ask(body: AskBody):
         t0 = time.perf_counter()
-        ans = service.ask(body.question.strip())
+        with GATE.interactive():  # live analysis waits while an officer's question is answered
+            ans = service.ask(body.question.strip())
         f = ans.parsed.filter if ans.parsed else None
         return {
             "text": ans.text,
@@ -334,6 +336,10 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         `done` (timings)."""
 
         def events():
+            with GATE.interactive():
+                yield from _stream()
+
+        def _stream():
             for ev in service.ask_stream(body.question.strip()):
                 if ev["type"] == "retrieved":
                     p = ev["parsed"]
@@ -507,6 +513,30 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
             raise HTTPException(404, "unknown locality")
         st["concerns"] = [_event_json(e, store) for e in st["concerns"]]
         return st
+
+    @app.get("/api/live/cameras/{camera_id}/poster.jpg")
+    def live_poster(camera_id: str):
+        """A still from the camera's clip, shown in the tile at once so it is never black while the browser's video
+        decoder catches up (the GPU is busy with the model). Made once per clip version and cached on disk."""
+        cam = live.cameras.get(camera_id)
+        if cam is None or cam.is_live or not live.has_footage(camera_id):
+            raise HTTPException(404, "no footage for this camera")
+        src = Path(cam.file)
+        out = settings.data_dir / "posters" / f"{camera_id}-{int(src.stat().st_mtime)}.jpg"
+        if not out.is_file():
+            import cv2
+
+            cap = cv2.VideoCapture(str(src))
+            cap.set(cv2.CAP_PROP_POS_MSEC, 500)  # just past any fade-in
+            ok, frame = cap.read()
+            cap.release()
+            if not ok:
+                raise HTTPException(404, "could not read the clip")
+            h, w = frame.shape[:2]
+            frame = cv2.resize(frame, (640, round(640 * h / w)))
+            out.parent.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(out), frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "max-age=86400"})
 
     @app.get("/api/live/cameras/{camera_id}/video")
     def live_video(camera_id: str):
@@ -744,7 +774,8 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         if r["translation"] and not refresh:
             return {**r["translation"], "cached": True}
         llm = _translator()
-        english, ms = translate_to_english(llm, r["description"], r["language"])
+        with GATE.interactive():
+            english, ms = translate_to_english(llm, r["description"], r["language"])
         if english is None:
             raise HTTPException(502, f"The translation model ({llm.model}) did not answer. Is it running?")
         result = {"text": english, "ms": round(ms), "model": f"{llm.cfg.backend}:{llm.model}",
@@ -776,8 +807,9 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         d = _video_detail(u)
         llm = _translator()
         try:
-            res = answer_video(llm, body.question, d["windows"], d["events"], d["summary"], d["duration_s"],
-                               citizen_text, [h.model_dump() for h in body.history])
+            with GATE.interactive():
+                res = answer_video(llm, body.question, d["windows"], d["events"], d["summary"], d["duration_s"],
+                                   citizen_text, [h.model_dump() for h in body.history])
         except Exception as e:
             log.warning("video question failed for %s: %s", target, e)
             raise HTTPException(503, f"The chat model ({llm.model}) did not answer. Is it running?")
