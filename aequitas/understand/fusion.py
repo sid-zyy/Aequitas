@@ -3,6 +3,7 @@ Confidence comes from agreement between the two signals, not from the VLM's self
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from aequitas.config import FusionCfg
@@ -32,6 +33,19 @@ def fuse(cand: Candidate, ans: VlmAnswer | None, cfg: FusionCfg) -> Fused:
 
 VIOLENT = {"fighting", "riot", "weapon", "harassment"}
 
+# How many people Gemma's summary says are there: "Two men push...", "A group of people...", "Several people...".
+_COUNT = re.compile(r"\b(two|three|four|five|six|seven|eight|nine|ten|\d+|several|many|a few|a group of|a crowd of)"
+                    r"\s+(?:\w+\s+){0,2}?(people|persons|men|women|boys|girls|individuals|youths|students|"
+                    r"officers|figures)\b", re.I)
+
+
+def people_involved(summary: str | None) -> str | None:
+    """'two men', 'a group of people', 'several people' from a summary, for the lead of a clip-model fight."""
+    m = _COUNT.search(summary or "")
+    if not m:
+        return None
+    return f"{m.group(1).lower()} {m.group(2).lower()}"
+
 
 def fuse_window(ans: VlmAnswer | None, violence: float | None, threshold: float,
                 alone: float | None = None) -> tuple[VlmAnswer | None, str]:
@@ -43,7 +57,8 @@ def fuse_window(ans: VlmAnswer | None, violence: float | None, threshold: float,
       high on the clip model, and the VLM's label is the more specific one
     - only the clip model sees violence -> fighting, but only at >= `alone` (stricter than the calibrated
       threshold: on busy street footage single windows reach 0.8-0.9, faculty fights reach 0.95-1.0). The summary
-      then starts "Violent motion detected (0.98)." so it explains the label
+      then starts "Possible fight among several people (violent motion 0.98)." so it explains the label, using the
+      people count from Gemma's own summary
     - only the VLM sees violence -> unchanged: a missed fight is worse than a false alarm a human dismisses"""
     alone = threshold if alone is None else max(alone, threshold)
     if violence is None:
@@ -55,7 +70,9 @@ def fuse_window(ans: VlmAnswer | None, violence: float | None, threshold: float,
     if violence >= alone:
         # The label comes from the clip model, so the summary says so first: the VLM's own description ("people
         # gathered") alone read as if it contradicted the label. The VLM's words are kept unchanged after it.
-        lead = f"Violent motion detected ({violence:.2f})."
+        people = people_involved(ans.summary) if ans is not None else None
+        lead = (f"Possible fight among {people} (violent motion {violence:.2f})." if people
+                else f"Possible fight (violent motion {violence:.2f}).")
         summary = f"{lead} {ans.summary.strip()}" if ans is not None and ans.summary.strip() else (
             f"Violent motion detected by the clip model ({violence:.2f}).")
         return VlmAnswer(category="fighting", summary=summary,
