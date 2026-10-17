@@ -201,7 +201,42 @@ without a second signal and a human.
 
 ---
 
-## 10. Hard questions: answer honestly
+## 10. "How is this production ready?"
+
+**The 20-second answer:** "It's built the way a station would need it: it runs offline on one affordable
+laptop, every decision is made by a person and logged so it can't be quietly changed, every incident exports as
+checkable evidence, it keeps working when a part fails, and an operator can see its health at a glance. It's
+ready for a pilot in a real station; that pilot is the next step."
+
+**If they push, the evidence:**
+- **Runs where police can run it:** one 6 GB laptop, offline, no cloud bill, footage never leaves the station.
+  Measured end to end: six test clips in 25 s; every stage timed and shown on screen.
+- **People stay in charge:** the AI only flags; an officer confirms or dismisses, and the AI's call and the
+  officer's call are stored separately.
+- **Accountable:** a tamper-evident audit log of every sign-in, view, decision and export; one-click evidence
+  packages with SHA-256 hashes and a draft certificate.
+- **Secure by default:** salted scrypt passwords, sessions in HttpOnly SameSite cookies with only a hash stored,
+  lockout after 5 failed sign-ins, admin and officer roles, bound to localhost; citizen uploads are rate-limited,
+  size-capped and type-checked.
+- **Keeps working when something fails:**
+  - If the model server is down, the chat falls back to its keyword parser (48/48 on our test questions).
+  - Queues have backpressure, so a slow model never piles up unbounded work.
+  - Jobs cut off by a restart are marked failed; the AI-generated checks resume on their own.
+  - An officer's question always goes ahead of background analysis.
+  - Old databases upgrade themselves on start.
+- **Operable:** a System health page checks the model server, GPU, live lag, failed answers, queue, audit chain
+  and disk every 5 seconds. Cameras, categories, thresholds and the model are set in config files, not code.
+- **Tested:** 258 automated tests (synthetic data, no model downloads), plus repeatable evaluation scripts for
+  every number on the slides.
+
+**Say plainly what it isn't yet (it builds trust):** it hasn't run in a real station or on real station
+cameras (the Bengaluru feeds are stock footage); our test sets are small; one laptop covers one locality (about
+5 cameras) at a time; HTTPS and single sign-on aren't set up. A station pilot with real cameras is what turns
+"production-minded" into "in production".
+
+---
+
+## 11. Hard questions: answer honestly
 
 **Your test sets are tiny.** Yes: 6 faculty clips, 21 demo clips, 60–180 benchmark clips. One clip moves the
 faculty score by 17 points, so we read these as ranges, and we report held-out numbers next to tuned ones.
