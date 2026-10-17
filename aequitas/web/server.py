@@ -359,6 +359,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
         return {
             "mode": ans.mode,
             "weak": ans.weak,
+            "earlier": ans.earlier,
             "moments": [_moment_json(w, store) for w in ans.moments],
             "suggestions": ans.suggestions,
             "context": ans.context,
@@ -402,7 +403,7 @@ def create_app(settings: Settings, service: ChatService, camera_cfgs: list[Camer
                           "filter": f.model_dump(mode="json"), "retrieve_ms": ev["retrieve_ms"],
                           "parse_ms": ev["parse_ms"], "query_ms": ev.get("query_ms"),
                           "embed_ms": ev.get("embed_ms"), "vector_ms": ev.get("vector_ms"),
-                          "mode": ev["mode"], "kept": ev["kept"], "weak": ev["weak"], "suggestions": ev["suggestions"],
+                          "mode": ev["mode"], "kept": ev["kept"], "weak": ev["weak"], "earlier": ev["earlier"], "suggestions": ev["suggestions"],
                           "context": ev["context"],
                           "moments": [_moment_json(w, store) for w in ev["moments"]],
                           "events": [_event_json(r, store) for r in ev["rows"]]}

@@ -6,7 +6,7 @@ type Timing = { parse?: number; embed?: number | null; vector?: number | null; q
 type Msg = {
   role: "user" | "bot"; text: string; head?: string[]; events?: EventItem[]; moments?: Moment[];
   total?: number; mode?: Mode; kept?: string[]; suggestions?: string[]; timing?: Timing;
-  dropped?: boolean; error?: boolean; stopped?: boolean; pending?: boolean; weak?: boolean;
+  dropped?: boolean; error?: boolean; stopped?: boolean; pending?: boolean; weak?: boolean; earlier?: boolean;
 };
 
 const MODE_INFO: Record<Mode, { icon: string; name: string; hint: string }> = {
@@ -111,7 +111,7 @@ export default function AnalystChat({ localityName }: { localityName: string }) 
         if (e.type === "retrieved") {
           patch((m) => ({
             ...m, pending: false, head: e.head, events: e.events, moments: e.moments, total: e.total, mode: e.mode,
-            kept: e.kept, suggestions: e.suggestions, weak: e.weak,
+            kept: e.kept, suggestions: e.suggestions, weak: e.weak, earlier: e.earlier,
             timing: { parse: e.parse_ms, embed: e.embed_ms, vector: e.vector_ms, query: e.query_ms },
           }));
           setCtx(e.context);
@@ -193,6 +193,7 @@ export default function AnalystChat({ localityName }: { localityName: string }) 
               {m.mode && (
                 <div className="mode-line">
                   <span className={"mode-badge " + m.mode} title={MODE_INFO[m.mode].hint}>{MODE_INFO[m.mode].icon} {MODE_INFO[m.mode].name}</span>
+                  {m.earlier && <span className="weak-badge" title="Nothing in the time you asked about; these are the latest before or after it">outside your time range</span>}
                   {m.weak && <span className="weak-badge" title="Below the close-match bar (chat.vector.strong_score)">weak matches only</span>}
                   {!!m.kept?.length && <span className="note">kept from before: {m.kept.join(", ")}</span>}
                 </div>

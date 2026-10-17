@@ -257,3 +257,17 @@ def test_similar_answer_may_cite_the_event_it_compares_against(store, index):
     events = list(svc.ask_stream(f"Find events similar to #{ref}"))
     assert [e for e in events if e["type"] == "summary"][0]["summary"].startswith("Like")
     assert ref not in [r["event_id"] for r in events[0]["rows"]]
+
+
+def test_empty_time_range_shows_the_latest_events_outside_it(store, index):
+    class Llm(CountingLlm):
+        def stream_text(self, *a, **k):
+            raise AssertionError("no summary: these rows don't answer the question asked")
+
+    svc = ChatService(store, QuestionParser(Llm()), index=index, vector_cfg=LOOSE)
+    ans = svc.ask("Any fire in the last 10 minutes?")  # the fire was 2 hours ago
+    assert ans.total == 0 and ans.earlier and ans.summary is None
+    assert [r["event_id"] for r in ans.rows] == [store.ids["fire"]]
+    assert "No confirmed fire event" in ans.text and "latest outside that time" in ans.text
+    assert not any(s.startswith("Tell me more") for s in ans.suggestions)
+    assert not svc.ask("Any arrests in the last 10 minutes?").earlier  # none at any time: nothing to show
