@@ -304,6 +304,8 @@ class CameraCfg(BaseModel):
     camera_id: str
     name: str
     aliases: list[str] = Field(default_factory=list)
+    area: str | None = None  # the locality the camera is in (e.g. Indiranagar): "fights in Indiranagar" means all its cameras
+    area_aliases: list[str] = Field(default_factory=list)  # other names for the area (e.g. Indira Nagar)
     source: str  # rtsp://..., http://..., a file path, or a webcam index like "0"
     realtime: bool = True  # pace file sources at native speed (simulated live)
     loop: bool = False  # replay a file source forever (demo footage standing in for a live camera)

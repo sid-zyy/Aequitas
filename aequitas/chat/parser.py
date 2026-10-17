@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 from datetime import datetime, timedelta, tzinfo
 from typing import Literal
 
@@ -45,11 +46,67 @@ class ParseResult:
     method: str = "llm"
 
 
+# ---------- places: cameras and the areas (localities) they are in ----------
+
+FUZZY = 0.85  # how close a misspelt place name must be (difflib ratio, spaces and punctuation ignored)
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", s.lower())
+
+
+def _close(a: str, b: str) -> bool:
+    """A near miss of a name: letters may differ a little, numbers never (80 Feet Road is not 100 Feet Road)."""
+    na, nb = _norm(a), _norm(b)
+    return (len(nb) >= 5 and re.findall(r"\d+", na) == re.findall(r"\d+", nb)
+            and SequenceMatcher(None, na, nb).ratio() >= FUZZY)
+
+
+def camera_names(c: dict) -> list[str]:
+    """Every name a camera answers to; "Forum Mall, Hosur Road" also answers to "Forum Mall"."""
+    names = [c["name"], *c["aliases"]]
+    if "," in c["name"]:
+        names.append(c["name"].split(",")[0].strip())
+    return names
+
+
+def areas(cameras: list[dict]) -> dict[str, dict]:
+    """Area name -> {"ids": its camera IDs, "names": the name and its aliases}."""
+    out: dict[str, dict] = {}
+    for c in cameras:
+        a = c.get("area")
+        if not a:
+            continue
+        e = out.setdefault(a, {"ids": [], "names": [a]})
+        e["ids"].append(c["camera_id"])
+        for al in c.get("area_aliases") or []:
+            if al not in e["names"]:
+                e["names"].append(al)
+    return out
+
+
+def _mentioned(words: list[str], name: str) -> bool:
+    """Is `name` in the question, allowing a small misspelling (Kormangala, Indra nagar, mgroad)?"""
+    k = len(re.findall(r"[a-z0-9]+", name.lower())) or 1
+    for size in {max(1, k - 1), k, k + 1}:
+        for i in range(len(words) - size + 1):
+            chunk = "".join(words[i:i + size])
+            if chunk == _norm(name) or _close(chunk, name):
+                return True
+    return False
+
+
 def _prompt(question: str, now: datetime, cameras: list[dict], categories: dict[str, str] | None = None) -> str:
     cams = "\n".join(
-        f"- {c['camera_id']}: {c['name']}" + (f" (also called: {', '.join(c['aliases'])})" if c["aliases"] else "")
+        f"- {c['camera_id']}: {c['name']}" + (f", in {c['area']}" if c.get("area") else "")
+        + (f" (also called: {', '.join(c['aliases'])})" if c["aliases"] else "")
         for c in cameras
     ) or "- (no cameras registered)"
+    places = areas(cameras)
+    if places:
+        cams += "\n\nAreas (a question about an area means all its cameras):\n" + "\n".join(
+            f"- {a}" + (f" (also called: {', '.join(e['names'][1:])})" if len(e["names"]) > 1 else "")
+            for a, e in places.items())
     cats = "\n".join(f"- {name}: {d}" for name, d in (categories or DEFAULT_CATEGORIES).items())
     return (
         "Convert the user's question about stored security-camera events into a JSON search filter.\n\n"
@@ -59,7 +116,7 @@ def _prompt(question: str, now: datetime, cameras: list[dict], categories: dict[
         "Subtypes: loitering and abandoned_object (both suspicious_activity), overcrowding (crowd_incident).\n\n"
         "Rules:\n"
         "- Only fill fields the question asks about; leave the rest empty or default.\n"
-        "- cameras: copy the camera words the user used (e.g. 'camera 2', 'entrance').\n"
+        "- cameras: copy the camera or area words the user used (e.g. 'camera 2', 'entrance', 'Indiranagar').\n"
         "- start/end: local time as YYYY-MM-DDTHH:MM. 'today' = 00:00 today to now. "
         "'yesterday' = all of yesterday. 'this morning' = 06:00-12:00 today, 'this afternoon' = 12:00-18:00, "
         "'this evening'/'tonight' = 18:00-23:59. 'last N hours' = now minus N hours to now.\n"
@@ -82,30 +139,50 @@ def _parse_local(s: str | None, tz: tzinfo) -> datetime | None:
 
 
 def resolve_cameras(mentions: list[str], cameras: list[dict]) -> tuple[list[str], list[str]]:
-    """Map the user's camera words to camera IDs. Returns (ids, unknown mentions)."""
-    ids, unknown = [], []
+    """Map the user's place words to camera IDs. Returns (ids, unknown mentions).
+
+    A camera's name wins; an area name (or one of its aliases) means every camera in that area; then camera
+    numbers, partial names, and finally close misspellings. If the question names both an area and one of its
+    cameras ("Forum Mall in Koramangala"), the camera is meant, so the area is dropped."""
+    places = areas(cameras)
+    cam_hits: list[str] = []
+    area_hits: list[list[str]] = []
+    unknown = []
     for m in mentions:
         q = m.strip().lower()
         if not q:
             continue
-        hit = None
-        for c in cameras:
-            names = [c["camera_id"].lower(), c["name"].lower(), *(a.lower() for a in c["aliases"])]
-            if q in names:
-                hit = c["camera_id"]
-                break
+        hit = next((c["camera_id"] for c in cameras
+                    if _norm(q) in {_norm(n) for n in [c["camera_id"], *camera_names(c)]}), None)
+        area = None
         if hit is None:
+            area = next((e["ids"] for e in places.values() if _norm(q) in {_norm(n) for n in e["names"]}), None)
+        if hit is None and area is None:
             num = re.search(r"(?:cam(?:era)?\s*#?\s*)(\d+)", q)
             if num:
                 hit = next((c["camera_id"] for c in cameras if c["camera_id"].lower() in (f"cam{num[1]}", num[1])), None)
-        if hit is None:
+        if hit is None and area is None:
             hit = next((c["camera_id"] for c in cameras
                         if any(q in n or n in q for n in [c["name"].lower(), *(a.lower() for a in c["aliases"])])),
                        None)
-        if hit is None:
+        if hit is None and area is None:
+            area = next((e["ids"] for e in places.values() if any(_close(q, n) for n in e["names"])), None)
+        if hit is None and area is None:
+            hit = next((c["camera_id"] for c in cameras if _close(q, c["name"])), None)
+        if hit is not None:
+            cam_hits.append(hit)
+        elif area is not None:
+            area_hits.append(area)
+        else:
             unknown.append(m)
-        elif hit not in ids:
-            ids.append(hit)
+    ids: list[str] = []
+    for i in cam_hits:
+        if i not in ids:
+            ids.append(i)
+    for group in area_hits:
+        if any(i in group for i in cam_hits):  # a camera in this area was named: that camera is meant
+            continue
+        ids += [i for i in group if i not in ids]
     return ids, unknown
 
 
@@ -160,10 +237,20 @@ def keyword_filter(question: str, now: datetime, cameras: list[dict],
     subs = [s for s, rx in _SUBTYPE_WORDS.items() if re.search(rx, q)]
 
     mentions = re.findall(r"\bcam(?:era)?\s*#?\s*\d+\b", q)
+    words = re.findall(r"[a-z0-9]+", q)
     for c in cameras:
-        for n in [c["name"], *c["aliases"]]:
+        for n in camera_names(c):
             if re.search(rf"\b{re.escape(n.lower())}\b", q):
                 mentions.append(n)
+                break
+    found = {_norm(m) for m in mentions}
+    for c in cameras:  # misspelt camera names ("jyothi nivas college road")
+        if not found & {_norm(n) for n in camera_names(c)} and len(_norm(c["name"])) >= 8 \
+                and _mentioned(words, c["name"]):
+            mentions.append(c["name"])
+    for a, e in areas(cameras).items():  # area names, their aliases and close misspellings ("kormangala")
+        if any(_mentioned(words, n) for n in e["names"]):
+            mentions.append(a)
 
     fmt = "%Y-%m-%dT%H:%M"
     day0 = now.replace(hour=0, minute=0, second=0, microsecond=0)

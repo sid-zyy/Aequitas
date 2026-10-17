@@ -13,7 +13,7 @@ from datetime import datetime, tzinfo
 
 from pydantic import BaseModel, Field
 
-from aequitas.chat.parser import ParseResult, QuestionParser
+from aequitas.chat.parser import ParseResult, QuestionParser, areas
 from aequitas.store.db import EventStore
 from aequitas.store.query import QueryFilter
 from aequitas.taxonomy import label
@@ -44,6 +44,31 @@ def _fmt_time(ms: int, tz: tzinfo | None, with_date: bool = True) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S" if with_date else "%H:%M:%S")
 
 
+def place(c: dict) -> str:
+    """A camera's name with the area it is in: "Double Road Restaurant, Indiranagar"."""
+    area = c.get("area") or c.get("camera_area")
+    name = c.get("name") or c.get("camera_name") or c.get("camera_id", "")
+    return f"{name}, {area}" if area else name
+
+
+def where_answer(f: QueryFilter, cameras: list[dict]) -> str:
+    """For "Where is ...?": where the named place is, from the camera list (no LLM)."""
+    whole = [(a, e) for a, e in areas(cameras).items() if set(e["ids"]) == set(f.camera_ids)]
+    by_id = {c["camera_id"]: c for c in cameras}
+    if whole:
+        a, e = whole[0]
+        return f"{a} is an area with {len(e['ids'])} camera points: " + ", ".join(
+            by_id[i]["name"] for i in e["ids"] if i in by_id) + "."
+    out = []
+    for i in f.camera_ids:
+        c = by_id.get(i)
+        if c is None:
+            continue
+        out.append(f"{c['name']} is in {c['area']} (camera {i})." if c.get("area")
+                   else f"{c['name']} is camera {i}; it isn't assigned to an area.")
+    return " ".join(out)
+
+
 def describe(f: QueryFilter, cameras: list[dict], count: int = 2) -> str:
     parts = []
     if f.subtypes:
@@ -55,8 +80,12 @@ def describe(f: QueryFilter, cameras: list[dict], count: int = 2) -> str:
         parts.insert(0, "confirmed")
     s = " ".join(parts + ["event" if count == 1 else "events"])
     if f.camera_ids:
-        names = {c["camera_id"]: c["name"] for c in cameras}
-        s += " on " + ", ".join(f"{names.get(i, i)} ({i})" for i in f.camera_ids)
+        whole = [a for a, e in areas(cameras).items() if set(e["ids"]) == set(f.camera_ids)]
+        if whole:
+            s += f" in {whole[0]} (all {len(f.camera_ids)} cameras)"
+        else:
+            by_id = {c["camera_id"]: c for c in cameras}
+            s += " on " + ", ".join(f"{place(by_id.get(i, {'name': i}))} ({i})" for i in f.camera_ids)
     if f.start or f.end:
         fmt = "%Y-%m-%d %H:%M"
         s += f" between {f.start.strftime(fmt) if f.start else 'the beginning'} and {f.end.strftime(fmt) if f.end else 'now'}"
@@ -68,7 +97,7 @@ def describe(f: QueryFilter, cameras: list[dict], count: int = 2) -> str:
 def format_row(r: dict, tz: tzinfo | None) -> str:
     label = (r.get("subtype") or r["category"]).replace("_", " ")
     status = "" if r["status"] == "confirmed" else f" [{r['status']}]"
-    cam = r.get("camera_name") or r["camera_id"]
+    cam = place(r)
     summary = r.get("summary") or "(no summary)"
     return (f"- [#{r['event_id']}] {_fmt_time(r['start_ts'], tz)} · {cam} · {label}{status} · "
             f"conf {r['confidence']:.2f} — {summary}")
@@ -76,7 +105,7 @@ def format_row(r: dict, tz: tzinfo | None) -> str:
 
 def _summary_prompt(question: str, rows: list[dict], tz: tzinfo | None) -> str:
     facts = "\n".join(
-        f"[#{r['event_id']}] {_fmt_time(r['start_ts'], tz)}, camera {r.get('camera_name') or r['camera_id']}, "
+        f"[#{r['event_id']}] {_fmt_time(r['start_ts'], tz)}, camera {place(r)}, "
         f"{(r.get('subtype') or r['category']).replace('_', ' ')}, status {r['status']}: {r.get('summary') or 'no description'}"
         for r in rows
     )
@@ -133,6 +162,8 @@ class ChatService:
         total = self.store.count(f)
         desc = describe(f, cameras, total)
         head, tail = list(parsed.warnings), []
+        if f.camera_ids and not f.categories and re.match(r"\s*where\b", question, re.I):
+            head.append(where_answer(f, cameras))
         rows: list[dict] = []
         if f.intent == "count":
             head.append(f"{total} {desc}.")

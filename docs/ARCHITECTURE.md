@@ -235,6 +235,10 @@ The LLM never writes SQL and never lists events. The flow:
    - `reconcile` keeps the explicit words for intent and time, because Gemma read yes/no questions as counts
      and invented times.
    - Code resolves camera names and aliases and sanity-checks times.
+   - **Places:** every Live CCTV camera knows its locality (`config/bangalore.yaml`, `cameras.area`). An area name
+     ("Indiranagar", an alias like "Indira Nagar", or a close misspelling like "Kormangala") means all its
+     cameras; naming one camera ("Forum Mall") narrows to it; numbers must match exactly (80 vs 100 Feet Road).
+     Answers show "camera, area", and "Where is ...?" is answered from the camera list (tests/test_places.py).
    - Result: 28/28 on dev questions and 20/20 held out, where Gemma alone got 19/28 and 15/20
      (results/chat_eval/README.md).
 2. **Retrieve** (`store/query.py`). `QueryFilter` → parameterised SQL, plus SQLite FTS5 on summaries.
