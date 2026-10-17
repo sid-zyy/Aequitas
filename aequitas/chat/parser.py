@@ -62,6 +62,18 @@ def _close(a: str, b: str) -> bool:
             and SequenceMatcher(None, na, nb).ratio() >= FUZZY)
 
 
+def short_names(cameras: list[dict]) -> dict[str, str]:
+    """Camera ID -> the first two words of its name, when no other camera's name starts with them:
+    "Jyoti Nivas College Road" also answers to "Jyoti Nivas", "5th Block Cafe Terrace" to "5th Block"."""
+    first = {}
+    for c in cameras:
+        w = c["name"].split(",")[0].split()
+        if len(w) > 2 and len(_norm(" ".join(w[:2]))) >= 6:
+            first[c["camera_id"]] = " ".join(w[:2])
+    taken = [_norm(v) for v in first.values()]
+    return {i: v for i, v in first.items() if taken.count(_norm(v)) == 1}
+
+
 def camera_names(c: dict) -> list[str]:
     """Every name a camera answers to; "Forum Mall, Hosur Road" also answers to "Forum Mall"."""
     names = [c["name"], *c["aliases"]]
@@ -198,6 +210,10 @@ def finalize(lf: LlmFilter, now: datetime, cameras: list[dict],
         start, end = end, start
     if end is not None and end > now:
         end = now
+    if end is not None and now - end < timedelta(minutes=1):
+        # Times are read to the minute, so "the last hour" at 12:30:55 ended at 12:30:00 and missed a fight at
+        # 12:30:41. A range that ends in the current minute ends now, to the second.
+        end = now
     if start is not None and start > now:
         warnings.append("That time range is in the future, so it was ignored.")
         start, end = None, None
@@ -244,9 +260,12 @@ def keyword_filter(question: str, now: datetime, cameras: list[dict],
                 mentions.append(n)
                 break
     found = {_norm(m) for m in mentions}
-    for c in cameras:  # misspelt camera names ("jyothi nivas college road")
-        if not found & {_norm(n) for n in camera_names(c)} and len(_norm(c["name"])) >= 8 \
-                and _mentioned(words, c["name"]):
+    short = short_names(cameras)
+    for c in cameras:  # misspelt camera names ("jyothi nivas college road") and short ones ("jyoti nivas")
+        if found & {_norm(n) for n in camera_names(c)}:
+            continue
+        if (len(_norm(c["name"])) >= 8 and _mentioned(words, c["name"])) or \
+                (c["camera_id"] in short and _mentioned(words, short[c["camera_id"]])):
             mentions.append(c["name"])
     for a, e in areas(cameras).items():  # area names, their aliases and close misspellings ("kormangala")
         if any(_mentioned(words, n) for n in e["names"]):

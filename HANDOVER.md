@@ -59,7 +59,7 @@ shaped into a **police product for India**: live CCTV, bodycam review, citizen r
 
 ## 3. What exists today
 
-Repo: https://github.com/sid-zyy/Aequitas. **283 tests pass** (`pytest`; synthetic data, no model downloads).
+Repo: https://github.com/sid-zyy/Aequitas. **293 tests pass** (`pytest`; synthetic data, no model downloads).
 
 | Area | Status | Where |
 |---|---|---|

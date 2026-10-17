@@ -13,8 +13,8 @@ from datetime import datetime, tzinfo
 
 from pydantic import BaseModel, Field
 
-from aequitas.chat import followup
-from aequitas.chat.parser import _SUBTYPE_WORDS, ParseResult, QuestionParser, areas, camera_names
+from aequitas.chat import followup, spelling
+from aequitas.chat.parser import _SUBTYPE_WORDS, ParseResult, QuestionParser, areas, camera_names, short_names
 from aequitas.config import VectorCfg
 from aequitas.store.db import EventStore
 from aequitas.store.query import QueryFilter, to_epoch_ms
@@ -79,6 +79,7 @@ class Retrieval:
     kept: list[str] = field(default_factory=list)  # parts of the previous filter a follow-up kept
     weak: bool = False
     earlier: bool = False
+    question: str = ""  # the question as read (typos corrected)
     asked_about: list[dict] = field(default_factory=list)  # similar mode: the event compared against (LLM may cite it)
 
     @property
@@ -86,10 +87,16 @@ class Retrieval:
         return self.asked_about + self.rows
 
 
-def content_terms(question: str, cameras: list[dict], categories: dict[str, str]) -> list[str]:
+def content_terms(question: str, cameras: list[dict], categories: dict[str, str],
+                  camera_ids: list[str] = ()) -> list[str]:
     """The descriptive words of a question: what remains after question, time and place words and the category
-    keywords are taken out. "Anyone carrying a ladder near Forum Mall today?" -> ["carrying", "ladder"]."""
+    keywords are taken out. "Anyone carrying a ladder near Forum Mall today?" -> ["carrying", "ladder"].
+    Every word of the cameras the question resolved to is a place word too: "5th block cafe" leaves no "cafe"."""
     q = question.lower()
+    for c in cameras:
+        if c["camera_id"] in camera_ids:
+            for w in re.findall(r"[a-z0-9]+", f"{c['name']} {' '.join(c.get('aliases') or [])}".lower()):
+                q = re.sub(rf"\b{re.escape(w)}\b", " ", q)
     for c in categories:
         q = re.sub(keyword_pattern(c), " ", q)
     for rx in _SUBTYPE_WORDS.values():
@@ -100,6 +107,7 @@ def content_terms(question: str, cameras: list[dict], categories: dict[str, str]
         if c.get("area"):
             names.add(c["area"].lower())
         names.update(a.lower() for a in c.get("area_aliases") or [])
+    names.update(n.lower() for n in short_names(cameras).values())
     for n in sorted(names, key=len, reverse=True):
         q = re.sub(rf"\b{re.escape(n)}\b", " ", q)
     return [w for w in re.findall(r"[a-z]{3,}", q) if w not in _STOP]
@@ -288,21 +296,46 @@ class ChatService:
         self.summarize = summarize
         self.index = index  # aequitas.chat.vectors.VectorIndex, or None for keyword search only
         self.vcfg = vector_cfg or VectorCfg()
+        self._known: tuple[float, set[str]] = (0.0, set())  # (when built, words in stored summaries)
+
+    def _known_words(self, cameras: list[dict]) -> set[str]:
+        """Words the typo fixer must leave alone: question and place words, and every word in a stored summary
+        (a word the cameras used is a real word). Rebuilt at most every 30 s."""
+        built, words = self._known
+        if time.monotonic() - built > 30:
+            words = set(_STOP) | self.store.summary_words()
+            self._known = (time.monotonic(), words)
+        places = set()
+        for c in cameras:
+            for n in [c["name"], *(c.get("aliases") or []), c.get("area") or "", *(c.get("area_aliases") or [])]:
+                places.update(re.findall(r"[a-z]+", n.lower()))
+        return words | places
+
+    def _retrieve(self, question: str, context: dict | None = None) -> Retrieval:
+        """Typos are fixed first ("fire incdent" -> "fire incident"), and the answer says how it read the question."""
+        t0 = time.perf_counter()
+        cameras = self.store.cameras()
+        read, fixes = spelling.correct(question, spelling.targets(self.parser.categories),
+                                       self._known_words(cameras))
+        ret = self._retrieve_read(read, context, cameras, t0)
+        ret.question = read
+        if fixes:
+            ret.head.insert(0, f"Read as: \u201c{read}\u201d")
+        return ret
 
     # ---------- retrieval ----------
 
-    def _retrieve(self, question: str, context: dict | None = None) -> Retrieval:
+    def _retrieve_read(self, question: str, context: dict | None, cameras: list[dict], t0: float) -> Retrieval:
         """Parse and query. Timings in ms: parse = question -> filter (the LLM call, if any), embed = the question's
         vector, vector = the Qdrant searches, query = everything in SQLite."""
-        t0 = time.perf_counter()
-        cameras = self.store.cameras()
         refs = followup.references(question, context)
         if refs:
             return (self._similar if followup.wants_similar(question) else self._detail)(question, refs, t0)
         parsed = self.parser.parse(question, cameras, semantic=self.index is not None)
         timings = {"parse_ms": round((time.perf_counter() - t0) * 1000)}
         f = parsed.filter
-        terms = content_terms(question, cameras, self.parser.categories) if self.index is not None else []
+        terms = (content_terms(question, cameras, self.parser.categories, f.camera_ids)
+                 if self.index is not None else [])
         if self.index is not None:
             f = f.model_copy(update={"text": " ".join(terms) or None})
         kept: list[str] = []
@@ -368,9 +401,13 @@ class ChatService:
         t5 = time.perf_counter()
         # One bar for events and moments alike, anchored on the best match anywhere: a window that matches at
         # 0.83 means events at 0.63 ("a group of people outdoors" for "people near train tracks") are noise.
+        # A question that names a category ("any fire ...") already chose its events in SQL, so they are measured
+        # against the best event only: a fire window at 0.80 must not push the confirmed fire event at 0.65 out.
         best = max([h.score for h in hits[:1] + w_hits[:1]], default=0.0)
+        best_e = hits[0].score if hits else 0.0
         floor = max(self.vcfg.min_score, best - self.vcfg.margin)
-        passing = [h for h in hits if h.score >= floor]
+        e_floor = max(self.vcfg.min_score, best_e - self.vcfg.margin) if f.categories or f.subtypes else floor
+        passing = [h for h in hits if h.score >= e_floor]
         w_hits = [h for h in w_hits if h.score >= floor]
         words = self.store.fts_ids(" ".join(terms), ids)
         fused: dict[int, float] = {}
@@ -389,6 +426,21 @@ class ChatService:
         wsim = {h.ref_id: h.score for h in w_hits}
         for w in moments:
             w["relevance"] = round(wsim[w["id"]], 3)
+        structured = bool(f.categories or f.subtypes or f.camera_ids or f.start or f.end)
+        if not order and ids and structured and f.intent != "count":
+            # The description matched nothing, but the place / type / time the officer named does have events:
+            # never hide them behind a word ("any fights at 5th block cafe" must still list the fights).
+            rows = self.store.query(f.model_copy(update={"text": None}))
+            total = self.store.count(f.model_copy(update={"text": None}))
+            timings["query_ms"] = round(sql_ms + (time.perf_counter() - t5) * 1000)
+            plain = describe(f.model_copy(update={"text": None}), cameras, total)
+            head = list(parsed.warnings) + [
+                f"None of them mention “{' '.join(terms)}”. All {total} {plain}:"]
+            tail = [format_row(r, self.parser.tz) for r in rows]
+            if moments:
+                tail.append("Camera moments that match (analysed windows, not incidents):")
+                tail.extend(format_moment(w, self.parser.tz) for w in moments)
+            return Retrieval(parsed, total, rows, head, tail, timings, moments, "hybrid", kept)
         timings["query_ms"] = round(sql_ms + (time.perf_counter() - t5) * 1000)
         weak = bool(fused or moments) and not words and best < self.vcfg.strong_score
         total = 0 if weak else len(order)
@@ -489,7 +541,7 @@ class ChatService:
         summary = None
         if self._wants_summary(ret):
             t1 = time.perf_counter()
-            summary = grounded_summary(self.parser.llm, question, ret.llm_rows, self.parser.tz, ret.moments)
+            summary = grounded_summary(self.parser.llm, ret.question, ret.llm_rows, self.parser.tz, ret.moments)
             timings["summary_ms"] = round((time.perf_counter() - t1) * 1000)
         timings["total_ms"] = round((time.perf_counter() - t0) * 1000)
         mid = [summary, ""] if summary else []
@@ -521,7 +573,7 @@ class ChatService:
             text, summary = "", None
             if hasattr(llm, "stream_text"):
                 try:
-                    prompt = _stream_prompt(question, shown, self.parser.tz, ret.moments)
+                    prompt = _stream_prompt(ret.question, shown, self.parser.tz, ret.moments)
                     for delta in llm.stream_text([{"role": "user", "content": prompt}]):
                         if ttft_ms is None:
                             ttft_ms = round((time.perf_counter() - t1) * 1000)
@@ -532,7 +584,7 @@ class ChatService:
                     log.warning("streamed summary failed: %s", e)
                     text = ""
             if not text:  # no streaming support, or it failed before any text: one structured call
-                summary = grounded_summary(llm, question, ret.llm_rows, self.parser.tz, ret.moments)
+                summary = grounded_summary(llm, ret.question, ret.llm_rows, self.parser.tz, ret.moments)
             summary_ms = round((time.perf_counter() - t1) * 1000)
             yield {"type": "summary", "summary": summary}
         yield {"type": "done", "retrieve_ms": round(retrieve_ms), **timings, "summary_ttft_ms": ttft_ms,

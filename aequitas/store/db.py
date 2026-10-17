@@ -306,6 +306,13 @@ class EventStore:
                 (after_id, limit)).fetchall()
         return [dict(r) for r in rows]
 
+    def summary_words(self) -> set[str]:
+        """Every word (3+ letters) in a stored event or window summary: the chat's typo fixer leaves these alone."""
+        with self._lock:
+            rows = self._conn.execute("SELECT summary FROM events WHERE summary IS NOT NULL UNION ALL "
+                                      "SELECT summary FROM windows WHERE summary IS NOT NULL").fetchall()
+        return {w for (s,) in rows for w in re.findall(r"[a-z]{3,}", s.lower())}
+
     def window_ids(self, camera_ids: list[str] | None = None, start_ms: int | None = None,
                    end_ms: int | None = None) -> list[int]:
         where, params = ["summary IS NOT NULL"], []
