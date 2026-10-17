@@ -158,7 +158,7 @@ numbers in the docs.
   latency slide
 
 ### Accuracy (in progress)
-- [x] Clip-model-only "fighting" windows: the summary now starts "Violent motion detected (0.98)." so it explains
+- [x] Clip-model-only "fighting" windows: the summary now starts "Possible fight among a group of people (violent motion 0.98)." (people count from Gemma's summary) so it explains
   the label (the VLM's words follow unchanged). A label-aware second look (`analysis.refocus`) was measured on the 10
   stored clip-model fighting key frames: gemma4:e2b saw the fight in 0/10, +1.2–2.0 s each, so it is off. Try it
   with the E4B escalation model or larger tiles

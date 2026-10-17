@@ -36,7 +36,8 @@ def test_seen_fight_becomes_the_summary_and_time_is_added():
     assert u.summarize_ms == 1500.0 and u.classify_ms == 380.0 and u.refocused == "seen"
     ans, source = fuse_window(u.answer, 0.98, 0.5, 0.9)
     assert ans.category == "fighting" and source == "clip_model"
-    assert ans.summary == "Violent motion detected (0.98). Two men shove and punch each other between the tables."
+    assert ans.summary == ("Possible fight among two men (violent motion 0.98). "
+                           "Two men shove and punch each other between the tables.")
 
 
 def test_not_seen_says_so_instead_of_inventing_a_fight():
@@ -44,7 +45,7 @@ def test_not_seen_says_so_instead_of_inventing_a_fight():
     u = refocus(first_pass(), vlm, b"jpeg", "fighting", "people hit each other", 0.98)
     assert u.summary == "No fighting is clearly visible: People sit and stand around tables, talking."
     ans, _ = fuse_window(u.answer, 0.98, 0.5, 0.9)
-    assert ans.summary.startswith("Violent motion detected (0.98). No fighting is clearly visible")
+    assert ans.summary.startswith("Possible fight (violent motion 0.98). No fighting is clearly visible")
     assert u.refocused == "not_seen"
 
 
