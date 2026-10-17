@@ -461,7 +461,7 @@ table.dense td { padding: 8px 18px; }
   <div class="eyebrow rv">Architecture · React + FastAPI over one SQLite file</div>
   <h2 class="rv" style="--i:1;font-size:56px">Cheap checks first. The big model only looks when it has to.</h2>
   <div class="dgwrap rv" style="--i:2">
-    <svg class="dg" viewBox="0 0 1376 610" role="img" aria-label="Architecture: sources feed ingest, which splits into a GPU lane (scene gate, summarise, classify) and a CPU lane (violence model, detector and rules); both feed fusion, which writes events to the SQLite evidence store; the React app reads the store for the officer queue, chat and latency panel.">
+    <svg class="dg" viewBox="0 0 1376 610" role="img" aria-label="Architecture: sources feed ingest, which splits into a GPU lane (scene gate, summarise, classify) and a CPU lane (violence model, detector and rules); both feed fusion, which writes events to the SQLite evidence store; the React app reads the store for the officer queue, chat (SQL filter plus Qdrant vector search over every summary) and latency panel.">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker><marker id="ah-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker></defs>
     <rect class="bound" x="205" y="6" width="1166" height="600" rx="10"/>
     <text class="k" x="221" y="28">ONE LAPTOP · OFFLINE · RTX 4050, 6 GB · NOTHING LEAVES THE STATION</text>
@@ -547,6 +547,7 @@ table.dense td { padding: 8px 18px; }
     <text class="s" x="1126" y="422">every stage's time</text>
     <text class="s" x="1126" y="443">audit log</text>
     <text class="s" x="1126" y="464">key frame + SHA-256</text>
+    <text class="s" x="1126" y="485">Qdrant · summaries embedded</text>
     <path class="wire " d="M1230,230 V312" marker-end="url(#ah)"/>
     <text class="wl" x="1240" y="278" text-anchor="start">event</text>
     <rect class="lane" x="225" y="350" width="835" height="210" rx="8"/>
@@ -562,8 +563,9 @@ table.dense td { padding: 8px 18px; }
     <rect class="box stg" x="515" y="430" width="300" height="116" rx="6"/>
     <text class="k cy" x="529" y="452">STAGE 3</text>
     <text class="t" x="529" y="476">Chat</text>
-    <text class="s" x="529" y="498">question → filter → SQL</text>
-    <text class="s" x="529" y="517">answer cites event IDs</text>
+    <text class="s" x="529" y="498">SQL filter + Qdrant vectors</text>
+    <text class="s" x="529" y="517">by meaning + words · 20–60 ms</text>
+    <text class="s" x="529" y="536">cites [#id] events and moments</text>
     <text class="ms" x="801" y="476" text-anchor="end">0.45 s · streamed</text>
     <rect class="box " x="839" y="430" width="205" height="116" rx="6"/>
     <text class="t" x="853" y="456">Latency panel</text>
