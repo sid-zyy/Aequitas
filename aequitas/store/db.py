@@ -265,6 +265,83 @@ class EventStore:
         with self._lock:
             return self._conn.execute(sql, params).fetchone()[0]
 
+    # ---------- the chatbot's vector search (aequitas/chat/vectors.py) ----------
+
+    def event_ids(self, f: QueryFilter, cap: int = 5000) -> list[int]:
+        """IDs of every event the structured filter allows (no text match): the candidates vector search ranks."""
+        sql, params = build_sql(f.model_copy(update={"text": None, "limit": 1}))
+        sql = sql.replace("SELECT e.*, c.name AS camera_name, c.area AS camera_area", "SELECT e.event_id", 1)
+        with self._lock:
+            return [r[0] for r in self._conn.execute(sql, params[:-1] + [cap]).fetchall()]
+
+    def events_by_ids(self, ids: list[int]) -> list[dict]:
+        """Events in the order of `ids` (missing ones skipped)."""
+        rows = {r["event_id"]: r for r in (self.event(i) for i in dict.fromkeys(ids)) if r}
+        return [rows[i] for i in ids if i in rows]
+
+    def fts_ids(self, text: str, ids: list[int] | None = None, limit: int = 50) -> list[int]:
+        """Events whose summary contains the words, best BM25 rank first (the keyword half of hybrid search)."""
+        from aequitas.store.query import fts_expression
+
+        expr = fts_expression(text)
+        if not expr:
+            return []
+        sql = "SELECT rowid FROM events_fts WHERE events_fts MATCH ?"
+        params: list = [expr]
+        if ids is not None:
+            if not ids:
+                return []
+            sql += f" AND rowid IN ({','.join('?' * len(ids))})"
+            params += ids
+        with self._lock:
+            return [r[0] for r in self._conn.execute(sql + " ORDER BY rank LIMIT ?", params + [limit]).fetchall()]
+
+    def summaries_after(self, kind: str, after_id: int, limit: int = 256) -> list[dict]:
+        """Events or windows with a summary and an ID above `after_id`, oldest first (for indexing)."""
+        table, key = ("events", "event_id") if kind == "event" else ("windows", "id")
+        with self._lock:
+            rows = self._conn.execute(
+                f"SELECT {key} AS id, camera_id, start_ts, end_ts, summary FROM {table} "
+                f"WHERE {key} > ? AND summary IS NOT NULL AND summary != '' ORDER BY {key} LIMIT ?",
+                (after_id, limit)).fetchall()
+        return [dict(r) for r in rows]
+
+    def window_ids(self, camera_ids: list[str] | None = None, start_ms: int | None = None,
+                   end_ms: int | None = None) -> list[int]:
+        where, params = ["summary IS NOT NULL"], []
+        if camera_ids:
+            where.append(f"camera_id IN ({','.join('?' * len(camera_ids))})")
+            params += camera_ids
+        if start_ms is not None:
+            where.append("end_ts >= ?")
+            params.append(start_ms)
+        if end_ms is not None:
+            where.append("start_ts <= ?")
+            params.append(end_ms)
+        with self._lock:
+            return [r[0] for r in self._conn.execute(
+                f"SELECT id FROM windows WHERE {' AND '.join(where)}", params).fetchall()]
+
+    def windows_by_ids(self, ids: list[int]) -> list[dict]:
+        if not ids:
+            return []
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT w.*, c.name AS camera_name, c.area AS camera_area FROM windows w "
+                f"LEFT JOIN cameras c USING(camera_id) WHERE w.id IN ({','.join('?' * len(ids))})", ids).fetchall()
+        by_id = {r["id"]: dict(r) for r in rows}
+        return [by_id[i] for i in ids if i in by_id]
+
+    def windows_near(self, camera_id: str, start_ms: int, end_ms: int, pad_ms: int = 20000) -> list[dict]:
+        """The analysed windows around an event: what the camera saw just before, during and after it."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT w.*, c.name AS camera_name, c.area AS camera_area FROM windows w "
+                "LEFT JOIN cameras c USING(camera_id) WHERE w.camera_id=? AND w.end_ts >= ? AND w.start_ts <= ? "
+                "AND w.summary IS NOT NULL ORDER BY w.start_ts LIMIT 12",
+                (camera_id, start_ms - pad_ms, end_ms + pad_ms)).fetchall()
+        return [dict(r) for r in rows]
+
     # ---------- web app helpers ----------
 
     def camera(self, camera_id: str) -> dict | None:

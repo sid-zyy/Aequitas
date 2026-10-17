@@ -44,6 +44,23 @@ export type EventItem = {
   id: number; camera_id: string; camera_name: string; area?: string | null; start_ts: number; end_ts: number; category: string;
   status: string; confidence: number; summary: string | null; keyframe_url: string;
   video: { url: string; offset_s: number } | null;
+  subtype?: string | null; review?: string | null;
+  relevance?: number | null; matched?: string | null;
+};
+
+/** An analysed window the chat found by meaning: what a camera saw, incident or not. */
+export type Moment = {
+  id: number; camera_id: string; camera_name: string; area?: string | null; start_ts: number; end_ts: number;
+  summary: string | null; label: string | null; relevance: number | null;
+  video: { url: string; offset_s: number } | null;
+};
+
+/** Sent back with the next question so follow-ups ("and yesterday?", "the second one") work. */
+export type ChatContext = { filter: Record<string, unknown>; event_ids: number[]; mode: string };
+
+export type ChatIndex = {
+  enabled: boolean; ready: boolean; engine?: string; mode?: string; embedder?: string; dim?: number;
+  events?: number; windows?: number; last_sync_ms?: number | null;
 };
 
 export type LiveState = {
@@ -170,14 +187,22 @@ export const api = {
 };
 
 export type StreamEvent =
-  | { type: "retrieved"; total: number; head: string[]; tail: string[]; events: EventItem[]; parse_ms: number; query_ms: number }
+  | {
+      type: "retrieved"; total: number; head: string[]; tail: string[]; events: EventItem[]; moments: Moment[];
+      mode: "filter" | "hybrid" | "detail" | "similar"; kept: string[]; weak: boolean; suggestions: string[]; context: ChatContext;
+      intent: string; parsed_with: string | null; warnings: string[];
+      parse_ms: number; query_ms: number | null; embed_ms: number | null; vector_ms: number | null; retrieve_ms: number;
+    }
   | { type: "token"; text: string }
   | { type: "summary"; summary: string | null }
   | { type: "done"; elapsed_ms: number; summary_ttft_ms: number | null; summary_ms: number | null; parse_ms: number };
 
+export const chatIndex = () => request<ChatIndex>("/api/chat/index");
+
 /** Streams the grounded chatbot answer (server-sent events over a POST). */
-export async function askStream(question: string, onEvent: (e: StreamEvent) => void): Promise<void> {
-  const r = await fetch("/api/ask/stream", { ...json({ question }), credentials: "same-origin" });
+export async function askStream(question: string, onEvent: (e: StreamEvent) => void,
+                                context?: ChatContext | null, signal?: AbortSignal): Promise<void> {
+  const r = await fetch("/api/ask/stream", { ...json({ question, context: context ?? null }), credentials: "same-origin", signal });
   if (!r.ok || !r.body) throw new ApiError(r.status, r.statusText);
   const reader = r.body.getReader();
   const dec = new TextDecoder();

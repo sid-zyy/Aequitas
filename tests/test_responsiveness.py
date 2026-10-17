@@ -66,15 +66,15 @@ def test_chat_holds_live_analysis_while_it_answers(tmp_path, monkeypatch):
     c, service = _app(tmp_path)
     seen = []
     real = service.ask
-    monkeypatch.setattr(service, "ask", lambda q: (seen.append(GATE.busy), real(q))[1])
+    monkeypatch.setattr(service, "ask", lambda q, ctx=None: (seen.append(GATE.busy), real(q, ctx))[1])
     assert c.post("/api/ask", json={"question": "any fights today"}).status_code == 200
     assert seen == [True] and not GATE.busy
     streamed = []
     real_stream = service.ask_stream
 
-    def stream(q):
+    def stream(q, ctx=None):
         streamed.append(GATE.busy)
-        yield from real_stream(q)
+        yield from real_stream(q, ctx)
 
     monkeypatch.setattr(service, "ask_stream", stream)
     assert c.post("/api/ask/stream", json={"question": "any fights today"}).status_code == 200
