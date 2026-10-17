@@ -263,6 +263,13 @@ The LLM never writes SQL and never lists events. The flow:
    - With the index on, the LLM parse is skipped unless the question has a time phrase the keyword parser can't
      read: the vector search already handles the descriptive words the LLM used to copy (1.3–1.9 s → ~10 ms on
      such questions).
+   - **Typos** (`chat/spelling.py`, before anything else reads the question): a word of 5+ letters that is unknown
+     (not a question word, place word or word in any stored summary) and within one edit (two for 7+ letters with
+     the same first letter) of exactly one category or question word is corrected: "fire incdent", "figths",
+     "acident". The answer shows "Read as: …". Cameras also answer to the first two words of their name when unique
+     ("Jyoti Nivas").
+   - A description that matches nothing never hides the events the place / type / time filter found: the answer
+     lists them and says none mention the words. A time range ending in the current minute ends now, to the second.
 3. **Follow-ups** (`chat/followup.py`, no model call). Each answer returns a `context` (its filter and event IDs);
    the client sends it with the next question. "What about Koramangala?", "and yesterday?", "only confirmed",
    "show them" keep the previous filter and replace only what the new question names; "#12", "the second one"

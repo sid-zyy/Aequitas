@@ -271,3 +271,26 @@ def test_empty_time_range_shows_the_latest_events_outside_it(store, index):
     assert "No confirmed fire event" in ans.text and "latest outside that time" in ans.text
     assert not any(s.startswith("Tell me more") for s in ans.suggestions)
     assert not svc.ask("Any arrests in the last 10 minutes?").earlier  # none at any time: nothing to show
+
+
+def test_a_category_question_keeps_its_events_when_a_moment_scores_higher(store, index):
+    t = ms(datetime.now().astimezone()) - 60_000
+    store.record_window("cam1", t, t + 4000, "Smoke and flames rise and smoke and flames spread.", "fire", 0.9, 1, 1, 1)
+    index.sync()
+    svc = ChatService(store, QuestionParser(None), summarize=False, index=index,
+                      vector_cfg=VectorCfg(min_score=0.05, margin=0.02, strong_score=0.05))
+    ans = svc.ask("Any fire with smoke and flames rising?")
+    assert ans.mode == "hybrid" and [r["event_id"] for r in ans.rows] == [store.ids["fire"]]
+
+
+def test_a_description_that_matches_nothing_never_hides_the_filtered_events(store, index):
+    svc = ChatService(store, QuestionParser(None), summarize=False, index=index,
+                      vector_cfg=VectorCfg(min_score=0.99, margin=0.0, strong_score=0.99))
+    ans = svc.ask("any fights on camera 2 involving a giraffe")
+    assert ans.mode == "hybrid" and [r["event_id"] for r in ans.rows] == [store.ids["fight"]]
+    assert "None of them mention" in ans.text
+
+
+def test_words_of_the_named_camera_are_not_a_description():
+    cams = [c.model_dump() | {"aliases": c.aliases} for c in CAMS]
+    assert content_terms("any fights at the lobby", cams, DEFAULT_CATEGORIES, ["cam1"]) == []
