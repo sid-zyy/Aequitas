@@ -42,7 +42,8 @@ def fuse_window(ans: VlmAnswer | None, violence: float | None, threshold: float,
     - the VLM named another incident (arrest, person_down...) -> kept: a struggle during an arrest scores
       high on the clip model, and the VLM's label is the more specific one
     - only the clip model sees violence -> fighting, but only at >= `alone` (stricter than the calibrated
-      threshold: on busy street footage single windows reach 0.8-0.9, faculty fights reach 0.95-1.0)
+      threshold: on busy street footage single windows reach 0.8-0.9, faculty fights reach 0.95-1.0). The summary
+      then starts "Violent motion detected (0.98)." so it explains the label
     - only the VLM sees violence -> unchanged: a missed fight is worse than a false alarm a human dismisses"""
     alone = threshold if alone is None else max(alone, threshold)
     if violence is None:
@@ -52,7 +53,11 @@ def fuse_window(ans: VlmAnswer | None, violence: float | None, threshold: float,
     if ans is not None and ans.category != "none":
         return ans, ("vlm+clip" if violence >= threshold else "vlm")
     if violence >= alone:
-        summary = ans.summary if ans is not None else f"Violent motion detected by the clip model ({violence:.2f})."
+        # The label comes from the clip model, so the summary says so first: the VLM's own description ("people
+        # gathered") alone read as if it contradicted the label. The VLM's words are kept unchanged after it.
+        lead = f"Violent motion detected ({violence:.2f})."
+        summary = f"{lead} {ans.summary.strip()}" if ans is not None and ans.summary.strip() else (
+            f"Violent motion detected by the clip model ({violence:.2f}).")
         return VlmAnswer(category="fighting", summary=summary,
                          visible_evidence=(ans.visible_evidence if ans else ""), confidence=round(violence, 4)), \
             "clip_model"

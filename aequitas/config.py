@@ -158,6 +158,12 @@ class AnalysisCfg(BaseModel):
     # towards confirmation, whatever label the VLM gave. Replay of the six saved demo runs: +1 to +3 confirmed
     # incidents per run, no new false alarm (results/improvements/README.md, scripts/replay_confirm.py; chosen on those clips).
     clip_votes: bool = True
+    # When only the clip model sees violence, the window is labelled fighting but its summary is the VLM's first
+    # description ("people gathered"). refocus: the VLM looks at the same frames once more, told what the clip model
+    # flagged, and either describes the action it now sees or says plainly that it can't see it. Off: measured on the
+    # 10 stored clip-model "fighting" key frames, gemma4:e2b saw the fight in 0/10 even when told, for +1.2-2.0 s per
+    # window (2026-10-17). Worth trying with a bigger model (escalation) or larger tiles.
+    refocus: bool = False
     # Windows kept per camera in the database (oldest dropped). Bodycam recordings keep all of theirs.
     keep_windows: int = 200
     # Coarse stage: a SigLIP scene gate skips the VLM on windows that clearly look normal (aequitas/understand/gate.py).

@@ -16,6 +16,7 @@ class Understanding:
     summarize_ms: float | None
     classify_ms: float | None
     escalated: str | None = None  # model that re-checked this window (cascade), if any
+    refocused: str | None = None  # "seen" / "not_seen": the second look at a clip-model window (refocus)
 
     @property
     def vlm_ms(self) -> float | None:
@@ -66,6 +67,28 @@ def escalate(u: Understanding, big, grid_jpeg: bytes, highlighted: bool, categor
     if v.answer is None:
         return Understanding(u.answer, u.summary, total_s, total_c, escalated=None)
     return Understanding(v.answer, v.summary, total_s, total_c, escalated=big.model)
+
+
+def needs_refocus(u: Understanding, violence: float | None, alone: float | None) -> bool:
+    """Only the clip model sees violence: the window will be labelled fighting on its score alone
+    (fusion.fuse_window), while the VLM's summary describes something else."""
+    return (alone is not None and violence is not None and violence >= alone
+            and (u.answer is None or u.answer.category == "none"))
+
+
+def refocus(u: Understanding, vlm, grid_jpeg: bytes, label: str, definition: str, violence: float) -> Understanding:
+    """The VLM looks again, told what the clip model flagged. If it sees the action, its description becomes the
+    window's summary; if not, the summary says so next to what it does see, so an event never claims more than
+    the image model saw. The label is left to the fusion rule; the extra call's time is added to summarize_ms."""
+    r, ms = vlm.refocus(grid_jpeg, label, definition)
+    total = (u.summarize_ms or 0) + ms
+    if r is None or not r.summary.strip():
+        return Understanding(u.answer, u.summary, total, u.classify_ms, u.escalated)
+    name = label.replace("_", " ")
+    text = r.summary.strip() if r.seen else f"No {name} is clearly visible: {r.summary.strip()}"
+    ans = (u.answer.model_copy(update={"summary": text}) if u.answer is not None
+           else VlmAnswer(category="none", summary=text))
+    return Understanding(ans, text, total, u.classify_ms, u.escalated, "seen" if r.seen else "not_seen")
 
 
 class InOrder:

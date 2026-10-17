@@ -4,7 +4,9 @@
    is not steered towards a label.
 2. classify: a text-only call labels the summary, constrained to the category list plus "none".
 
-The prompts never say which rule fired, so the answer is an independent check rather than an echo."""
+The prompts never say which rule fired, so the answer is an independent check rather than an echo. The one
+exception is refocus_prompt: a second look, after the independent first pass, at a window only the violence clip
+model flagged, so the summary of a "fighting" event describes the fight or says it can't be seen."""
 
 from __future__ import annotations
 
@@ -24,6 +26,13 @@ class SummaryAnswer(BaseModel):
     summary: str = Field(max_length=500)
     visible_evidence: str = Field(default="", max_length=300)
     checks: str = Field(default="", max_length=300)  # guided mode: the check questions answered yes
+
+
+class RefocusAnswer(BaseModel):
+    """Second look at a window the clip model flagged (refocus_prompt)."""
+
+    seen: bool  # the flagged action is visible in the frames
+    summary: str = Field(max_length=500)
 
 
 @lru_cache(maxsize=16)
@@ -120,6 +129,24 @@ def summarize_prompt(highlighted: bool = True, concise: bool = True, view: str =
         "- If anyone throws stones, bricks, bottles or other objects, or smashes property, say so plainly.\n"
         f"{GUIDED_CHECKS if guided else ''}"
         f"{length}"
+        "Respond with JSON only."
+    )
+
+
+def refocus_prompt(label: str, definition: str) -> str:
+    """A second look at a window only the motion (clip) model flagged. Worded so the model may disagree."""
+    name = label.replace("_", " ")
+    return (
+        f"{_GRID}\n"
+        f"A motion model flagged these seconds as possible {name} ({definition}). The motion model is often "
+        "wrong. Look again closely at what the people do with their hands and bodies.\n\n"
+        "Rules:\n"
+        f"- seen: true only if you can clearly see {name} happening; otherwise false.\n"
+        "- summary: one or two short sentences (at most 35 words) describing what is visible. If seen is true, "
+        "say who does what to whom with a specific verb (punching, shoving, grabbing, kicking, grappling, "
+        "pulling). If seen is false, describe what the people actually do.\n"
+        "- Describe only what is visible. Never describe faces or try to say who anyone is.\n"
+        "- Write as if describing a short video: never mention frames, the grid or the motion model.\n"
         "Respond with JSON only."
     )
 

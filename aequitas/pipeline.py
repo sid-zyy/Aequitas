@@ -26,7 +26,8 @@ from aequitas.understand.gate import should_skip
 from aequitas.understand.keyframes import encode_jpeg, make_grid, window_detail, window_motion
 from aequitas.understand.periodic import WindowAggregator
 from aequitas.understand.priority import GATE
-from aequitas.understand.stages import InOrder, Understanding, escalate, needs_escalation, understand
+from aequitas.understand.stages import (InOrder, Understanding, escalate, needs_escalation, needs_refocus, refocus,
+                                        understand)
 
 log = logging.getLogger(__name__)
 
@@ -432,6 +433,11 @@ class Pipeline:
                        categories=self.s.categories, view=job.view, previous=previous)
         if self.big is not None and needs_escalation(u, job.violence, self.s.escalation.violence_band_low):
             u = escalate(u, self.big, job.grid_jpeg, False, self.s.categories, job.view)
+        if self.s.analysis.refocus and self.violence_model is not None and "fighting" in self.s.categories:
+            threshold = self.s.models.violence_threshold or self.violence_model.threshold
+            alone = self.s.models.violence_alone_threshold
+            if needs_refocus(u, job.violence, None if alone is None else max(alone, threshold)):
+                u = refocus(u, self.vlm, job.grid_jpeg, "fighting", self.s.categories["fighting"], job.violence)
         self._record_stage(job, "window", queue_ms, u)
         self.order.finish(job.camera_id, job.seq, (job, u, queue_ms), self._apply_window)
 
@@ -450,6 +456,8 @@ class Pipeline:
         ans, source = fuse_window(u.answer, job.violence, threshold, self.s.models.violence_alone_threshold)
         if u.escalated:
             source = f"{source}+rechecked:{u.escalated}"
+        if u.refocused:
+            source = f"{source}+refocus:{u.refocused}"
         self.store.record_window(job.camera_id, start, end, ans.summary if ans else u.summary,
                                  ans.category if ans else None, ans.confidence if ans else None, u.summarize_ms,
                                  u.classify_ms, (time.perf_counter_ns() - job.capture_ns) / 1e6,
