@@ -327,6 +327,12 @@ table.queue tr.review-row td { background: var(--panel-2); padding: 4px 12px 16p
 .chat-choices { display: flex; gap: 8px; }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; font-weight: 600; }
 .chat-input { display: flex; gap: 8px; padding: 0 14px 14px; }
+.chat-attach { padding: 4px 10px; font-size: 16px; }
+.chat-review { border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; max-width: 92%; }
+.chat-review dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+.chat-review dt { color: var(--muted); }
+.chat-review dd { margin: 0; overflow-wrap: anywhere; }
+.chat-review .badge { justify-self: start; }
 .helplines { border: 1px solid rgba(255,77,94,.5); background: var(--danger-bg); border-radius: 10px; padding: 10px 12px; max-width: 88%; }
 .helplines ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .helplines li { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; }
