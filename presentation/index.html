@@ -301,6 +301,19 @@ table.dense td { padding: 8px 18px; }
 .more li::before { content: "+"; position: absolute; left: 2px; color: var(--saffron); font-weight: 800; }
 .more li b { color: var(--fg); font-weight: 600; }
 
+/* --- the demo scene behind the student slide --- */
+.scene { position: absolute; inset: 0; overflow: hidden; }
+.scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%;
+  filter: grayscale(.55) brightness(.5) contrast(1.1); transform: scaleX(-1); } /* mirrored: the man with the chain lands right of the text */
+.scene::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(11,18,24,.97) 0%, rgba(11,18,24,.9) 38%, rgba(11,18,24,.35) 72%, rgba(11,18,24,.55) 100%); }
+.slide.active .scene img { animation: creep 14s linear both; }
+@keyframes creep { from { transform: scaleX(-1) scale(1.02); } to { transform: scaleX(-1) scale(1.14) translateX(-2%); } }
+.scene-rec { position: absolute; z-index: 1; right: 40px; bottom: 36px; font-family: var(--mono); font-size: 18px;
+  letter-spacing: .16em; color: var(--danger); display: flex; align-items: center; gap: 10px; }
+.scene-rec::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--danger);
+  animation: blink 1.1s steps(2, start) infinite; }
+
 /* --- end --- */
 .slide.active .end img { animation: kbs 14s ease-out both; }
 @keyframes kbs { from { transform: scale(1.15); } to { transform: scale(1); } }
@@ -410,14 +423,19 @@ table.dense td { padding: 8px 18px; }
   </div>
 </section>
 
-<!-- 5 · student -->
-<section class="slide center" data-title="Student">
+<!-- 5 · student: the demo clip (data/footage/demo/flyover-attack.mp4), seconds before the fight -->
+<section class="slide center scene-slide" data-title="Student">
+  <div class="scene" aria-hidden="true">
+    <img src="assets/flyover_still.jpg" alt="">
+    <span class="scene-rec">REC · 00:00:10</span>
+  </div>
   <div class="glow" aria-hidden="true"></div>
   <div class="story" style="position:relative">
-    <span class="t" style="--i:0">11:40 PM · OUTER RING ROAD</span>
-    <p style="--i:1">A student is attacked on the walk back to the hostel.</p>
-    <p class="dim" style="--i:2">No patrol nearby. No camera flagged it.<br>Calling it in feels like it won't change anything.</p>
-    <p class="cy" style="--i:3;font-size:44px">Here's what reporting it could look like.</p>
+    <span class="t" style="--i:0">5:42 PM · UNDER THE FLYOVER · OUTER RING ROAD</span>
+    <p style="--i:1">A man with a chain walks up to a group by a parked car.</p>
+    <p class="dim" style="--i:2;font-size:42px;max-width:34ch">Twelve seconds later, the punches start.<br>No patrol nearby. No camera flagged it.</p>
+    <p style="--i:3;font-size:42px;max-width:34ch">One student, walking back to the hostel, keeps filming.</p>
+    <p class="cy" style="--i:4;font-size:44px">Here's what that video can do.</p>
   </div>
 </section>
 
