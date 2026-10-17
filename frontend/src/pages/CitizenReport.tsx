@@ -137,7 +137,7 @@ export default function CitizenReport() {
         </div>
       </nav>
       <main className="portal" id="main">
-        {view === "report" && !done && <EmergencyChat lang={lang} onUrgent={setUrgent} />}
+        {view === "report" && !done && <EmergencyChat lang={lang} urgent={urgent} onUrgent={setUrgent} onSubmitted={setDone} />}
 
         {view === "track" ? (
           <form className="card card-body" onSubmit={check}>

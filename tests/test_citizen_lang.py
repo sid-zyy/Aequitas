@@ -159,3 +159,10 @@ def test_assistant_speaks_the_selected_language(c):
     assert kn["state"] == "emergency" and re.search(r"[ಀ-೿]", kn["reply"]) and kn["urgent"]
     assert c.post("/api/citizen/assist", json={"lang": "en", "message": "no"}).json()["state"] == "report"
     assert c.post("/api/citizen/assist", json={"lang": "xx"}).status_code == 422
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "kn"])
+def test_assistant_offers_to_take_the_report_in_the_chat(lang):
+    # the portal's chat starts a report when the citizen attaches a video (📎); both endings point to it
+    assert "📎" in emergency.reply(lang, choice="no")["reply"]
+    assert "📎" in emergency.reply(lang, choice="yes")["reply"]
